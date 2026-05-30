@@ -3,10 +3,12 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/smtp"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"app/api/internal/repository"
@@ -79,6 +81,7 @@ func (r *Router) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/adv/usuarios/invite", r.AuthenticateMiddleware(r.handleInviteMember))
 	mux.HandleFunc("/invite/", r.handlePublicInviteLink) // Espera /invite/{token}
 	mux.HandleFunc("/api/acc/postagens", r.AuthenticateMiddleware(r.handleAccountantPosts))
+	mux.HandleFunc("/api/acc/servicos", r.AuthenticateMiddleware(r.handleAccountantServices))
 	mux.HandleFunc("/api/media/", r.AuthenticateMiddleware(r.handleMediaProxy)) // Espera /api/media/{bucket}/{key}
 	
 	// Catálogo público de contadores
@@ -323,4 +326,61 @@ func (r *Router) handleMediaProxy(w http.ResponseWriter, req *http.Request) {
 
 	// Copia o binário do MinIO para a resposta HTTP sem expor segredos
 	_, _ = io.Copy(w, stream)
+}
+
+type ServicePayload struct {
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Price       string `json:"price"`
+	Duration    int    `json:"duration"`
+}
+
+var (
+	mockServices   = []ServicePayload{}
+	mockServicesMu sync.Mutex
+)
+
+// handleAccountantServices gerencia a listagem e criação de serviços dos contadores
+func (r *Router) handleAccountantServices(w http.ResponseWriter, req *http.Request) {
+	switch req.Method {
+	case http.MethodGet:
+		mockServicesMu.Lock()
+		defer mockServicesMu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(mockServices)
+
+	case http.MethodPost:
+		var payload ServicePayload
+		if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+
+		if payload.Title == "" || payload.Description == "" || payload.Price == "" || payload.Duration <= 0 {
+			http.Error(w, "Campos obrigatórios ausentes", http.StatusBadRequest)
+			return
+		}
+
+		mockServicesMu.Lock()
+		// Verificar duplicidade de título
+		for _, s := range mockServices {
+			if strings.ToLower(s.Title) == strings.ToLower(payload.Title) {
+				mockServicesMu.Unlock()
+				http.Error(w, "Já existe um serviço com este título.", http.StatusBadRequest)
+				return
+			}
+		}
+
+		payload.ID = uuid.New().String()
+		mockServices = append(mockServices, payload)
+		mockServicesMu.Unlock()
+
+		w.WriteHeader(http.StatusCreated)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(payload)
+
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
 }
