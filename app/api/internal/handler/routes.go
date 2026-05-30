@@ -18,12 +18,14 @@ import (
 
 // Router abriga todos os repositórios e serviços para servir as rotas HTTP.
 type Router struct {
-	UserRepo         *repository.UserRepository
-	PostRepo         *repository.PostRepository
-	LinkRepo         *repository.LinkRepository
-	NotificationRepo *repository.NotificationRepository
-	DocRepo          *repository.DocumentRepository
-	LinkService      *service.LinkService
+	UserRepo          *repository.UserRepository
+	PostRepo          *repository.PostRepository
+	LinkRepo          *repository.LinkRepository
+	NotificationRepo  *repository.NotificationRepository
+	DocRepo           *repository.DocumentRepository
+	DeliverableRepo   *repository.DeliverableRepository
+	ProcessEventsRepo *repository.ProcessEventsRepository
+	LinkService       *service.LinkService
 }
 
 // NewRouter cria um novo Router.
@@ -33,15 +35,19 @@ func NewRouter(
 	linkRepo *repository.LinkRepository,
 	notifRepo *repository.NotificationRepository,
 	docRepo *repository.DocumentRepository,
+	deliverableRepo *repository.DeliverableRepository,
+	processEventsRepo *repository.ProcessEventsRepository,
 	linkService *service.LinkService,
 ) *Router {
 	return &Router{
-		UserRepo:         userRepo,
-		PostRepo:         postRepo,
-		LinkRepo:         linkRepo,
-		NotificationRepo: notifRepo,
-		DocRepo:          docRepo,
-		LinkService:      linkService,
+		UserRepo:          userRepo,
+		PostRepo:          postRepo,
+		LinkRepo:          linkRepo,
+		NotificationRepo:  notifRepo,
+		DocRepo:           docRepo,
+		DeliverableRepo:   deliverableRepo,
+		ProcessEventsRepo: processEventsRepo,
+		LinkService:       linkService,
 	}
 }
 
@@ -75,6 +81,11 @@ func (r *Router) AuthenticateMiddleware(next http.HandlerFunc) http.HandlerFunc 
 	}
 }
 
+// authMiddleware is an alias for AuthenticateMiddleware
+func (r *Router) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return r.AuthenticateMiddleware(next)
+}
+
 // RegisterRoutes registra todas as rotas no mux.
 func (r *Router) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/adv/usuarios", r.AuthenticateMiddleware(r.handleLawyerUsers))
@@ -83,10 +94,82 @@ func (r *Router) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/acc/postagens", r.AuthenticateMiddleware(r.handleAccountantPosts))
 	mux.HandleFunc("/api/acc/servicos", r.AuthenticateMiddleware(r.handleAccountantServices))
 	mux.HandleFunc("/api/media/", r.AuthenticateMiddleware(r.handleMediaProxy)) // Espera /api/media/{bucket}/{key}
-	
+
 	// Catálogo público de contadores
 	catalogHandler := NewCatalogHandler(r.UserRepo)
 	mux.HandleFunc("/api/public/accountants", catalogHandler.ListPublicAccountants)
+
+	// === Phase 8: Deliverables & Link State Transitions ===
+
+	// Rotas do contador (ACC)
+	mux.HandleFunc("/api/acc/links/", r.authMiddleware(r.handleAccLinkRoutes))
+
+	// Rotas do advogado (ADV)
+	mux.HandleFunc("/api/adv/links/", r.authMiddleware(r.handleAdvLinkRoutes))
+
+	// Rotas do cliente (CLI) - readonly
+	mux.HandleFunc("/api/cli/links/", r.authMiddleware(r.handleCliLinkRoutes))
+}
+
+// handleAccLinkRoutes dispatches /api/acc/links/{id}/... routes
+func (r *Router) handleAccLinkRoutes(w http.ResponseWriter, req *http.Request) {
+	path := req.URL.Path
+	// /api/acc/links/{id}/entregas
+	if strings.HasSuffix(path, "/entregas") || strings.HasSuffix(path, "/entregas/") {
+		r.handleDeliverableCreate(w, req)
+		return
+	}
+	// /api/acc/links/{id}/status
+	if strings.HasSuffix(path, "/status") || strings.HasSuffix(path, "/status/") {
+		r.handleLinkTransitions(w, req)
+		return
+	}
+	// /api/acc/links/{id} - detalhes
+	parts := strings.Split(strings.TrimSuffix(path, "/"), "/")
+	if len(parts) == 5 && parts[4] != "" {
+		r.handleLinkDetails(w, req)
+		return
+	}
+	http.Error(w, "Rota não encontrada", http.StatusNotFound)
+}
+
+// handleAdvLinkRoutes dispatches /api/adv/links/{id}/... routes
+func (r *Router) handleAdvLinkRoutes(w http.ResponseWriter, req *http.Request) {
+	path := req.URL.Path
+	// /api/adv/links/{id}/entregas/{eid}/aprovar
+	if strings.HasSuffix(path, "/aprovar") {
+		r.handleDeliverableApprove(w, req)
+		return
+	}
+	// /api/adv/links/{id}/entregas/{eid}/revisar
+	if strings.HasSuffix(path, "/revisar") {
+		r.handleDeliverableRequestReview(w, req)
+		return
+	}
+	// /api/adv/links/{id}/cancelar
+	if strings.HasSuffix(path, "/cancelar") {
+		r.handleDeliverableCancelRequest(w, req)
+		return
+	}
+	// /api/adv/links/{id} - detalhes
+	parts := strings.Split(strings.TrimSuffix(path, "/"), "/")
+	if len(parts) == 5 && parts[4] != "" {
+		r.handleLinkDetails(w, req)
+		return
+	}
+	http.Error(w, "Rota não encontrada", http.StatusNotFound)
+}
+
+// handleCliLinkRoutes dispatches /api/cli/links/{id} (readonly)
+func (r *Router) handleCliLinkRoutes(w http.ResponseWriter, req *http.Request) {
+	path := req.URL.Path
+	// /api/cli/links/{id} - detalhes (readonly)
+	parts := strings.Split(strings.TrimSuffix(path, "/"), "/")
+	if len(parts) == 5 && parts[4] != "" {
+		r.handleLinkDetails(w, req)
+		return
+	}
+	http.Error(w, "Rota não encontrada", http.StatusNotFound)
 }
 
 // 1. GET /api/adv/usuarios -> Lista membros do law_firm do advogado autenticado (D-03).
@@ -148,8 +231,6 @@ func (r *Router) handleInviteMember(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// 1. Rate Limit / Segurança contra convites duplicados (Threat Model)
-	// Verificar se já existe um membro com esse email no escritório
-	// Ou verificar se já existe token pendente
 	tokenUUID := uuid.New()
 	invite := &repository.InviteToken{
 		Token:     tokenUUID,
