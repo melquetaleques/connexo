@@ -26,6 +26,7 @@ type Router struct {
 	DeliverableRepo   *repository.DeliverableRepository
 	ProcessEventsRepo *repository.ProcessEventsRepository
 	LinkService       *service.LinkService
+	MediaRepo         *repository.MediaRepository
 }
 
 // NewRouter cria um novo Router.
@@ -38,6 +39,7 @@ func NewRouter(
 	deliverableRepo *repository.DeliverableRepository,
 	processEventsRepo *repository.ProcessEventsRepository,
 	linkService *service.LinkService,
+	mediaRepo *repository.MediaRepository,
 ) *Router {
 	return &Router{
 		UserRepo:          userRepo,
@@ -48,6 +50,7 @@ func NewRouter(
 		DeliverableRepo:   deliverableRepo,
 		ProcessEventsRepo: processEventsRepo,
 		LinkService:       linkService,
+		MediaRepo:         mediaRepo,
 	}
 }
 
@@ -109,6 +112,18 @@ func (r *Router) RegisterRoutes(mux *http.ServeMux) {
 
 	// Rotas do cliente (CLI) - readonly
 	mux.HandleFunc("/api/cli/links/", r.authMiddleware(r.handleCliLinkRoutes))
+
+	// === Phase 9: Perfil Rico do Contador ===
+
+	// Upload de media (autenticado)
+	mux.HandleFunc("/api/acc/media/logo", r.AuthenticateMiddleware(r.handleAccMediaLogo))
+	mux.HandleFunc("/api/acc/media/photo", r.AuthenticateMiddleware(r.handleAccMediaPhoto))
+
+	// Perfil público de contador (sem autenticação)
+	mux.HandleFunc("/api/public/accountants/", r.handlePublicAccountantProfile)
+
+	// Disponibilidade do contador
+	mux.HandleFunc("/api/acc/availability", r.AuthenticateMiddleware(r.handleAccAvailability))
 }
 
 // handleAccLinkRoutes dispatches /api/acc/links/{id}/... routes
@@ -407,6 +422,237 @@ func (r *Router) handleMediaProxy(w http.ResponseWriter, req *http.Request) {
 
 	// Copia o binário do MinIO para a resposta HTTP sem expor segredos
 	_, _ = io.Copy(w, stream)
+}
+
+// === Phase 9: Handlers ===
+
+// handleAccMediaLogo faz upload do logo do contador.
+// POST /api/acc/media/logo (multipart, field "file", max 5MB, JPEG/PNG)
+func (r *Router) handleAccMediaLogo(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userIDStr := req.Header.Get("X-Authenticated-User-ID")
+	userID, _ := uuid.Parse(userIDStr)
+
+	// Parse multipart form (max 5MB + overhead)
+	err := req.ParseMultipartForm(6 << 20) // 6MB limit for form parsing
+	if err != nil {
+		http.Error(w, "Erro ao processar formulário: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	file, header, err := req.FormFile("file")
+	if err != nil {
+		http.Error(w, "Arquivo não fornecido", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	contentType := header.Header.Get("Content-Type")
+	if contentType != "image/jpeg" && contentType != "image/png" {
+		http.Error(w, "Formato não suportado. Use JPEG ou PNG.", http.StatusBadRequest)
+		return
+	}
+
+	if header.Size > 5*1024*1024 {
+		http.Error(w, "Logo excede o limite de 5MB", http.StatusBadRequest)
+		return
+	}
+
+	// Upload para MinIO
+	key, err := r.MediaRepo.UploadLogo(req.Context(), file, header.Size, contentType, userID)
+	if err != nil {
+		http.Error(w, "Erro ao fazer upload: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Salvar path no banco
+	err = r.UserRepo.SaveLogoURL(req.Context(), userID, key)
+	if err != nil {
+		http.Error(w, "Erro ao salvar logo: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":  true,
+		"logo_url": key,
+		"url":      "/api/media/" + repository.MediaBucket + "/" + key,
+	})
+}
+
+// handleAccMediaPhoto faz upload de uma foto do contador.
+// POST /api/acc/media/photo (multipart, field "file", max 10MB, JPEG/PNG, máx 5)
+func (r *Router) handleAccMediaPhoto(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userIDStr := req.Header.Get("X-Authenticated-User-ID")
+	userID, _ := uuid.Parse(userIDStr)
+
+	// Parse multipart form (max 10MB + overhead)
+	err := req.ParseMultipartForm(12 << 20)
+	if err != nil {
+		http.Error(w, "Erro ao processar formulário: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	file, header, err := req.FormFile("file")
+	if err != nil {
+		http.Error(w, "Arquivo não fornecido", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	contentType := header.Header.Get("Content-Type")
+	if contentType != "image/jpeg" && contentType != "image/png" {
+		http.Error(w, "Formato não suportado. Use JPEG ou PNG.", http.StatusBadRequest)
+		return
+	}
+
+	if header.Size > 10*1024*1024 {
+		http.Error(w, "Foto excede o limite de 10MB", http.StatusBadRequest)
+		return
+	}
+
+	// Determinar o índice da nova foto (baseado na quantidade atual)
+	var photoCount int
+	countQuery := `SELECT COALESCE(array_length(photo_urls, 1), 0) FROM users WHERE id = $1`
+	err = r.UserRepo.DB().QueryRowContext(req.Context(), countQuery, userID).Scan(&photoCount)
+	if err != nil {
+		http.Error(w, "Erro ao verificar fotos existentes", http.StatusInternalServerError)
+		return
+	}
+
+	if photoCount >= 5 {
+		http.Error(w, "Máximo de 5 fotos atingido", http.StatusBadRequest)
+		return
+	}
+
+	// Upload para MinIO
+	key, err := r.MediaRepo.UploadPhoto(req.Context(), file, header.Size, contentType, userID, photoCount+1)
+	if err != nil {
+		http.Error(w, "Erro ao fazer upload: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Salvar path no banco
+	err = r.UserRepo.AddPhotoURL(req.Context(), userID, key)
+	if err != nil {
+		http.Error(w, "Erro ao salvar foto: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":    true,
+		"photo_url":  key,
+		"url":        "/api/media/" + repository.MediaBucket + "/" + key,
+		"photoCount": photoCount + 1,
+	})
+}
+
+// handleAccAvailability atualiza o status de disponibilidade do contador.
+// PUT /api/acc/availability (JSON body: {"availability": "disponivel"|"parcial"|"indisponivel"})
+func (r *Router) handleAccAvailability(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPut && req.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userIDStr := req.Header.Get("X-Authenticated-User-ID")
+	userID, _ := uuid.Parse(userIDStr)
+
+	var body struct {
+		Availability string `json:"availability"`
+	}
+	if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+		http.Error(w, "Body inválido: esperado availability", http.StatusBadRequest)
+		return
+	}
+
+	if body.Availability == "" {
+		http.Error(w, "availability é obrigatório", http.StatusBadRequest)
+		return
+	}
+
+	err := r.UserRepo.UpdateAvailability(req.Context(), userID, body.Availability)
+	if err != nil {
+		http.Error(w, "Erro ao atualizar disponibilidade: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":      true,
+		"availability": body.Availability,
+	})
+}
+
+// handlePublicAccountantProfile retorna o perfil público completo de um contador.
+// GET /api/public/accountants/{slug} (público, sem autenticação)
+func (r *Router) handlePublicAccountantProfile(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(req.URL.Path, "/")
+	// /api/public/accountants/{slug} -> [ "", "api", "public", "accountants", "{slug}" ]
+	if len(pathParts) < 5 || pathParts[4] == "" {
+		http.Error(w, "slug não fornecido na URL", http.StatusBadRequest)
+		return
+	}
+
+	slug := pathParts[4]
+
+	// Se for exatamente "accountants" sem slug, retorna 400 (a listagem é feita em /api/public/accountants sem trailing)
+	if slug == "accountants" || slug == "" {
+		http.Error(w, "slug é obrigatório", http.StatusBadRequest)
+		return
+	}
+
+	// Buscar perfil público
+	profile, err := r.UserRepo.GetPublicProfileBySlug(req.Context(), slug)
+	if err != nil {
+		http.Error(w, "Perfil não encontrado: "+err.Error(), http.StatusNotFound)
+		return
+	}
+	if profile == nil {
+		http.Error(w, "Perfil não encontrado", http.StatusNotFound)
+		return
+	}
+
+	// Buscar posts publicados do contador
+	posts, err := r.PostRepo.ListByAccountant(req.Context(), profile.ID, 10, 0)
+	if err != nil {
+		posts = []*repository.Post{}
+	}
+
+	// Construir URLs completas para media
+	logoFullURL := ""
+	if profile.LogoURL != "" {
+		logoFullURL = "/api/media/" + repository.MediaBucket + "/" + profile.LogoURL
+	}
+
+	photoFullURLs := make([]string, 0)
+	for _, p := range profile.PhotoURLs {
+		photoFullURLs = append(photoFullURLs, "/api/media/"+repository.MediaBucket+"/"+p)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"profile":      profile,
+		"posts":        posts,
+		"logo_url":     logoFullURL,
+		"photo_urls":   photoFullURLs,
+		"availability": profile.Availability,
+	})
 }
 
 type ServicePayload struct {

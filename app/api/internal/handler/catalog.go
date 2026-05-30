@@ -28,11 +28,23 @@ func (h *CatalogHandler) ListPublicAccountants(w http.ResponseWriter, req *http.
 	specialty := req.URL.Query().Get("specialty")
 	city := req.URL.Query().Get("city")
 	state := req.URL.Query().Get("state")
+	availability := req.URL.Query().Get("availability")
 
 	accountants, err := h.UserRepo.ListPublicAccountants(req.Context(), specialty, city, state, q)
 	if err != nil {
 		http.Error(w, "Erro ao buscar catálogo: "+err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	// Filtrar por availability no Go level (já que o SQL pode ficar complexo com param opcionais)
+	if availability != "" {
+		filtered := make([]*repository.Accountant, 0)
+		for _, acc := range accountants {
+			if acc.Availability == availability {
+				filtered = append(filtered, acc)
+			}
+		}
+		accountants = filtered
 	}
 
 	w.Header().Set("Content-Type", "application/json")

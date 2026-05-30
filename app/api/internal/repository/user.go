@@ -47,6 +47,11 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
+// DB expõe o banco de dados para acesso direto em handlers específicos.
+func (r *UserRepository) DB() *sqlx.DB {
+	return r.db
+}
+
 // Create insere um novo usuário no banco de dados. Se a role for "advogado",
 // ele cria automaticamente um law_firm correspondente e o vincula na law_firm_members como owner.
 func (r *UserRepository) Create(ctx context.Context, user *User) error {
@@ -225,23 +230,41 @@ func (r *UserRepository) AddMemberToFirm(ctx context.Context, firmID uuid.UUID, 
 
 // Accountant representa a entidade resumida de um contador para exibição no catálogo público.
 type Accountant struct {
-	ID        uuid.UUID `db:"id" json:"id"`
-	Email     string    `db:"email" json:"email"`
-	Name      string    `db:"name" json:"name"`
-	Role      string    `db:"role" json:"role"`
-	Specialty string    `db:"specialty" json:"specialty"`
-	City      string    `db:"city" json:"city"`
-	State     string    `db:"state" json:"state"`
+	ID           uuid.UUID `db:"id" json:"id"`
+	Email        string    `db:"email" json:"email"`
+	Name         string    `db:"name" json:"name"`
+	Role         string    `db:"role" json:"role"`
+	Specialty    string    `db:"specialty" json:"specialty"`
+	City         string    `db:"city" json:"city"`
+	State        string    `db:"state" json:"state"`
+	LogoURL      string    `db:"logo_url" json:"logo_url"`
+	Availability string    `db:"availability" json:"availability"`
 }
 
-// ListPublicAccountants busca e filtra contadores com especialidade, cidade, estado e busca de texto.
+// PublicAccountantProfile representa o perfil completo e público de um contador.
+type PublicAccountantProfile struct {
+	ID           uuid.UUID `db:"id" json:"id"`
+	Email        string    `db:"email" json:"email"`
+	Name         string    `db:"name" json:"name"`
+	Specialty    string    `db:"specialty" json:"specialty"`
+	City         string    `db:"city" json:"city"`
+	State        string    `db:"state" json:"state"`
+	Bio          string    `db:"bio" json:"bio"`
+	LogoURL      string    `db:"logo_url" json:"logo_url"`
+	PhotoURLs    []string  `db:"photo_urls" json:"photo_urls"`
+	Availability string    `db:"availability" json:"availability"`
+}
+
+// ListPublicAccountants busca e filtra contadores com especialidade, cidade, estado, disponibilidade e busca de texto.
 func (r *UserRepository) ListPublicAccountants(ctx context.Context, specialty, city, state, search string) ([]*Accountant, error) {
 	var accountants []*Accountant
 	query := `
 		SELECT id, email, name, role, 
 		       COALESCE(specialty, '') as specialty, 
 		       COALESCE(city, '') as city, 
-		       COALESCE(state, '') as state
+		       COALESCE(state, '') as state,
+		       COALESCE(logo_url, '') as logo_url,
+		       COALESCE(availability, 'disponivel') as availability
 		FROM users
 		WHERE role = 'contador'
 	`
@@ -276,6 +299,81 @@ func (r *UserRepository) ListPublicAccountants(ctx context.Context, specialty, c
 		return nil, err
 	}
 	return accountants, nil
+}
+
+// GetPublicProfileBySlug busca o perfil público completo de um contador pelo slug (name como fallback).
+// O slug é o nome do contador em formato URL-friendly, mas como não temos slug real, usamos id como parâmetro.
+func (r *UserRepository) GetPublicProfileBySlug(ctx context.Context, slug string) (*PublicAccountantProfile, error) {
+	var profile PublicAccountantProfile
+	query := `
+		SELECT id, email, name,
+		       COALESCE(specialty, '') as specialty,
+		       COALESCE(city, '') as city,
+		       COALESCE(state, '') as state,
+		       COALESCE(bio, '') as bio,
+		       COALESCE(logo_url, '') as logo_url,
+		       COALESCE(photo_urls, '{}') as photo_urls,
+		       COALESCE(availability, 'disponivel') as availability
+		FROM users
+		WHERE (id::text = $1 OR name ILIKE $1) AND role = 'contador'
+		LIMIT 1
+	`
+	err := r.db.GetContext(ctx, &profile, query, slug)
+	if err != nil {
+		return nil, err
+	}
+
+	// Se photo_urls for nil, inicializar como slice vazio
+	if profile.PhotoURLs == nil {
+		profile.PhotoURLs = []string{}
+	}
+
+	return &profile, nil
+}
+
+// UpdateAvailability atualiza o status de disponibilidade de um contador.
+func (r *UserRepository) UpdateAvailability(ctx context.Context, userID uuid.UUID, availability string) error {
+	valid := map[string]bool{"disponivel": true, "parcial": true, "indisponivel": true}
+	if !valid[availability] {
+		return fmt.Errorf("status de disponibilidade inválido: %s", availability)
+	}
+	query := `UPDATE users SET availability = $1 WHERE id = $2`
+	_, err := r.db.ExecContext(ctx, query, availability, userID)
+	return err
+}
+
+// SaveLogoURL salva o path do logo no perfil do contador.
+func (r *UserRepository) SaveLogoURL(ctx context.Context, userID uuid.UUID, logoURL string) error {
+	query := `UPDATE users SET logo_url = $1 WHERE id = $2`
+	_, err := r.db.ExecContext(ctx, query, logoURL, userID)
+	return err
+}
+
+// AddPhotoURL adiciona um path de foto ao array photo_urls do contador (máx 5).
+func (r *UserRepository) AddPhotoURL(ctx context.Context, userID uuid.UUID, photoURL string) error {
+	// Primeiro verifica quantas fotos já existem
+	var count int
+	query := `SELECT COALESCE(array_length(photo_urls, 1), 0) FROM users WHERE id = $1`
+	err := r.db.QueryRowContext(ctx, query, userID).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count >= 5 {
+		return fmt.Errorf("máximo de 5 fotos atingido")
+	}
+
+	// Append ao array
+	updateQuery := `UPDATE users SET photo_urls = array_append(COALESCE(photo_urls, '{}'), $1) WHERE id = $2`
+	_, err = r.db.ExecContext(ctx, updateQuery, photoURL, userID)
+	return err
+}
+
+// RemovePhotoURL remove uma foto do array photo_urls por índice.
+func (r *UserRepository) RemovePhotoURL(ctx context.Context, userID uuid.UUID, index int) error {
+	// Remove o elemento no índice especificado (1-based para PostgreSQL)
+	query := `UPDATE users SET photo_urls = array_remove(photo_urls, photo_urls[$1]) WHERE id = $2 AND array_length(photo_urls, 1) >= $1`
+	_, err := r.db.ExecContext(ctx, query, index+1, userID) // +1 porque PostgreSQL é 1-based
+	return err
 }
 
 
