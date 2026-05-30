@@ -8,8 +8,9 @@ import {
   PageContainer,
   Pill,
 } from "@/components/ui/connexo-primitives";
-import { getPublicProfile } from "@/services/accountant";
+import { getPublicProfile, getReviews } from "@/services/accountant";
 import type { PublicAccountantProfile } from "@/types";
+import type { ReviewWithClient } from "@/services/accountant";
 
 interface PostItem {
   id: string;
@@ -34,6 +35,9 @@ export function AccountantPublicProfile() {
   const [profile, setProfile] = useState<PublicAccountantProfile | null>(null);
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [notFound, setNotFound] = useState(false);
+  const [reviews, setReviews] = useState<ReviewWithClient[]>([]);
+  const [reviewsTotal, setReviewsTotal] = useState(0);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
 
   useEffect(() => {
     if (!slug) {
@@ -58,7 +62,22 @@ export function AccountantPublicProfile() {
         setLoading(false);
       }
     }
+
+    async function loadReviews() {
+      try {
+        setReviewsLoading(true);
+        const data = await getReviews(slug, { limit: 10, offset: 0 });
+        setReviews(data.reviews || []);
+        setReviewsTotal(data.total || 0);
+      } catch (err) {
+        console.error("Erro ao carregar avaliações", err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    }
+
     loadProfile();
+    loadReviews();
   }, [slug]);
 
   if (loading) {
@@ -300,7 +319,7 @@ export function AccountantPublicProfile() {
           </Card>
         )}
 
-        {/* ======== Section 6: Avaliações (placeholder) ======== */}
+        {/* ======== Section 6: Avaliações ======== */}
         <Card>
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
@@ -312,16 +331,81 @@ export function AccountantPublicProfile() {
             </div>
           </div>
 
-          <div className="rounded-xl border-2 border-dashed border-outline/30 bg-surface-2 p-10 text-center">
-            <Icon name="rate_review" className="text-5xl text-primary/10 mb-4" />
-            <h4 className="text-sm font-bold text-primary/30 uppercase tracking-widest mb-2">
-              Em Breve
-            </h4>
-            <p className="text-xs font-medium text-primary/20 max-w-md mx-auto">
-              O sistema de avaliações está sendo desenvolvido. Em breve, clientes e advogados poderão avaliar
-              os serviços prestados por este contador.
-            </p>
-          </div>
+          {reviewsLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <div className="h-8 w-8 animate-spin rounded-full border-3 border-secondary/20 border-t-secondary" />
+            </div>
+          ) : reviews.length === 0 ? (
+            <div className="rounded-xl border-2 border-dashed border-outline/30 bg-surface-2 p-10 text-center">
+              <Icon name="rate_review" className="text-5xl text-primary/10 mb-4" />
+              <h4 className="text-sm font-bold text-primary/30 uppercase tracking-widest mb-2">
+                Nenhuma Avaliação
+              </h4>
+              <p className="text-xs font-medium text-primary/20 max-w-md mx-auto">
+                Este contador ainda não recebeu avaliações de seus clientes.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {reviews.map((review) => (
+                <div
+                  key={review.id}
+                  className="rounded-xl border border-outline/30 bg-surface-2 p-6 space-y-3"
+                >
+                  {/* Header: client name + stars */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-primary">
+                      {review.client_name || "Cliente"}
+                    </span>
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Icon
+                          key={star}
+                          name={star <= review.rating ? "star" : "star_outline"}
+                          className={
+                            star <= review.rating
+                              ? "text-amber-500 text-base"
+                              : "text-primary/20 text-base"
+                          }
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Comment */}
+                  {review.comment && (
+                    <p className="text-sm font-medium text-primary/80 leading-relaxed">
+                      {review.comment}
+                    </p>
+                  )}
+
+                  {/* Date */}
+                  <p className="text-[10px] font-bold text-primary/30 uppercase tracking-wider">
+                    {new Date(review.submitted_at).toLocaleDateString("pt-BR")}
+                  </p>
+
+                  {/* Accountant reply */}
+                  {review.reply_text && (
+                    <div className="ml-6 pl-4 border-l-2 border-secondary/40 space-y-1">
+                      <p className="text-[10px] font-bold text-secondary uppercase tracking-wider">
+                        Resposta do Contador
+                      </p>
+                      <p className="text-sm font-medium text-primary/70">
+                        {review.reply_text}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Show total count */}
+              {reviewsTotal > reviews.length && (
+                <p className="text-center text-xs font-bold text-primary/40 uppercase tracking-widest">
+                  Mostrando {reviews.length} de {reviewsTotal} avaliações
+                </p>
+              )}
+            </div>
+          )}
         </Card>
       </div>
     </PageContainer>

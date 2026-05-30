@@ -11,10 +11,11 @@ import (
 
 // LinkService encapsula a lógica de negócio de vínculos entre clientes e contadores.
 type LinkService struct {
-	linkRepo         *repository.LinkRepository
-	notificationRepo *repository.NotificationRepository
-	userRepo         *repository.UserRepository
+	linkRepo          *repository.LinkRepository
+	notificationRepo  *repository.NotificationRepository
+	userRepo          *repository.UserRepository
 	processEventsRepo *repository.ProcessEventsRepository
+	lgpdRepo          *repository.LGPDRepository
 }
 
 // NewLinkService cria uma nova instância de LinkService.
@@ -23,12 +24,14 @@ func NewLinkService(
 	notificationRepo *repository.NotificationRepository,
 	userRepo *repository.UserRepository,
 	processEventsRepo *repository.ProcessEventsRepository,
+	lgpdRepo *repository.LGPDRepository,
 ) *LinkService {
 	return &LinkService{
 		linkRepo:          linkRepo,
 		notificationRepo:  notificationRepo,
 		userRepo:          userRepo,
 		processEventsRepo: processEventsRepo,
+		lgpdRepo:          lgpdRepo,
 	}
 }
 
@@ -281,6 +284,11 @@ func (s *LinkService) TransitionStatus(ctx context.Context, linkID uuid.UUID, ne
 		targetUserID = link.AccountantID
 		notifTitle = "Serviço Cancelado"
 		notifMsg = fmt.Sprintf("O vínculo de serviço com o cliente %s foi cancelado.", clientName)
+
+		// Revogar todas as permissões de documento do vínculo (D-11: Phase 11 LGPD)
+		if s.lgpdRepo != nil {
+			_ = s.lgpdRepo.RevokeAllByLink(ctx, linkID)
+		}
 	}
 
 	if targetUserID != uuid.Nil {

@@ -7,6 +7,39 @@ import (
 	"github.com/google/uuid"
 )
 
+// ClientConsent representa o consentimento LGPD registrado.
+type ClientConsent struct {
+	ID           uuid.UUID `db:"id" json:"id"`
+	ClientID     uuid.UUID `db:"client_id" json:"client_id"`
+	LinkID       uuid.UUID `db:"link_id" json:"link_id"`
+	ConsentedAt  time.Time `db:"consented_at" json:"consented_at"`
+	IPAddress    string    `db:"ip_address" json:"ip_address"`
+	UserAgent    string    `db:"user_agent" json:"user_agent"`
+	TextVersion  string    `db:"text_version" json:"text_version"`
+}
+
+// DocPermission representa a permissão de acesso a um documento por vínculo.
+type DocPermission struct {
+	ID         uuid.UUID  `db:"id" json:"id"`
+	DocumentID uuid.UUID  `db:"document_id" json:"document_id"`
+	LinkID     uuid.UUID  `db:"link_id" json:"link_id"`
+	GrantedBy  uuid.UUID  `db:"granted_by" json:"granted_by"`
+	GrantedAt  time.Time  `db:"granted_at" json:"granted_at"`
+	RevokedAt  *time.Time `db:"revoked_at" json:"revoked_at"`
+}
+
+// DocumentRequest representa uma solicitação de documento do advogado ao cliente.
+type DocumentRequest struct {
+	ID          uuid.UUID `db:"id" json:"id"`
+	ProcessID   uuid.UUID `db:"process_id" json:"process_id"`
+	RequestedBy uuid.UUID `db:"requested_by" json:"requested_by"`
+	ClientID    uuid.UUID `db:"client_id" json:"client_id"`
+	Description string    `db:"description" json:"description"`
+	Status      string    `db:"status" json:"status"`
+	CreatedAt   time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at" json:"updated_at"`
+}
+
 // LinkStatus representa os possíveis estados do vínculo entre cliente/processo e contador.
 type LinkStatus string
 

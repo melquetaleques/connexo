@@ -77,7 +77,7 @@ func (r *UserRepository) Create(ctx context.Context, user *User) error {
 		return err
 	}
 
-	// 2. Se a role for 'advogado', criar a law_firm e vincular o owner
+	// 2. Se a role for 'advogado', criar a law_firm, vincular o owner e configurar trial de 30 dias
 	if user.Role == "advogado" {
 		firmID := uuid.New()
 		firm := &LawFirm{
@@ -108,6 +108,16 @@ func (r *UserRepository) Create(ctx context.Context, user *User) error {
 			VALUES (:firm_id, :user_id, :role, :joined_at)
 		`
 		_, err = tx.NamedExecContext(ctx, queryMember, member)
+		if err != nil {
+			return err
+		}
+
+		// Configurar trial automático de 30 dias (D-06, D-10)
+		queryTrial := `
+			UPDATE users SET subscription_status = 'ativo', subscription_expires_at = $1
+			WHERE id = $2
+		`
+		_, err = tx.ExecContext(ctx, queryTrial, time.Now().Add(30*24*time.Hour), user.ID)
 		if err != nil {
 			return err
 		}
@@ -255,8 +265,59 @@ type PublicAccountantProfile struct {
 	PhotoURLs    []string  `db:"photo_urls" json:"photo_urls"`
 	Availability string    `db:"availability" json:"availability"`
 }
+// SubscriptionInfo representa os dados de assinatura de um advogado.
+type SubscriptionInfo struct {
+	Plan      string     `json:"plan"`
+	Status    string     `json:"status"`
+	ExpiresAt *time.Time `json:"expires_at"`
+}
 
-// ListPublicAccountants busca e filtra contadores com especialidade, cidade, estado, disponibilidade e busca de texto.
+// GetSubscriptionByUserID retorna os dados de assinatura de um usuário advogado.
+func (r *UserRepository) GetSubscriptionByUserID(ctx context.Context, userID uuid.UUID) (*SubscriptionInfo, error) {
+	var info SubscriptionInfo
+	query := `SELECT 
+		COALESCE(subscription_status, 'ativo') as plan,
+		subscription_status as status,
+		subscription_expires_at as expires_at
+	FROM users WHERE id = $1 AND role = 'advogado'`
+	err := r.db.GetContext(ctx, &info, query, userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	// Calcular status real baseado na data de expiração
+	if info.ExpiresAt != nil && time.Now().After(*info.ExpiresAt) {
+		info.Status = "expirado"
+	} else if info.Status == "ativo" || info.Status == "" {
+		info.Status = "ativo"
+	}
+	// Plan é derivado do status para MVP
+	if info.ExpiresAt != nil && time.Now().After(*info.ExpiresAt) {
+		info.Plan = "expirado"
+	} else if info.Plan == "" || info.Plan == "ativo" {
+		info.Plan = "trial"
+	}
+	return &info, nil
+}
+
+// ActivateSubscription ativa ou renova a assinatura de um advogado (admin).
+func (r *UserRepository) ActivateSubscription(ctx context.Context, lawyerID uuid.UUID, plan string, expiresAt time.Time) error {
+	query := `UPDATE users SET subscription_status = 'ativo', subscription_expires_at = $1 WHERE id = $2 AND role = 'advogado'`
+	result, err := r.db.ExecContext(ctx, query, expiresAt, lawyerID)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("advogado não encontrado")
+	}
+	return nil
+}
+
+
+
 func (r *UserRepository) ListPublicAccountants(ctx context.Context, specialty, city, state, search string) ([]*Accountant, error) {
 	var accountants []*Accountant
 	query := `

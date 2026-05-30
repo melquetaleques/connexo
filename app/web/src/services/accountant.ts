@@ -78,3 +78,78 @@ export async function getPublicProfile(slug: string) {
   }>(`/public/accountants/${slug}`);
   return res.data;
 }
+
+// ---------------------------------------------------------------------------
+// Review / Avaliação types
+// ---------------------------------------------------------------------------
+
+export interface ReviewData {
+  id: string;
+  accountant_id: string;
+  client_id: string;
+  link_id: string;
+  rating: number;
+  comment: string;
+  reply_text: string;
+  submitted_at: string;
+  replied_at: string | null;
+}
+
+export interface ReviewWithClient extends ReviewData {
+  client_name: string;
+}
+
+export interface CreateReviewPayload {
+  link_id: string;
+  rating: number;
+  comment: string;
+}
+
+export interface ReviewStatusResponse {
+  has_review: boolean;
+  review: ReviewData | null;
+}
+
+// ---------------------------------------------------------------------------
+// Review API calls
+// ---------------------------------------------------------------------------
+
+/**
+ * Cria uma avaliação para um vínculo concluído (cliente autenticado).
+ * POST /api/cli/reviews
+ */
+export async function createReview(data: CreateReviewPayload) {
+  const res = await api.post<{ success: boolean; review: ReviewData }>(
+    "/cli/reviews",
+    data,
+  );
+  return res.data;
+}
+
+/**
+ * Busca avaliações públicas de um contador.
+ * GET /api/public/accountants/{slug}/reviews
+ */
+export async function getReviews(
+  slug: string,
+  params?: { limit?: number; offset?: number },
+) {
+  const res = await api.get<{
+    reviews: ReviewWithClient[];
+    total: number;
+    limit: number;
+    offset: number;
+  }>(`/public/accountants/${slug}/reviews`, { params });
+  return res.data;
+}
+
+/**
+ * Verifica se o cliente autenticado já avaliou um determinado link.
+ * GET /api/cli/reviews/check/{link_id}
+ */
+export async function checkReviewStatus(linkId: string) {
+  const res = await api.get<ReviewStatusResponse>(
+    `/cli/reviews/check/${linkId}`,
+  );
+  return res.data;
+}

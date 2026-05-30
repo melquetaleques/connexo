@@ -1,0 +1,107 @@
+version: '3.8'
+
+# Production Docker Compose for Connexo
+# Usage: docker compose -f docker-compose.prod.yml up -d
+# Environment variables must be set in .env file (see .env.example)
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: connexo-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${CONNEXO_DB_PASSWORD:-postgrespassword}
+      POSTGRES_DB: connexo
+    # No ports exposed externally — accessible only via internal Docker network
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - connexo-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: connexo-redis
+    restart: unless-stopped
+    # No ports exposed externally
+    command: redis-server --appendonly yes
+    volumes:
+      - connexo-redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: connexo-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    # No ports exposed externally — API accesses MinIO via internal Docker network
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    volumes:
+      - connexo-miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  api:
+    build:
+      context: ./app/api
+      dockerfile: Dockerfile
+    container_name: connexo-api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      CONNEXO_DATABASE_URL: postgres://postgres:${CONNEXO_DB_PASSWORD:-postgrespassword}@db:5432/connexo?sslmode=disable
+      CONNEXO_REDIS_URL: redis://redis:6379/0
+      CONNEXO_HTTP_ADDR: ":8080"
+      APP_ENV: production
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRY_HOURS: ${JWT_EXPIRY_HOURS:-72}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-https://connexo.com.br}
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+  web:
+    build:
+      context: ./app/web
+      dockerfile: Dockerfile
+    container_name: connexo-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:80"
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-/api}
+    depends_on:
+      - api
+
+volumes:
+  connexo-pgdata:
+    driver: local
+  connexo-redisdata:
+    driver: local
+  connexo-miniodata:
+    driver: local

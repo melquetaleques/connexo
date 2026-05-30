@@ -28,6 +28,7 @@ type Router struct {
 	ReviewRepo        *repository.ReviewRepository
 	LinkService       *service.LinkService
 	MediaRepo         *repository.MediaRepository
+	LGPDRepo          *repository.LGPDRepository
 }
 
 // NewRouter cria um novo Router.
@@ -42,6 +43,7 @@ func NewRouter(
 	reviewRepo *repository.ReviewRepository,
 	linkService *service.LinkService,
 	mediaRepo *repository.MediaRepository,
+	lgpdRepo *repository.LGPDRepository,
 ) *Router {
 	return &Router{
 		UserRepo:          userRepo,
@@ -54,6 +56,7 @@ func NewRouter(
 		ReviewRepo:        reviewRepo,
 		LinkService:       linkService,
 		MediaRepo:         mediaRepo,
+		LGPDRepo:          lgpdRepo,
 	}
 }
 
@@ -128,8 +131,18 @@ func (r *Router) RegisterRoutes(mux *http.ServeMux) {
 	// Disponibilidade do contador
 	mux.HandleFunc("/api/acc/availability", r.AuthenticateMiddleware(r.handleAccAvailability))
 
+	// === Phase 12: Landing Page + Assinatura ===
+
+	// GET /api/adv/subscription — dados de assinatura do advogado autenticado
+	mux.HandleFunc("/api/adv/subscription", r.AuthenticateMiddleware(r.handleAdvSubscription))
+	// POST /api/admin/subscriptions/{lawyer_id}/activate — ativar/renovar assinatura (admin)
+	mux.HandleFunc("/api/admin/subscriptions/", r.AuthenticateMiddleware(r.handleAdminActivateSubscription))
+
 	// === Phase 10: Avaliações e Reviews ===
 	r.RegisterReviewRoutes(mux)
+
+	// === Phase 11: LGPD + Gestão Documental Avançada ===
+	r.RegisterLGPDRoutes(mux)
 }
 
 // handleAccLinkRoutes dispatches /api/acc/links/{id}/... routes
@@ -422,6 +435,24 @@ func (r *Router) handleMediaProxy(w http.ResponseWriter, req *http.Request) {
 	}
 	defer stream.Close()
 
+	// Log de acesso a documento (Phase 11 - D-12, D-13)
+	// Registra acesso no audit_logs quando bucket = 'connexo-docs'
+	if bucket == "connexo-docs" {
+		userIDStr := req.Header.Get("X-Authenticated-User-ID")
+		userID, _ := uuid.Parse(userIDStr)
+		if userID != uuid.Nil {
+			// Tenta extrair process_id da chave (formato: UUID_nome_arquivo)
+			ipAddress := req.Header.Get("X-Real-IP")
+			if ipAddress == "" {
+				ipAddress = req.RemoteAddr
+			}
+			_ = r.LGPDRepo.LogDocumentAccess(req.Context(), userID, uuid.Nil, ipAddress, "")
+			// Nota: para log preciso do document_id, seria necessário buscar o doc pelo key no banco.
+			// Para MVP, registra o acesso com a key no metadata.
+			_ = r.LGPDRepo.LogDocumentAccessWithKey(req.Context(), userID, key, ipAddress, bucket)
+		}
+	}
+
 	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", size))
 	w.Header().Set("Cache-Control", "private, max-age=3600")
@@ -597,6 +628,112 @@ func (r *Router) handleAccAvailability(w http.ResponseWriter, req *http.Request)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"success":      true,
 		"availability": body.Availability,
+	})
+}
+
+// handleAdvSubscription retorna os dados de assinatura do advogado autenticado.
+// GET /api/adv/subscription
+func (r *Router) handleAdvSubscription(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userIDStr := req.Header.Get("X-Authenticated-User-ID")
+	userID, _ := uuid.Parse(userIDStr)
+
+	sub, err := r.UserRepo.GetSubscriptionByUserID(req.Context(), userID)
+	if err != nil {
+		http.Error(w, "Erro ao buscar assinatura: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if sub == nil {
+		http.Error(w, "Assinatura não encontrada", http.StatusNotFound)
+		return
+	}
+
+	// Calcular days_remaining
+	daysRemaining := 0
+	if sub.ExpiresAt != nil {
+		daysRemaining = int(time.Until(*sub.ExpiresAt).Hours() / 24)
+		if daysRemaining < 0 {
+			daysRemaining = 0
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"plan":           sub.Plan,
+		"status":         sub.Status,
+		"expires_at":     sub.ExpiresAt,
+		"days_remaining": daysRemaining,
+	})
+}
+
+// handleAdminActivateSubscription ativa ou renova a assinatura de um advogado (admin).
+// POST /api/admin/subscriptions/{lawyer_id}/activate
+func (r *Router) handleAdminActivateSubscription(w http.ResponseWriter, req *http.Request) {
+	path := strings.TrimSuffix(req.URL.Path, "/activate")
+	path = strings.TrimSuffix(path, "/")
+	parts := strings.Split(path, "/")
+	// /api/admin/subscriptions/{lawyer_id} -> [ "", "api", "admin", "subscriptions", "{lawyer_id}" ]
+	if len(parts) < 5 || parts[4] == "" {
+		http.Error(w, "lawyer_id não fornecido na URL", http.StatusBadRequest)
+		return
+	}
+
+	if req.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	lawyerIDStr := parts[4]
+	lawyerID, err := uuid.Parse(lawyerIDStr)
+	if err != nil {
+		http.Error(w, "lawyer_id inválido", http.StatusBadRequest)
+		return
+	}
+
+	var body struct {
+		Plan      string `json:"plan"`
+		ExpiresAt string `json:"expires_at"` // ISO 8601
+	}
+	if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+		http.Error(w, "Body inválido: esperado {plan, expires_at}", http.StatusBadRequest)
+		return
+	}
+
+	if body.Plan == "" || body.ExpiresAt == "" {
+		http.Error(w, "Campos obrigatórios: plan, expires_at", http.StatusBadRequest)
+		return
+	}
+
+	expiresAt, err := time.Parse(time.RFC3339, body.ExpiresAt)
+	if err != nil {
+		http.Error(w, "expires_at deve estar em formato ISO 8601 (ex: 2026-12-31T23:59:59-03:00)", http.StatusBadRequest)
+		return
+	}
+
+	// Verificar se o usuário autenticado é admin
+	adminIDStr := req.Header.Get("X-Authenticated-User-ID")
+	adminID, _ := uuid.Parse(adminIDStr)
+	adminUser, err := r.UserRepo.GetByID(req.Context(), adminID)
+	if err != nil || adminUser == nil || adminUser.Role != "admin" {
+		http.Error(w, "Acesso negado: apenas administradores podem ativar assinaturas", http.StatusForbidden)
+		return
+	}
+
+	err = r.UserRepo.ActivateSubscription(req.Context(), lawyerID, body.Plan, expiresAt)
+	if err != nil {
+		http.Error(w, "Erro ao ativar assinatura: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":    true,
+		"plan":       body.Plan,
+		"expires_at": expiresAt,
 	})
 }
 

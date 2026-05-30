@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Icon, Avatar } from "@/components/ui/connexo-primitives";
 import type { Role } from "@/types";
+import { useExpiredSubscription } from "@/hooks/useExpiredSubscription";
 
 interface NavItem {
   to: string;
@@ -54,9 +55,36 @@ interface AppShellProps {
 export function AppShell({ role = "advogado" }: AppShellProps) {
   const nav = NAV[role] ?? NAV.advogado;
   const location = useLocation();
+  const { expired, expiresAt, daysRemaining, loading } = useExpiredSubscription();
+
+  function formatDate(dateStr: string | null): string {
+    if (!dateStr) return "";
+    return new Date(dateStr).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+  }
 
   return (
     <div className="min-h-screen flex bg-surface-1 font-['Plus_Jakarta_Sans']">
+      {/* Expiration Banner */}
+      {!loading && expired && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-amber-50 border-b border-amber-200 px-6 py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-amber-600 text-lg">warning_amber</span>
+              <p className="text-sm font-bold text-amber-800">
+                Sua assinatura expirou{daysRemaining === 0 && expiresAt ? ` em ${formatDate(expiresAt)}` : ""}.
+                <a href="/adv/assinatura" className="ml-2 text-secondary font-extrabold underline hover:no-underline">
+                  Renovar agora →
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside className="w-72 shrink-0 bg-primary text-white flex flex-col relative z-20 shadow-2xl">
         {/* Branding Area */}

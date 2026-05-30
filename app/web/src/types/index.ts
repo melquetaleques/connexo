@@ -68,3 +68,34 @@ export interface PublicAccountantProfile {
   availability: string;
   posts?: any[];
 }
+
+// Phase 11: LGPD + Document Management Types
+export interface DocPermission {
+  id: string;
+  document_id: string;
+  link_id: string;
+  granted_by: string;
+  granted_at: string;
+  revoked_at: string | null;
+}
+
+export interface DocumentRequest {
+  id: string;
+  process_id: string;
+  requested_by: string;
+  client_id: string;
+  description: string;
+  status: "pendente" | "atendido" | "cancelado";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConsentRecord {
+  id: string;
+  client_id: string;
+  link_id: string;
+  consented_at: string;
+  ip_address: string;
+  user_agent: string;
+  text_version: string;
+}

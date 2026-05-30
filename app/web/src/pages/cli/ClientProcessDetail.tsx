@@ -7,8 +7,11 @@ import {
   Pill,
   StatusDot,
   Avatar,
+  GoldButton,
 } from "@/components/ui/connexo-primitives";
 import api from "@/services/api";
+import { createReview, checkReviewStatus } from "@/services/accountant";
+import type { ReviewData } from "@/services/accountant";
 
 interface Deliverable {
   id: string;
@@ -85,6 +88,15 @@ export function ClientProcessDetail() {
   const [events, setEvents] = useState<ProcessEvent[]>([]);
   const [accountant, setAccountant] = useState<UserData | null>(null);
 
+  // Review state
+  const [existingReview, setExistingReview] = useState<ReviewData | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
@@ -97,6 +109,23 @@ export function ClientProcessDetail() {
         setDeliverables(data.deliverables || []);
         setEvents(data.process_events || []);
         setAccountant(data.accountant || null);
+
+        // Check if there's an existing review for concluded links
+        if (data.link?.status === "concluido") {
+          try {
+            setReviewLoading(true);
+            const reviewStatus = await checkReviewStatus(id);
+            setExistingReview(reviewStatus.review);
+            if (reviewStatus.has_review) {
+              setRating(reviewStatus.review?.rating || 0);
+              setComment(reviewStatus.review?.comment || "");
+            }
+          } catch {
+            // Non-critical — review check may fail silently
+          } finally {
+            setReviewLoading(false);
+          }
+        }
       } catch (err: any) {
         setError(err.response?.data || "Erro ao carregar dados do vínculo");
       } finally {
@@ -267,8 +296,242 @@ export function ClientProcessDetail() {
               </div>
             </div>
           </Card>
+
+          {/* Review section — only when concluded */}
+          {statusKey === "concluido" && (
+            <ReviewCard
+              existingReview={existingReview}
+              reviewLoading={reviewLoading}
+              reviewError={reviewError}
+              reviewSuccess={reviewSuccess}
+              rating={rating}
+              comment={comment}
+              submitting={submitting}
+              setRating={setRating}
+              setComment={setComment}
+              setReviewError={setReviewError}
+              setReviewSuccess={setReviewSuccess}
+              setSubmitting={setSubmitting}
+              setExistingReview={setExistingReview}
+              linkId={id!}
+            />
+          )}
         </div>
       </div>
     </PageContainer>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ReviewCard — Formulário de avaliação para vínculos concluídos
+// ---------------------------------------------------------------------------
+
+interface ReviewCardProps {
+  existingReview: ReviewData | null;
+  reviewLoading: boolean;
+  reviewError: string | null;
+  reviewSuccess: boolean;
+  rating: number;
+  comment: string;
+  submitting: boolean;
+  setRating: (v: number) => void;
+  setComment: (v: string) => void;
+  setReviewError: (v: string | null) => void;
+  setReviewSuccess: (v: boolean) => void;
+  setSubmitting: (v: boolean) => void;
+  setExistingReview: (v: ReviewData | null) => void;
+  linkId: string;
+}
+
+function ReviewCard({
+  existingReview,
+  reviewLoading,
+  reviewError,
+  reviewSuccess,
+  rating,
+  comment,
+  submitting,
+  setRating,
+  setComment,
+  setReviewError,
+  setReviewSuccess,
+  setSubmitting,
+  setExistingReview,
+  linkId,
+}: ReviewCardProps) {
+  // Auto-dismiss success banner after 6 seconds
+  useEffect(() => {
+    if (reviewSuccess) {
+      const timer = setTimeout(() => setReviewSuccess(false), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [reviewSuccess, setReviewSuccess]);
+
+  // Show spinner while checking review status
+  if (reviewLoading && !existingReview) {
+    return (
+      <Card className="p-8">
+        <div className="flex flex-col items-center justify-center py-6 gap-3">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-secondary/20 border-t-secondary" />
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/40">
+            Verificando avaliação...
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  // Already reviewed — show existing review
+  if (existingReview) {
+    return (
+      <Card className="p-8">
+        <h3 className="text-sm font-black text-primary uppercase tracking-widest mb-6 border-b border-outline/60 pb-4 flex items-center gap-2">
+          <Icon name="star" className="text-amber-500" />
+          Sua Avaliação
+        </h3>
+        <div className="space-y-3">
+          {/* Stars */}
+          <div className="flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <Icon
+                key={s}
+                name={s <= existingReview.rating ? "star" : "star_outline"}
+                className={
+                  s <= existingReview.rating
+                    ? "text-amber-500 text-lg"
+                    : "text-primary/20 text-lg"
+                }
+              />
+            ))}
+          </div>
+          {/* Comment */}
+          {existingReview.comment && (
+            <p className="text-sm font-medium text-primary/80">
+              {existingReview.comment}
+            </p>
+          )}
+          {/* Date */}
+          <p className="text-[10px] font-bold text-primary/30 uppercase tracking-wider">
+            {new Date(existingReview.submitted_at).toLocaleDateString("pt-BR")}
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  // --- Formulário de avaliação ---
+  const handleSubmit = async () => {
+    if (rating < 1) {
+      setReviewError("Selecione pelo menos 1 estrela.");
+      return;
+    }
+    setReviewError(null);
+    setSubmitting(true);
+    try {
+      const result = await createReview({
+        link_id: linkId,
+        rating,
+        comment,
+      });
+      setExistingReview(result.review);
+      setReviewSuccess(true);
+    } catch (err: any) {
+      const msg =
+        err.response?.data || "Erro ao enviar avaliação. Tente novamente.";
+      setReviewError(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Card className="p-8">
+      <h3 className="text-sm font-black text-primary uppercase tracking-widest mb-6 border-b border-outline/60 pb-4 flex items-center gap-2">
+        <Icon name="star" className="text-amber-500" />
+        Avaliar Serviço
+      </h3>
+
+      {/* Loading spinner while submitting */}
+      {submitting && (
+        <div className="flex items-center justify-center py-4">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-secondary/20 border-t-secondary" />
+        </div>
+      )}
+
+      {/* Error banner */}
+      {reviewError && !submitting && (
+        <div className="rounded-lg border border-rose-200/60 bg-rose-50 px-4 py-3 text-rose-700 text-xs font-bold mb-4">
+          {reviewError}
+        </div>
+      )}
+
+      {/* Success banner */}
+      {reviewSuccess && !submitting && (
+        <div className="rounded-lg border border-emerald-200/60 bg-emerald-50 px-4 py-3 text-emerald-700 text-xs font-bold mb-4">
+          Avaliação enviada com sucesso! Obrigado pelo seu feedback.
+        </div>
+      )}
+
+      {/* Form (hidden while submitting) */}
+      {!submitting && !reviewSuccess && (
+        <div className="space-y-5">
+          {/* Star selector */}
+          <div>
+            <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest mb-2">
+              Nota
+            </p>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setRating(s)}
+                  className="p-1 transition-transform hover:scale-110 focus:outline-none"
+                  disabled={submitting}
+                >
+                  <Icon
+                    name={s <= rating ? "star" : "star_outline"}
+                    className={
+                      s <= rating
+                        ? "text-amber-500 text-2xl"
+                        : "text-primary/20 text-2xl hover:text-amber-400/60"
+                    }
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Comment (optional) */}
+          <div>
+            <label className="block text-[10px] font-bold text-primary/40 uppercase tracking-widest mb-2">
+              Comentário <span className="text-primary/20">(opcional)</span>
+            </label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Conte sua experiência com este contador..."
+              rows={3}
+              maxLength={500}
+              className="w-full rounded-xl border border-outline/30 bg-surface-2 p-3 text-sm font-medium text-primary placeholder:text-primary/20 focus:outline-none focus:ring-2 focus:ring-secondary/40 resize-none"
+              disabled={submitting}
+            />
+            <p className="text-[10px] text-primary/20 text-right mt-1">
+              {comment.length}/500
+            </p>
+          </div>
+
+          {/* Submit button */}
+          <GoldButton
+            onClick={handleSubmit}
+            disabled={rating < 1 || submitting}
+            icon="send"
+            className="w-full"
+          >
+            Enviar Avaliação
+          </GoldButton>
+        </div>
+      )}
+    </Card>
   );
 }
