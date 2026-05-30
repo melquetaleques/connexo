@@ -58,6 +58,25 @@ func (r *LinkRepository) Update(ctx context.Context, link *Link) error {
 	return err
 }
 
+// UpdateStatus atualiza apenas o status de um vínculo.
+func (r *LinkRepository) UpdateStatus(ctx context.Context, id uuid.UUID, status string) error {
+	query := `
+		UPDATE client_accountant_links 
+		SET status = $1, updated_at = $2 
+		WHERE id = $3
+	`
+	_, err := r.db.ExecContext(ctx, query, status, time.Now(), id)
+	return err
+}
+
+// GetProcessIDByClientID busca o process_id associado ao client_id na tabela processes.
+func (r *LinkRepository) GetProcessIDByClientID(ctx context.Context, clientID uuid.UUID) (uuid.UUID, error) {
+	var processID uuid.UUID
+	query := `SELECT id FROM processes WHERE client_id = $1 LIMIT 1`
+	err := r.db.GetContext(ctx, &processID, query, clientID)
+	return processID, err
+}
+
 // FindByID busca um vínculo por ID.
 func (r *LinkRepository) FindByID(ctx context.Context, id uuid.UUID) (*Link, error) {
 	var link Link
