@@ -50,4 +50,21 @@ export interface Accountant {
   is_public: boolean;
   rating: number;
   completed_cases: number;
+  logo_url?: string;
+  photo_urls?: string[];
+  availability?: string;
+}
+
+export interface PublicAccountantProfile {
+  id: string;
+  name: string;
+  email: string;
+  specialty: string;
+  city: string;
+  state: string;
+  bio: string;
+  logo_url: string;
+  photo_urls: string[];
+  availability: string;
+  posts?: any[];
 }
