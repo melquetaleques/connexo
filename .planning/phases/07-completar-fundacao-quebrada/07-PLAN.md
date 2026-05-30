@@ -86,7 +86,7 @@ must_haves:
 4. Implementar o LinkService no backend e automatizar o dispatch de notificações internas para alteração de vínculo.
 5. Realizar o wiring completo dos formulários de Serviços, Postagens e Equipe no frontend React com tratamento visual de erros e sucesso.
 
-## 🛠️ Tasks
+## Tasks
 
 <tasks>
 
@@ -97,24 +97,22 @@ must_haves:
     - app/api/internal/repository/user.go
     - app/api/internal/repository/post.go
   </files>
-  <read_first>
-    - .planning/phases/07-completar-fundacao-quebrada/07-CONTEXT.md
-    - .planning/codebase/STRUCTURE.md
-  </read_first>
   <action>
-    Criar a migration SQL com a definição das tabelas:
+    Criar a migration SQL com a definição das tabelas (D-01, D-08):
     - law_firms (id UUID PRIMARY KEY, name VARCHAR, owner_id UUID REFERENCES users(id), created_at TIMESTAMP)
     - law_firm_members (firm_id UUID REFERENCES law_firms(id), user_id UUID REFERENCES users(id), role VARCHAR, joined_at TIMESTAMP)
     - invite_tokens (token UUID PRIMARY KEY, email VARCHAR, firm_id UUID REFERENCES law_firms(id), expires_at TIMESTAMP, used_at TIMESTAMP)
     - posts (id UUID PRIMARY KEY, accountant_id UUID REFERENCES users(id), title VARCHAR, excerpt TEXT, content TEXT, tag VARCHAR, cover_url VARCHAR, status VARCHAR, published_at TIMESTAMP, created_at TIMESTAMP)
 
-    Implementar a lógica na criação de usuário na camada de repositório/serviço (UserRegistry):
-    - Se o usuário registrando tiver role = 'advogado', criar entrada correspondente em law_firms e vinculá-lo em law_firm_members como owner.
+    Implementar a lógica na criação de usuário na camada de repositório/serviço (UserRegistry) (D-02):
+    - Ao registrar um usuário com role = 'advogado', o sistema cria automaticamente um law_firm e o vincula em law_firm_members como owner.
   </action>
-  <acceptance_criteria>
-    - O arquivo 07_law_firms_and_posts.sql contém "CREATE TABLE law_firms" e "CREATE TABLE posts"
-    - O backend compila sem erros ao inicializar as novas interfaces do repositório
-  </acceptance_criteria>
+  <verify>
+    cd app/api && go build -v ./...
+  </verify>
+  <done>
+    Migration SQL criada com tabelas law_firms, law_firm_members, invite_tokens e posts prontas (D-01, D-08), e backend compilando sem erros com as novas structs e métodos do repositório (D-02).
+  </done>
 </task>
 
 <task type="auto">
@@ -124,25 +122,23 @@ must_haves:
     - app/api/internal/service/link.go
     - app/api/internal/repository/link.go
   </files>
-  <read_first>
-    - .planning/phases/07-completar-fundacao-quebrada/07-CONTEXT.md
-    - app/api/internal/handler/routes.go
-  </read_first>
   <action>
     Registrar e implementar os seguintes handlers e lógica de negócio:
-    1. GET /api/adv/usuarios -> Lista membros do law_firm associado ao advogado autenticado.
-    2. POST /api/adv/usuarios/invite -> Gera o token UUID em invite_tokens (expira em 72h) e envia e-mail com link mágico contendo as variáveis SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM.
-    3. GET /invite/{token} -> Rota pública que valida o token, marcando-o como usado e redireciona para a tela de registro com o e-mail pré-preenchido.
-    4. GET/POST /api/acc/postagens -> CRUD de postagens imediatas (status='publicado').
-    5. LinkService (app/api/internal/service/link.go) -> Encapsula chamadas de bind do cliente e aceitação/rejeição do contador, inserindo notificações no banco:
+    1. GET /api/adv/usuarios -> Lista membros do law_firm do advogado autenticado (D-03).
+    2. POST /api/adv/usuarios/invite -> Gera o token UUID em invite_tokens (expira em 72h) e envia e-mail com link mágico via SMTP genérico contendo as variáveis SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM (D-04, D-05, D-06).
+    3. GET /invite/{token} -> Rota pública que valida o token, redireciona para a tela de registro pré-preenchido (D-07).
+    4. GET/POST /api/acc/postagens -> CRUD de postagens imediatas (status='publicado'). Campos obrigatórios: title, tag, content, cover_url, excerpt (D-09, D-10).
+    5. LinkService (app/api/internal/service/link.go) -> Encapsula chamadas de bind do cliente e aceitação/rejeição do contador, inserindo notificações automáticas no banco (D-11, D-12, D-13):
        - Vínculo solicitado: notifica contador.
        - Vínculo aceito: notifica cliente e advogado.
        - Vínculo recusado: notifica cliente.
   </action>
-  <acceptance_criteria>
-    - O routes.go contém as definições funcionais para "/api/adv/usuarios" e "/api/acc/postagens"
-    - O link.go implementa chamadas ao repositório de notificações
-  </acceptance_criteria>
+  <verify>
+    cd app/api && go build -v ./...
+  </verify>
+  <done>
+    Endpoints /api/adv/usuarios (D-03), /api/adv/usuarios/invite (D-04, D-05, D-06), /invite/{token} (D-07), /api/acc/postagens (D-09, D-10) registrados, e LinkService implementado (D-11, D-12, D-13).
+  </done>
 </task>
 
 <task type="auto">
@@ -152,19 +148,17 @@ must_haves:
     - app/api/internal/repository/document.go
     - app/api/internal/handler/routes.go
   </files>
-  <read_first>
-    - docker-compose.yml
-    - .planning/phases/07-completar-fundacao-quebrada/07-CONTEXT.md
-  </read_first>
   <action>
-    1. Adicionar o serviço minio (imagem minio/minio:latest) no docker-compose.yml, mapeando as portas 9000 e 9001.
-    2. Integrar o SDK "github.com/minio/minio-go/v7" no repositório de documentos (app/api/internal/repository/document.go) para efetuar o upload real para o bucket "connexo-docs" sob as credenciais MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY.
-    3. Criar a rota no backend GET /api/media/{bucket}/{key} que atua como proxy reverso: verifica autenticação do usuário, baixa o binário correspondente do MinIO de forma interna e o retorna no response stream sem expor a URL interna do MinIO ao cliente.
+    1. Adicionar o serviço minio (imagem minio/minio:latest) no docker-compose.yml, mapeando as portas 9000 e 9001 (D-14).
+    2. Integrar o SDK "github.com/minio/minio-go/v7" no repositório de documentos (app/api/internal/repository/document.go) para efetuar o upload real para o bucket "connexo-docs" sob as credenciais MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY (D-15, D-16, D-18).
+    3. Criar a rota no backend GET /api/media/{bucket}/{key} que atua como proxy reverso: verifica autenticação do usuário, baixa o binário correspondente do MinIO de forma interna e o retorna no response stream sem expor a URL interna do MinIO ao cliente (D-17).
   </action>
-  <acceptance_criteria>
-    - docker-compose.yml contém o container do MinIO
-    - O endpoint /api/media/ realiza stream autenticado de arquivos
-  </acceptance_criteria>
+  <verify>
+    docker-compose config && cd app/api && go build -v ./...
+  </verify>
+  <done>
+    MinIO adicionado no docker-compose (D-14), document.go realizando uploads reais via SDK para o bucket connexo-docs (D-15, D-16, D-18), e proxy reverso /api/media/ funcional (D-17).
+  </done>
 </task>
 
 <task type="auto">
@@ -175,24 +169,19 @@ must_haves:
     - app/web/src/pages/UsersPage.tsx
     - app/api/internal/handler/catalog.go
   </files>
-  <read_first>
-    - .planning/phases/07-completar-fundacao-quebrada/07-UI-SPEC.md
-    - app/web/src/pages/ServicesPage.tsx
-    - app/web/src/pages/PostsPage.tsx
-    - app/web/src/pages/UsersPage.tsx
-  </read_first>
   <action>
     Realizar a conexão frontend-backend dos formulários seguindo os padrões descritos em 07-UI-SPEC.md:
     1. ServicesPage.tsx -> Ligar o formulário ao POST /api/acc/servicos. Adicionar estado disabled=true e spinner de loading ao salvar.
     2. PostsPage.tsx -> Integrar o submit com o POST /api/acc/postagens. Validar campos requeridos e expor o erro inline com estilo (bg-rose-50 border-rose-200 text-rose-700).
-    3. UsersPage.tsx -> Listar membros do escritório via GET /api/adv/usuarios. wired o formulário de convite ao POST /api/adv/usuarios/invite. Mostrar banner de sucesso temporário por 6s.
+    3. UsersPage.tsx -> Listar equipe do escritório via GET /api/adv/usuarios. wired o formulário de convite ao POST /api/adv/usuarios/invite. Mostrar banner de sucesso temporário por 6s.
     4. catalog.go / AccountantCatalogPage.tsx -> Atualizar a rota GET /api/public/accountants de forma que a query SQL do repositório utilize clauses WHERE funcionais baseadas em specialty, city, state e busca de texto.
   </action>
-  <acceptance_criteria>
-    - ServicesPage.tsx executa o createService ao submeter o formulário
-    - PostsPage.tsx e UsersPage.tsx possuem os respectivos tratamentos e classes CSS de erro/sucesso listados em 07-UI-SPEC.md
-    - O catálogo funciona com os filtros dinâmicos
-  </acceptance_criteria>
+  <verify>
+    cd app/web && npm run build
+  </verify>
+  <done>
+    Wiring dos formulários de serviços, posts e usuários completo com tratamento visual de loading, erros e sucesso do 07-UI-SPEC.md, e filtros do catálogo funcionando de forma dinâmica.
+  </done>
 </task>
 
 </tasks>

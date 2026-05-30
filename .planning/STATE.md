@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: MVP Completo para Produção
 status: planning
-last_updated: "2026-05-14T00:00:00Z"
+last_updated: "2026-05-30T01:16:37.885Z"
 progress:
-  total_phases: 7
+  total_phases: 13
   completed_phases: 0
-  total_plans: 20
+  total_plans: 2
   completed_plans: 0
   percent: 0
 ---
@@ -52,17 +52,20 @@ See: .planning/PROJECT.md (updated 2026-05-14)
 ## Gaps Identificados em 2026-05-14
 
 ### Backend faltando (frontend chama → 404)
+
 - `GET /api/adv/usuarios` — UsersPage
 - `GET /api/acc/postagens` — PostsPage
 - `POST /api/acc/postagens` — PostsPage "Publicar"
 
 ### Frontend não conectado (forms estáticos)
+
 - ServicesPage — criar serviço sem onSubmit
 - PostsPage — "Publicar" sem handler API
 - LawyerSubscriptionPage — 100% estática
 - UsersPage — "Convidar" estático
 
 ### Features projetadas mas não implementadas
+
 - Fluxo de vínculo: somente 3 estados de 11 planejados
 - Advogado sem visibilidade do contador escolhido (LAWY-03)
 - Sem entregáveis/pareceres do contador (ACCT-04)
