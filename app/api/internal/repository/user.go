@@ -239,6 +239,7 @@ type Accountant struct {
 	State        string    `db:"state" json:"state"`
 	LogoURL      string    `db:"logo_url" json:"logo_url"`
 	Availability string    `db:"availability" json:"availability"`
+	Rating       float64   `db:"rating" json:"rating"`
 }
 
 // PublicAccountantProfile representa o perfil completo e público de um contador.
@@ -264,7 +265,8 @@ func (r *UserRepository) ListPublicAccountants(ctx context.Context, specialty, c
 		       COALESCE(city, '') as city, 
 		       COALESCE(state, '') as state,
 		       COALESCE(logo_url, '') as logo_url,
-		       COALESCE(availability, 'disponivel') as availability
+		       COALESCE(availability, 'disponivel') as availability,
+		       COALESCE(rating, 0) as rating
 		FROM users
 		WHERE role = 'contador'
 	`

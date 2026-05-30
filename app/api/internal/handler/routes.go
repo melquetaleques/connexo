@@ -25,6 +25,7 @@ type Router struct {
 	DocRepo           *repository.DocumentRepository
 	DeliverableRepo   *repository.DeliverableRepository
 	ProcessEventsRepo *repository.ProcessEventsRepository
+	ReviewRepo        *repository.ReviewRepository
 	LinkService       *service.LinkService
 	MediaRepo         *repository.MediaRepository
 }
@@ -38,6 +39,7 @@ func NewRouter(
 	docRepo *repository.DocumentRepository,
 	deliverableRepo *repository.DeliverableRepository,
 	processEventsRepo *repository.ProcessEventsRepository,
+	reviewRepo *repository.ReviewRepository,
 	linkService *service.LinkService,
 	mediaRepo *repository.MediaRepository,
 ) *Router {
@@ -49,6 +51,7 @@ func NewRouter(
 		DocRepo:           docRepo,
 		DeliverableRepo:   deliverableRepo,
 		ProcessEventsRepo: processEventsRepo,
+		ReviewRepo:        reviewRepo,
 		LinkService:       linkService,
 		MediaRepo:         mediaRepo,
 	}
@@ -124,6 +127,9 @@ func (r *Router) RegisterRoutes(mux *http.ServeMux) {
 
 	// Disponibilidade do contador
 	mux.HandleFunc("/api/acc/availability", r.AuthenticateMiddleware(r.handleAccAvailability))
+
+	// === Phase 10: Avaliações e Reviews ===
+	r.RegisterReviewRoutes(mux)
 }
 
 // handleAccLinkRoutes dispatches /api/acc/links/{id}/... routes
@@ -596,6 +602,7 @@ func (r *Router) handleAccAvailability(w http.ResponseWriter, req *http.Request)
 
 // handlePublicAccountantProfile retorna o perfil público completo de um contador.
 // GET /api/public/accountants/{slug} (público, sem autenticação)
+// Também trata /api/public/accountants/{slug}/reviews (redireciona para listagem de reviews)
 func (r *Router) handlePublicAccountantProfile(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -604,6 +611,7 @@ func (r *Router) handlePublicAccountantProfile(w http.ResponseWriter, req *http.
 
 	pathParts := strings.Split(req.URL.Path, "/")
 	// /api/public/accountants/{slug} -> [ "", "api", "public", "accountants", "{slug}" ]
+	// /api/public/accountants/{slug}/reviews -> [ "", "api", "public", "accountants", "{slug}", "reviews" ]
 	if len(pathParts) < 5 || pathParts[4] == "" {
 		http.Error(w, "slug não fornecido na URL", http.StatusBadRequest)
 		return
@@ -614,6 +622,13 @@ func (r *Router) handlePublicAccountantProfile(w http.ResponseWriter, req *http.
 	// Se for exatamente "accountants" sem slug, retorna 400 (a listagem é feita em /api/public/accountants sem trailing)
 	if slug == "accountants" || slug == "" {
 		http.Error(w, "slug é obrigatório", http.StatusBadRequest)
+		return
+	}
+
+	// Se o caminho terminar em /reviews, delegar para o handler de reviews
+	if len(pathParts) >= 6 && (pathParts[5] == "reviews" || pathParts[5] == "reviews/") {
+		reviewHandler := NewReviewHandler(r.ReviewRepo, r.LinkRepo, r.UserRepo)
+		reviewHandler.ListReviews(w, req)
 		return
 	}
 
@@ -645,13 +660,25 @@ func (r *Router) handlePublicAccountantProfile(w http.ResponseWriter, req *http.
 		photoFullURLs = append(photoFullURLs, "/api/media/"+repository.MediaBucket+"/"+p)
 	}
 
+	// Buscar rating médio do contador
+	var avgRating float64
+	ratingQuery := `SELECT COALESCE(rating, 0) FROM users WHERE id = $1`
+	_ = r.UserRepo.DB().QueryRowContext(req.Context(), ratingQuery, profile.ID).Scan(&avgRating)
+
+	// Buscar total de avaliações
+	var reviewCount int
+	countQuery := `SELECT COUNT(*) FROM accountant_reviews WHERE accountant_id = $1`
+	_ = r.UserRepo.DB().QueryRowContext(req.Context(), countQuery, profile.ID).Scan(&reviewCount)
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"profile":      profile,
-		"posts":        posts,
-		"logo_url":     logoFullURL,
-		"photo_urls":   photoFullURLs,
-		"availability": profile.Availability,
+		"profile":       profile,
+		"posts":         posts,
+		"logo_url":      logoFullURL,
+		"photo_urls":    photoFullURLs,
+		"availability":  profile.Availability,
+		"rating":        avgRating,
+		"review_count":  reviewCount,
 	})
 }
 
