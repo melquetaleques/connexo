@@ -43,11 +43,6 @@ func main() {
 	db.SetMaxIdleConns(10)
 	db.SetConnMaxLifetime(5 * time.Minute)
 
-	// Run migrations (if migration files exist, apply them)
-	if err := runMigrations(db.DB); err != nil {
-		log.Printf("Warning: migrations may have errors: %v", err)
-	}
-
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
 
@@ -85,6 +80,35 @@ func main() {
 		lgpdRepo,
 	)
 
+	// New-arch domain repos for services
+	repoDB := &repository.DB{DB: db}
+
+	// Run schema migrations using the canonical schema
+	if err := repoDB.AutoMigrate(); err != nil {
+		log.Fatalf("Migration failed: %v", err)
+	}
+	domainUserRepo := repository.NewDomainUserRepo(repoDB)
+	domainLawyerRepo := repository.NewLawyerRepository(repoDB)
+	domainAccountantRepo := repository.NewAccountantRepository(repoDB)
+	domainClientRepo := repository.NewClientRepository(repoDB)
+	domainProcessRepo := repository.NewProcessRepository(repoDB)
+	domainAuditRepo := repository.NewAuditRepository(repoDB)
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		if os.Getenv("APP_ENV") == "production" {
+			log.Fatal("JWT_SECRET must be set in production")
+		}
+		jwtSecret = "connexo-dev-secret"
+	}
+	jwtMaker := service.NewJWTMaker(jwtSecret, 24*time.Hour)
+
+	authSvc := service.NewAuthService(domainUserRepo, domainLawyerRepo, domainAccountantRepo, jwtMaker, domainAuditRepo)
+	authHandler := handler.NewAuthHandler(authSvc)
+
+	lawyerSvc := service.NewLawyerService(domainLawyerRepo, domainClientRepo, domainProcessRepo, domainAuditRepo)
+	lawyerHandler := handler.NewLawyerHandler(lawyerSvc)
+
 	// Initialize router
 	router := handler.NewRouter(
 		userRepo,
@@ -118,6 +142,26 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `{"status":"ok","database":"%s","timestamp":"%s"}`, dbStatus, time.Now().Format(time.RFC3339))
 	})
+
+	// Auth routes
+	mux.HandleFunc("/api/auth/register", authHandler.Register)
+	mux.HandleFunc("/api/auth/login", authHandler.Login)
+	mux.HandleFunc("/api/auth/me", handler.JWTAuth(jwtMaker, authHandler.Me))
+
+	// Lawyer routes (JWT protected)
+	jwtMW := func(h http.HandlerFunc) http.HandlerFunc { return handler.JWTAuth(jwtMaker, h) }
+	mux.HandleFunc("/api/adv/clients", jwtMW(lawyerHandler.ListClients))
+	mux.HandleFunc("/api/adv/clients/", jwtMW(lawyerHandler.GetClient))
+	mux.HandleFunc("/api/adv/processes", jwtMW(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			lawyerHandler.CreateProcess(w, r)
+		} else {
+			lawyerHandler.ListProcesses(w, r)
+		}
+	}))
+	mux.HandleFunc("/api/adv/dashboard", jwtMW(lawyerHandler.Dashboard))
+
+	router.LawyerHandler = lawyerHandler
 
 	// Register all other routes
 	router.RegisterRoutes(mux)
