@@ -43,23 +43,26 @@ Advogado assina → cadastra clientes e processos
 - Node.js 20+
 - Docker e Docker Compose
 
-### Com Docker (recomendado)
+### Com Docker (recomendado — caminho canônico)
 
 ```bash
 cd app
 docker compose up -d --build
 ```
 
+Sobe Postgres, Redis, MinIO, API e Web com defaults de desenvolvimento local (não usar em produção).
+
 - Web: http://localhost:3000
 - API: http://localhost:8080
+- MinIO console: http://localhost:9001
 
 ### Desenvolvimento local
 
 ```bash
 cd app
 
-# Suba apenas os serviços de infraestrutura
-docker compose up -d db redis
+# Infraestrutura (db + redis + minio)
+docker compose up -d db redis minio
 
 # Terminal 1 — API
 make dev-api   # :8080
@@ -72,17 +75,18 @@ make dev-web   # :5173
 
 ```bash
 cp app/api/.env.example app/api/.env
-# Edite conforme seu ambiente
+# Edite conforme seu ambiente — nunca commite `.env` com segredos reais
 ```
 
 | Variável | Padrão | Descrição |
 |----------|--------|-----------|
 | `CONNEXO_HTTP_ADDR` | `:8080` | Endereço da API |
 | `CONNEXO_DATABASE_URL` | `postgres://...` | URL do PostgreSQL |
-| `CONNEXO_REDIS_URL` | `redis://localhost:6379` | URL do Redis |
-| `CONNEXO_JWT_SECRET` | — | **Troque em produção** |
-| `CONNEXO_STORAGE_ENDPOINT` | `localhost:9000` | MinIO endpoint |
-| `CONNEXO_STORAGE_BUCKET` | `connexo-docs` | Bucket de documentos |
+| `CONNEXO_REDIS_URL` | `redis://localhost:6380` | URL do Redis (compose local) |
+| `JWT_SECRET` | dev only | **Obrigatório em produção** (alias: `CONNEXO_JWT_SECRET`) |
+| `MINIO_ENDPOINT` | `localhost:9000` | MinIO endpoint (alias: `CONNEXO_STORAGE_ENDPOINT`) |
+| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | local defaults | Credenciais de storage |
+| `CORS_ALLOWED_ORIGIN` | `*` | Origem CORS (domínio em produção) |
 
 ## Estrutura
 

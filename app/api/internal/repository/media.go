@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,19 +21,7 @@ type MediaRepository struct {
 
 // NewMediaRepository cria uma nova instância de MediaRepository.
 func NewMediaRepository() (*MediaRepository, error) {
-	endpoint := os.Getenv("MINIO_ENDPOINT")
-	accessKey := os.Getenv("MINIO_ACCESS_KEY")
-	secretKey := os.Getenv("MINIO_SECRET_KEY")
-
-	if endpoint == "" {
-		endpoint = "localhost:9000"
-	}
-	if accessKey == "" {
-		accessKey = "minioadmin"
-	}
-	if secretKey == "" {
-		secretKey = "minioadmin"
-	}
+	endpoint, accessKey, secretKey := minioConfig()
 
 	minioClient, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),

@@ -1,0 +1,40 @@
+# Secrets & local env (never commit real credentials)
+.env
+.env.local
+.env.*.local
+**/.env
+!**/.env.example
+!app/api/.env.example
+!app/web/.env.example
+
+# Dependencies & build artifacts
+**/node_modules/
+**/dist/
+**/.vite/
+app/api/bin/
+*.exe
+*.test
+*.out
+*.dll
+*.so
+*.dylib
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+*.log
+
+# Agent / tooling caches (not product)
+.serena/
+.claude/
+.agent/
+.antigravitycli/
+
+# Coverage / temp
+coverage/
+*.cover
+tmp/
+temp/

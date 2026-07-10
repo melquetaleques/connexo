@@ -5,6 +5,37 @@ import type { PublicAccountantProfile } from "@/types";
  * AccountantService: API calls for accountant profile management.
  */
 
+export interface AccountantDashboardData {
+  stats: {
+    pending_links: number;
+    active_processes: number;
+    completed_cases: number;
+    rating: number;
+  };
+  pending_requests: {
+    id: string;
+    process_number: string;
+    process_type: string;
+    client_name: string;
+    created_at: string;
+  }[];
+}
+
+export async function getAccountantDashboard(): Promise<AccountantDashboardData> {
+  const res = await api.get<AccountantDashboardData>("/acc/dashboard");
+  return res.data;
+}
+
+export async function acceptLinkRequest(linkId: string) {
+  const res = await api.post(`/acc/links/${linkId}/accept`);
+  return res.data;
+}
+
+export async function rejectLinkRequest(linkId: string) {
+  const res = await api.post(`/acc/links/${linkId}/reject`);
+  return res.data;
+}
+
 export interface ProfileUpdateData {
   name?: string;
   bio?: string;
@@ -152,4 +183,44 @@ export async function checkReviewStatus(linkId: string) {
     `/cli/reviews/check/${linkId}`,
   );
   return res.data;
+}
+
+// ---------------------------------------------------------------------------
+// Processos do contador
+// ---------------------------------------------------------------------------
+
+export interface AccountantProcess {
+  id: string;
+  process_id?: string;
+  process_number?: string;
+  process_type?: string;
+  client_name?: string;
+  status?: string;
+  link_id?: string;
+  [key: string]: unknown;
+}
+
+export type AccountantProcessDetail = AccountantProcess & {
+  documents?: unknown[];
+  deliverables?: unknown[];
+  events?: unknown[];
+};
+
+export async function listAccountantProcesses(): Promise<AccountantProcess[]> {
+  const res = await api.get<{ processes?: AccountantProcess[] } | AccountantProcess[]>(
+    "/acc/processes",
+  );
+  const data = res.data;
+  if (Array.isArray(data)) return data;
+  return data.processes ?? [];
+}
+
+export async function getAccountantProcess(id: string): Promise<AccountantProcessDetail> {
+  const res = await api.get<AccountantProcessDetail>(`/acc/processes/${id}`);
+  return res.data;
+}
+
+/** Alias used by older pages */
+export async function updateAccountantProfile(data: ProfileUpdateData) {
+  return updateMyProfile(data);
 }

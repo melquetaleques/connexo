@@ -1,6 +1,42 @@
 import api from "./api";
 
 // ---------------------------------------------------------------------------
+// Documentos por processo
+// ---------------------------------------------------------------------------
+
+export interface Document {
+  id: string;
+  name: string;
+  url?: string;
+  visible_to_accountant?: boolean;
+  created_at?: string;
+  process_id?: string;
+}
+
+export async function listDocumentsByProcess(processId: string): Promise<Document[]> {
+  const res = await api.get<{ documents?: Document[] } | Document[]>(
+    `/adv/processes/${processId}/documents`,
+  );
+  const data = res.data;
+  if (Array.isArray(data)) return data;
+  return data.documents ?? [];
+}
+
+export async function uploadDocument(processId: string, file: File): Promise<Document> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await api.post<Document>(`/adv/processes/${processId}/documents`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+}
+
+export async function toggleDocumentVisibility(documentId: string): Promise<{ visible: boolean }> {
+  const res = await api.post<{ visible: boolean }>(`/adv/documents/${documentId}/visibility`);
+  return res.data;
+}
+
+// ---------------------------------------------------------------------------
 // Consentimento LGPD
 // ---------------------------------------------------------------------------
 

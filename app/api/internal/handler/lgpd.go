@@ -477,6 +477,7 @@ func (h *LGPDHandler) handleListDocumentRequestsByProcess(w http.ResponseWriter,
 // RegisterLGPDRoutes registra todas as rotas LGPD no Router.
 func (r *Router) RegisterLGPDRoutes(mux *http.ServeMux) {
 	lgpdHandler := NewLGPDHandler(r.LGPDRepo, r.UserRepo, r.LinkRepo, r.NotificationRepo)
+	r.lgpdHandler = lgpdHandler
 
 	// Consentimento LGPD (cliente)
 	mux.HandleFunc("/api/cli/consent", r.AuthenticateMiddleware(lgpdHandler.handleClientConsent))
@@ -498,17 +499,6 @@ func (r *Router) RegisterLGPDRoutes(mux *http.ServeMux) {
 		http.Error(w, "Rota não encontrada", http.StatusNotFound)
 	}))
 
-	// Listar permissões de vínculo (advogado)
-	mux.HandleFunc("/api/adv/links/", r.AuthenticateMiddleware(func(w http.ResponseWriter, req *http.Request) {
-		path := req.URL.Path
-		// /api/adv/links/{id}/permissoes
-		if strings.HasSuffix(path, "/permissoes") || strings.HasSuffix(path, "/permissoes/") {
-			lgpdHandler.handleListDocPermissions(w, req)
-			return
-		}
-		http.Error(w, "Rota não encontrada", http.StatusNotFound)
-	}))
-
 	// Solicitação de documento (advogado → cliente)
 	mux.HandleFunc("/api/adv/processes/", r.AuthenticateMiddleware(func(w http.ResponseWriter, req *http.Request) {
 		path := req.URL.Path
@@ -520,6 +510,11 @@ func (r *Router) RegisterLGPDRoutes(mux *http.ServeMux) {
 		// /api/adv/processes/{id}/solicitacoes
 		if strings.HasSuffix(path, "/solicitacoes") || strings.HasSuffix(path, "/solicitacoes/") {
 			lgpdHandler.handleListDocumentRequestsByProcess(w, req)
+			return
+		}
+		// Delegate GET /api/adv/processes/{id} to LawyerHandler
+		if r.LawyerHandler != nil {
+			r.LawyerHandler.GetProcess(w, req)
 			return
 		}
 		http.Error(w, "Rota não encontrada", http.StatusNotFound)

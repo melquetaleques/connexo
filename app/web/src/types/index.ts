@@ -99,3 +99,9 @@ export interface ConsentRecord {
   user_agent: string;
   text_version: string;
 }
+
+export interface MonthlyActivity {
+  m: string;
+  processos: number;
+  laudos: number;
+}

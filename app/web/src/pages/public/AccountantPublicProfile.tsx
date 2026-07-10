@@ -45,10 +45,11 @@ export function AccountantPublicProfile() {
       setLoading(false);
       return;
     }
+    const profileSlug = slug;
 
     async function loadProfile() {
       try {
-        const data = await getPublicProfile(slug);
+        const data = await getPublicProfile(profileSlug);
         setProfile(data.profile);
         setPosts(data.posts || []);
       } catch (err: any) {
@@ -66,7 +67,7 @@ export function AccountantPublicProfile() {
     async function loadReviews() {
       try {
         setReviewsLoading(true);
-        const data = await getReviews(slug, { limit: 10, offset: 0 });
+        const data = await getReviews(profileSlug, { limit: 10, offset: 0 });
         setReviews(data.reviews || []);
         setReviewsTotal(data.total || 0);
       } catch (err) {

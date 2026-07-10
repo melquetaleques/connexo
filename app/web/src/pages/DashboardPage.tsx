@@ -7,19 +7,12 @@ import {
   GoldButton,
   Icon,
   PageContainer,
-  Pill,
   SectionTitle,
 } from "@/components/ui/connexo-primitives";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/services/api";
 
 const ACCENT = "#C59D5C";
-
-// Fallback data para visualização enquanto o backend não envia todos os dados
-const NEXT_DEADLINES = [
-  { d: "12 mai", l: "Entrega do laudo — Santa Inês", danger: true },
-  { d: "15 mai", l: "Audiência — Helena & Filhos", danger: false },
-] as const;
 
 function KpiCard({
   label,
@@ -140,7 +133,7 @@ export function DashboardPage() {
             </p>
             <span className="mt-2 flex items-center gap-1 text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
               <Icon name="trending_up" className="text-sm" />
-              +14% em relação ao mês anterior
+              Dados do periodo atual
             </span>
           </Card>
         </div>
@@ -224,28 +217,13 @@ export function DashboardPage() {
           <div className="space-y-8">
             <Card className="p-0 overflow-hidden">
               <div className="bg-primary p-6 text-white">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-secondary mb-1">Atenção</p>
-                <h3 className="text-lg font-black tracking-tight">Próximos Prazos</h3>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-secondary mb-1">Atencao</p>
+                <h3 className="text-lg font-black tracking-tight">Proximos Prazos</h3>
               </div>
-              <div className="p-6 space-y-6">
-                {NEXT_DEADLINES.map((deadline, i) => (
-                  <div key={i} className="flex gap-4">
-                    <div className={cn(
-                      "w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 border",
-                      deadline.danger ? "bg-rose-50 border-rose-100 text-rose-600" : "bg-surface-2 border-outline/60 text-primary"
-                    )}>
-                      <span className="text-[10px] font-black uppercase leading-none">{deadline.d.split(" ")[1]}</span>
-                      <span className="text-lg font-black leading-none mt-0.5">{deadline.d.split(" ")[0]}</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-primary leading-tight">{deadline.l}</p>
-                      <p className={cn("text-[10px] font-bold uppercase tracking-wider mt-1", deadline.danger ? "text-rose-400" : "text-primary/30")}>
-                        {deadline.danger ? "Prazo Crítico" : "No Prazo"}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                <GoldButton className="w-full mt-4" icon="calendar_month">Ver Agenda Completa</GoldButton>
+              <div className="p-6 text-center">
+                <Icon name="calendar_month" className="text-3xl text-primary/10 mb-3" />
+                <p className="text-sm font-bold text-primary/30 uppercase tracking-widest">Nenhum prazo proximo</p>
+                <p className="text-xs text-primary/20 mt-1">Os prazos dos seus processos aparecerao aqui.</p>
               </div>
             </Card>
 

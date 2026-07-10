@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"io"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -34,19 +33,7 @@ type DocumentRepository struct {
 
 // NewDocumentRepository cria uma nova instância de DocumentRepository.
 func NewDocumentRepository(db *sqlx.DB) (*DocumentRepository, error) {
-	endpoint := os.Getenv("MINIO_ENDPOINT")
-	accessKey := os.Getenv("MINIO_ACCESS_KEY")
-	secretKey := os.Getenv("MINIO_SECRET_KEY")
-
-	if endpoint == "" {
-		endpoint = "localhost:9000"
-	}
-	if accessKey == "" {
-		accessKey = "minioadmin"
-	}
-	if secretKey == "" {
-		secretKey = "minioadmin"
-	}
+	endpoint, accessKey, secretKey := minioConfig()
 
 	// Inicializa o cliente do MinIO
 	minioClient, err := minio.New(endpoint, &minio.Options{

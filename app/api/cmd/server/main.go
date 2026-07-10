@@ -94,10 +94,14 @@ func main() {
 	domainProcessRepo := repository.NewProcessRepository(repoDB)
 	domainAuditRepo := repository.NewAuditRepository(repoDB)
 
+	// JWT secret: JWT_SECRET preferred; CONNEXO_JWT_SECRET accepted as alias.
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
+		jwtSecret = os.Getenv("CONNEXO_JWT_SECRET")
+	}
+	if jwtSecret == "" {
 		if os.Getenv("APP_ENV") == "production" {
-			log.Fatal("JWT_SECRET must be set in production")
+			log.Fatal("JWT_SECRET (or CONNEXO_JWT_SECRET) must be set in production")
 		}
 		jwtSecret = "connexo-dev-secret"
 	}
@@ -109,7 +113,7 @@ func main() {
 	lawyerSvc := service.NewLawyerService(domainLawyerRepo, domainClientRepo, domainProcessRepo, domainAuditRepo)
 	lawyerHandler := handler.NewLawyerHandler(lawyerSvc)
 
-	// Initialize router
+	// Initialize router (JWT required on all protected product routes)
 	router := handler.NewRouter(
 		userRepo,
 		postRepo,
@@ -122,6 +126,7 @@ func main() {
 		linkService,
 		mediaRepo,
 		lgpdRepo,
+		jwtMaker,
 	)
 
 	// Create mux and register routes

@@ -29,6 +29,9 @@ type Router struct {
 	LinkService       *service.LinkService
 	MediaRepo         *repository.MediaRepository
 	LGPDRepo          *repository.LGPDRepository
+	JWTMaker          service.JWTMaker
+	lgpdHandler       *LGPDHandler
+	LawyerHandler     *LawyerHandler
 }
 
 // NewRouter cria um novo Router.
@@ -44,6 +47,7 @@ func NewRouter(
 	linkService *service.LinkService,
 	mediaRepo *repository.MediaRepository,
 	lgpdRepo *repository.LGPDRepository,
+	jwtMaker service.JWTMaker,
 ) *Router {
 	return &Router{
 		UserRepo:          userRepo,
@@ -57,36 +61,37 @@ func NewRouter(
 		LinkService:       linkService,
 		MediaRepo:         mediaRepo,
 		LGPDRepo:          lgpdRepo,
+		JWTMaker:          jwtMaker,
 	}
 }
 
-// AuthenticateMiddleware simula a autenticação extraindo o user_id do cabeçalho Authorization.
-// Em ambiente de produção seria um JWT real, mas aqui suportamos Bearer <UUID> para facilidade e robustez.
+// AuthenticateMiddleware exige um JWT Bearer válido (mesmo caminho de auth de login).
+// Rejeita token ausente ou inválido; não aceita UUID cru como "Bearer <uuid>".
 func (r *Router) AuthenticateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
+		if r.JWTMaker == nil {
+			respondErr(w, http.StatusInternalServerError, "autenticação não configurada")
+			return
+		}
 		authHeader := req.Header.Get("Authorization")
-		if authHeader == "" {
-			http.Error(w, "Unauthorized: missing token", http.StatusUnauthorized)
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			respondErr(w, http.StatusUnauthorized, "token ausente")
 			return
 		}
-
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-			http.Error(w, "Unauthorized: invalid authorization format", http.StatusUnauthorized)
+		token := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
+		if token == "" {
+			respondErr(w, http.StatusUnauthorized, "token ausente")
 			return
 		}
-
-		userIDStr := parts[1]
-		userID, err := uuid.Parse(userIDStr)
+		claims, err := r.JWTMaker.Validate(token)
 		if err != nil {
-			// Mock JWT fallback: se não for UUID, tenta extrair de uma env de desenvolvimento ou usa um fixo
-			// para passar nos testes e UAT
-			userID = uuid.New() // Fallback seguro
+			respondErr(w, http.StatusUnauthorized, "token inválido")
+			return
 		}
-
-		// Adiciona o userID no cabeçalho interno para os handlers
-		req.Header.Set("X-Authenticated-User-ID", userID.String())
-		next(w, req)
+		// Compatibilidade com handlers que leem o user id do header interno.
+		req.Header.Set("X-Authenticated-User-ID", claims.UserID.String())
+		ctx := contextWithClaims(req.Context(), claims)
+		next(w, req.WithContext(ctx))
 	}
 }
 
@@ -183,6 +188,11 @@ func (r *Router) handleAdvLinkRoutes(w http.ResponseWriter, req *http.Request) {
 	// /api/adv/links/{id}/cancelar
 	if strings.HasSuffix(path, "/cancelar") {
 		r.handleDeliverableCancelRequest(w, req)
+		return
+	}
+	// /api/adv/links/{id}/permissoes (LGPD)
+	if (strings.HasSuffix(path, "/permissoes") || strings.HasSuffix(path, "/permissoes/")) && r.lgpdHandler != nil {
+		r.lgpdHandler.handleListDocPermissions(w, req)
 		return
 	}
 	// /api/adv/links/{id} - detalhes

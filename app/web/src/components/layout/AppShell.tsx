@@ -1,8 +1,8 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Icon, Avatar } from "@/components/ui/connexo-primitives";
+import { useAuth } from "@/hooks/useAuth";
 import type { Role } from "@/types";
-import { useExpiredSubscription } from "@/hooks/useExpiredSubscription";
 
 interface NavItem {
   to: string;
@@ -20,13 +20,12 @@ const NAV: Record<Role, NavItem[]> = {
     { to: "/adv/configuracoes", label: "Configurações", icon: "settings" },
   ],
   contador: [
-    { to: "/cnt/dashboard", label: "Dashboard", icon: "dashboard" },
-    { to: "/cnt/convites", label: "Convites", icon: "mail" },
-    { to: "/cnt/processos", label: "Perícias Ativas", icon: "history_edu" },
-    { to: "/cnt/servicos", label: "Meus Serviços", icon: "business_center" },
-    { to: "/cnt/postagens", label: "Postagens", icon: "article" },
-    { to: "/cnt/perfil", label: "Perfil Público", icon: "person" },
-    { to: "/cnt/configuracoes", label: "Configurações", icon: "settings" },
+    { to: "/acc/dashboard", label: "Dashboard", icon: "dashboard" },
+    { to: "/acc/processos", label: "Perícias Ativas", icon: "history_edu" },
+    { to: "/acc/servicos", label: "Meus Serviços", icon: "business_center" },
+    { to: "/acc/postagens", label: "Postagens", icon: "article" },
+    { to: "/acc/perfil", label: "Perfil Público", icon: "person" },
+    { to: "/acc/configuracoes", label: "Configurações", icon: "settings" },
   ],
   cliente: [
     { to: "/cli/processos", label: "Processos", icon: "balance" },
@@ -53,38 +52,15 @@ interface AppShellProps {
 }
 
 export function AppShell({ role = "advogado" }: AppShellProps) {
+  const { user, logout } = useAuth();
   const nav = NAV[role] ?? NAV.advogado;
   const location = useLocation();
-  const { expired, expiresAt, daysRemaining, loading } = useExpiredSubscription();
-
-  function formatDate(dateStr: string | null): string {
-    if (!dateStr) return "";
-    return new Date(dateStr).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-  }
+  const displayName = user?.name ?? "Usuario";
+  const initials = displayName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+  const subtitle = role === "advogado" ? "Advogado" : role === "contador" ? "Contador" : role === "cliente" ? "Cliente" : "";
 
   return (
     <div className="min-h-screen flex bg-surface-1 font-['Plus_Jakarta_Sans']">
-      {/* Expiration Banner */}
-      {!loading && expired && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-amber-50 border-b border-amber-200 px-6 py-3">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-amber-600 text-lg">warning_amber</span>
-              <p className="text-sm font-bold text-amber-800">
-                Sua assinatura expirou{daysRemaining === 0 && expiresAt ? ` em ${formatDate(expiresAt)}` : ""}.
-                <a href="/adv/assinatura" className="ml-2 text-secondary font-extrabold underline hover:no-underline">
-                  Renovar agora →
-                </a>
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Sidebar */}
       <aside className="w-72 shrink-0 bg-primary text-white flex flex-col relative z-20 shadow-2xl">
         {/* Branding Area */}
@@ -127,14 +103,14 @@ export function AppShell({ role = "advogado" }: AppShellProps) {
         {/* User Profile Hook */}
         <div className="p-4 mt-auto">
           <div className="bg-white/5 rounded-2xl p-4 flex items-center gap-3 border border-white/5">
-            <Avatar initials="MS" size="md" tone="gold" />
+            <Avatar initials={initials} size="md" tone="gold" />
             <div className="min-w-0">
-              <p className="text-sm font-bold truncate">Dr. Marcelo Silva</p>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-secondary/80">OAB/SP 123.456</p>
+              <p className="text-sm font-bold truncate">{displayName}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-secondary/80">{subtitle}</p>
             </div>
           </div>
-          
-          <button className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white/40 hover:text-rose-400 transition-colors">
+
+          <button onClick={logout} className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white/40 hover:text-rose-400 transition-colors">
             <Icon name="logout" className="text-lg" />
             Sair
           </button>

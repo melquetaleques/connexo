@@ -7,10 +7,10 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci --only=production || npm install
+RUN npm ci
 
 COPY . .
-RUN npm run build || echo "Warning: frontend build failed, using development mode"
+RUN npm run build
 
 # Stage 2: Run with nginx
 FROM nginx:alpine

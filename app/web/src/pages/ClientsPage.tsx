@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import {
   Avatar,
   Card,
@@ -16,7 +17,7 @@ import {
 import api from "@/services/api";
 import type { Client } from "@/types";
 
-type FilterKey = "todos" | "ativo" | "atencao" | "encerrado";
+type FilterKey = "todos" | "active" | "inactive" | "pending";
 
 export function ClientsPage() {
   const navigate = useNavigate();
@@ -52,9 +53,9 @@ export function ClientsPage() {
 
   const tabs: { k: FilterKey; l: string; n: number }[] = [
     { k: "todos", l: "Todos", n: clients.length },
-    { k: "ativo", l: "Ativos", n: clients.filter((c) => c.status === "ativo").length },
-    { k: "atencao", l: "Atenção", n: clients.filter((c) => c.status === "atencao").length },
-    { k: "encerrado", l: "Encerrados", n: clients.filter((c) => c.status === "encerrado").length },
+    { k: "active", l: "Ativos", n: clients.filter((c) => c.status === "active").length },
+    { k: "pending", l: "Pendente", n: clients.filter((c) => c.status === "pending").length },
+    { k: "inactive", l: "Inativos", n: clients.filter((c) => c.status === "inactive").length },
   ];
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -111,12 +112,15 @@ export function ClientsPage() {
                     label="Nome Completo / Razão Social" 
                     placeholder="Ex: João da Silva ou Empresa LTDA" 
                     value={newClient.name}
-                    // Implementação básica de onChange para o field
-                    // Nota: O componente Field precisa suportar value/onChange se quisermos controle total.
-                    // Por enquanto, usamos a estrutura atual e assumimos que o usuário preencherá.
+                    onChange={e => setNewClient({...newClient, name: e.target.value})}
                   />
                 </div>
-                <Field label="CPF / CNPJ" placeholder="000.000.000-00" value={newClient.document} />
+                <Field 
+                  label="CPF / CNPJ" 
+                  placeholder="000.000.000-00" 
+                  value={newClient.document} 
+                  onChange={e => setNewClient({...newClient, document: e.target.value})}
+                />
                 <div>
                   <label className="text-primary mb-2 block text-[10px] font-bold uppercase tracking-widest">Tipo de Pessoa</label>
                   <select 
@@ -128,8 +132,19 @@ export function ClientsPage() {
                     <option value="PJ">Pessoa Jurídica (PJ)</option>
                   </select>
                 </div>
-                <Field label="E-mail" placeholder="cliente@email.com" type="email" value={newClient.email} />
-                <Field label="Telefone / WhatsApp" placeholder="(11) 99999-9999" value={newClient.phone} />
+                <Field 
+                  label="E-mail" 
+                  placeholder="cliente@email.com" 
+                  type="email" 
+                  value={newClient.email} 
+                  onChange={e => setNewClient({...newClient, email: e.target.value})}
+                />
+                <Field 
+                  label="Telefone / WhatsApp" 
+                  placeholder="(11) 99999-9999" 
+                  value={newClient.phone} 
+                  onChange={e => setNewClient({...newClient, phone: e.target.value})}
+                />
                 <div className="md:col-span-2">
                   <label className="text-primary mb-2 block text-[10px] font-bold uppercase tracking-widest">Notas e Observações</label>
                   <textarea 
@@ -278,31 +293,33 @@ export function ClientsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8">
             {filtered.map((c) => (
-              <Card 
+              <div 
                 key={c.id} 
-                className="hover:border-secondary/40 hover:shadow-xl transition-all cursor-pointer group p-6"
+                className="cursor-pointer group"
                 onClick={() => navigate(`/adv/clientes/${c.id}`)}
               >
-                <div className="flex items-start justify-between mb-6">
-                  <Avatar initials={c.name.substring(0, 2).toUpperCase()} size="lg" tone="gold" />
-                  <Pill tone={c.status === "active" ? "success" : c.status === "pending" ? "warning" : "neutral"}>
-                    <StatusDot tone={c.status === "active" ? "success" : c.status === "pending" ? "warning" : "neutral"} />
-                  </Pill>
-                </div>
-                <h4 className="text-lg font-black text-primary mb-1 group-hover:text-secondary transition-colors">{c.name}</h4>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-primary/30 mb-6">{c.type} • Desde {new Date(c.created_at).toLocaleDateString()}</p>
-                
-                <div className="space-y-3 pt-4 border-t border-outline/60">
-                  <div className="flex items-center gap-2 text-xs font-medium text-primary/60">
-                    <Icon name="mail" className="text-sm opacity-40" />
-                    <span className="truncate">{c.email}</span>
+                <Card className="hover:border-secondary/40 hover:shadow-xl transition-all p-6">
+                  <div className="flex items-start justify-between mb-6">
+                    <Avatar initials={c.name.substring(0, 2).toUpperCase()} size="lg" tone="gold" />
+                    <Pill tone={c.status === "active" ? "success" : c.status === "pending" ? "warning" : "neutral"}>
+                      <StatusDot tone={c.status === "active" ? "success" : c.status === "pending" ? "warning" : "neutral"} />
+                    </Pill>
                   </div>
-                  <div className="flex items-center gap-2 text-xs font-medium text-primary/60">
-                    <Icon name="phone" className="text-sm opacity-40" />
-                    <span>{c.phone}</span>
+                  <h4 className="text-lg font-black text-primary mb-1 group-hover:text-secondary transition-colors">{c.name}</h4>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary/30 mb-6">{c.type} • Desde {new Date(c.created_at).toLocaleDateString()}</p>
+                  
+                  <div className="space-y-3 pt-4 border-t border-outline/60">
+                    <div className="flex items-center gap-2 text-xs font-medium text-primary/60">
+                      <Icon name="mail" className="text-sm opacity-40" />
+                      <span className="truncate">{c.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs font-medium text-primary/60">
+                      <Icon name="phone" className="text-sm opacity-40" />
+                      <span>{c.phone}</span>
+                    </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              </div>
             ))}
           </div>
         )}

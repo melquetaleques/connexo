@@ -1,139 +1,265 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Card, GoldButton, Field, Icon, SectionTitle, Pill } from "@/components/ui/connexo-primitives";
+import { GoldButton, Icon, Field, SelectField } from "@/components/ui/connexo-primitives";
+import { useAuth } from "@/hooks/useAuth";
+
+const ACCENT = "#C59D5C";
+
+function roleDashboard(role: string): string {
+  switch (role) {
+    case "advogado": return "/adv/dashboard";
+    case "contador": return "/acc/dashboard";
+    default: return "/adv/dashboard";
+  }
+}
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [role, setRole] = useState<"advogado" | "contador">("advogado");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const nextStep = () => setStep(s => s + 1);
-  const prevStep = () => setStep(s => s - 1);
+  const totalSteps = 2;
 
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step < 3) {
-      nextStep();
-    } else {
-      setLoading(true);
-      setTimeout(() => {
-        setLoading(false);
-        navigate("/dashboard");
-      }, 1500);
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        navigate(roleDashboard(role), { replace: true });
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [success, navigate, role]);
+
+  const handleFinish = async () => {
+    if (password !== confirmPassword) {
+      setError("Senhas nao conferem");
+      return;
+    }
+    setError("");
+    setLoading(true);
+    try {
+      await register({ name, email, password, role });
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err?.response?.data?.error || err?.message || "Erro ao cadastrar");
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-surface-1 font-['Plus_Jakarta_Sans'] py-12 px-6">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-12">
-          <Link to="/login" className="flex items-center gap-2 text-primary/60 hover:text-primary transition-colors group">
-            <Icon name="arrow_back" className="text-xl" />
-            <span className="text-xs font-extrabold uppercase tracking-widest">Voltar ao Login</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
-              <Icon name="balance" className="text-white text-sm" />
+    <div className="min-h-screen flex items-center justify-center relative bg-[#F9FAFB] font-['Plus_Jakarta_Sans'] py-12 px-4">
+      {/* Watermarks */}
+      <div className="fixed inset-0 z-0 overflow-hidden select-none pointer-events-none opacity-[0.03]">
+        <span className="absolute -top-10 -left-10 text-[10rem] font-black text-primary leading-none">CONNEXO</span>
+      </div>
+
+      <main className="relative z-10 w-full max-w-[850px] bg-white rounded-[32px] shadow-[0_50px_100px_-30px_rgba(0,8,48,0.15)] overflow-hidden border border-[#F3F4F6] animate-in fade-in slide-in-from-bottom-8 duration-700">
+        
+        {/* Header do Wizard */}
+        <div className="px-12 py-10 border-b border-[#F3F4F6] flex items-center justify-between bg-white">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+              <Icon name="balance" className="text-white text-xl" />
             </div>
-            <span className="text-lg font-black tracking-tighter uppercase text-primary">Connexo</span>
+            <span className="text-xl font-black tracking-tighter uppercase text-primary">Connexo</span>
           </div>
+          <Link to="/login" className="text-[11px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary transition-colors flex items-center gap-2">
+            <Icon name="arrow_back" className="text-base" />
+            Voltar ao Login
+          </Link>
         </div>
 
-        <Card className="p-10">
-          <div className="mb-10">
-            <div className="flex items-center gap-3 mb-4">
-              <Pill tone="gold" className="px-4 py-1.5">Passo {step} de 3</Pill>
-              <div className="flex-1 h-1.5 bg-surface-2 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-secondary transition-all duration-500" 
-                  style={{ width: `${(step / 3) * 100}%` }}
-                />
-              </div>
+        <div className="px-12 pt-12">
+          {/* Barra de Progresso */}
+          <div className="mb-12">
+            <div className="flex justify-between items-end mb-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.4em]" style={{ color: ACCENT }}>
+                Etapa {step} de {totalSteps}
+              </p>
+              <p className="text-xs font-bold text-primary/30 uppercase tracking-widest">
+                {step === 1 ? "Dados Corporativos" : (step === 2 && role === "contador") ? "Credenciais" : step === 2 ? "Credenciais Admin" : "Selecao de Plano"}
+              </p>
             </div>
-            <h2 className="text-3xl font-black text-primary">Solicitar Acesso</h2>
-            <p className="text-on-surface-variant font-medium mt-2">
-              {step === 1 && "Primeiro, conte-nos sobre o seu escritório ou atuação profissional."}
-              {step === 2 && "Agora, defina os dados de acesso da conta administradora."}
-              {step === 3 && "Escolha o plano que melhor se adapta ao volume do seu escritório."}
-            </p>
+            <div className="flex gap-3">
+              {(role === "advogado" ? [1, 2, 3] : [1, 2]).map((s) => (
+                <div
+                  key={s}
+                  className="h-1.5 flex-1 rounded-full transition-all duration-500"
+                  style={{ background: s <= step ? ACCENT : "#F3F4F6" }}
+                />
+              ))}
+            </div>
           </div>
 
-          <form onSubmit={handleRegister} className="space-y-8">
+          {/* Conteúdo das Etapas */}
+          <div className="min-h-[380px]">
             {step === 1 && (
-              <div className="grid gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <Field label="Razão Social / Nome Profissional" placeholder="Ex: Silva & Associados" />
+              <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                <h2 className="text-4xl font-black text-primary tracking-tight mb-3">
+                  {role === "advogado" ? "Escritório Jurídico" : "Escritório de Perícia"}
+                </h2>
+                <p className="text-primary/50 font-medium mb-10">
+                  {role === "advogado" 
+                    ? "Inicie o registro do seu escritório de advocacia." 
+                    : "Inicie o registro do seu escritório de perícia contábil."}
+                </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Field label="CNPJ / CPF" placeholder="00.000.000/0000-00" />
-                  <Field label="Nº OAB" placeholder="000.000" />
+                  <SelectField 
+                    label="Perfil Profissional" 
+                    value={role} 
+                    onChange={(e) => setRole(e.target.value as any)}
+                    options={[
+                      { label: "Advogado (Contratante)", value: "advogado" },
+                      { label: "Contador (Perito)", value: "contador" },
+                    ]}
+                  />
+                  <Field label="Razão Social" placeholder="Ex: Pereira & Advogados Associados" />
+                  <Field label="CNPJ" placeholder="00.000.000/0001-00" />
+                  <Field label={role === "advogado" ? "Registro OAB" : "Registro CRC"} placeholder="Ex: 123456/SP" />
                 </div>
-                <Field label="Endereço do Escritório" placeholder="Rua, Número, Bairro, Cidade - UF" />
               </div>
             )}
 
             {step === 2 && (
-              <div className="grid gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <Field label="Nome Completo do Administrador" placeholder="Ex: Dr. Marcelo Silva" />
-                <Field label="E-mail de Trabalho" placeholder="marcelo@escritorio.com.br" type="email" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Field label="Senha de Acesso" placeholder="••••••••" type="password" />
-                  <Field label="Confirmar Senha" placeholder="••••••••" type="password" />
-                </div>
+              <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                {success ? (
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
+                      <Icon name="check_circle" className="text-4xl text-emerald-600" />
+                    </div>
+                    <h2 className="text-3xl font-black text-primary tracking-tight mb-3">Cadastro concluido!</h2>
+                    <p className="text-primary/50 font-medium mb-4">
+                      Conta criada com sucesso. Redirecionando para o painel...
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <h2 className="text-4xl font-black text-primary tracking-tight mb-3">
+                      {role === "contador" ? "Conta do Perito" : "Administrador"}
+                    </h2>
+                    <p className="text-primary/50 font-medium mb-10">
+                      {role === "contador"
+                        ? "Defina suas credenciais de acesso para comecar a receber propostas."
+                        : "Defina as credenciais do gestor principal da plataforma."}
+                    </p>
+                    {error && (
+                      <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl text-sm font-bold text-rose-600">
+                        {error}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Field label="Nome Completo" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome completo" />
+                      <Field label="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="seu@email.com" />
+                      <Field label="Senha" value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Minimo 8 caracteres" />
+                      <Field label="Confirmar Senha" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type="password" placeholder="Repita a senha" />
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
             {step === 3 && (
-              <div className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {[
-                  { id: 'essencial', name: 'Essencial', desc: 'Até 10 processos ativos/mês', price: 'R$ 297/mês' },
-                  { id: 'pro', name: 'Profissional', desc: 'Até 50 processos ativos/mês', price: 'R$ 597/mês', highlight: true },
-                  { id: 'elite', name: 'Escritório Elite', desc: 'Processos ilimitados + Consultoria', price: 'Sob consulta' },
-                ].map((plan) => (
-                  <label key={plan.id} className={`flex items-center justify-between p-5 rounded-xl border-2 transition-all cursor-pointer ${plan.highlight ? 'border-secondary bg-secondary/5' : 'border-outline hover:border-secondary/30 bg-white'}`}>
-                    <div className="flex items-center gap-4">
-                      <input type="radio" name="plan" defaultChecked={plan.highlight} className="w-5 h-5 text-secondary focus:ring-secondary/20" />
-                      <div>
-                        <p className="font-bold text-primary">{plan.name}</p>
-                        <p className="text-xs text-on-surface-variant">{plan.desc}</p>
-                      </div>
+              <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                {success ? (
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
+                      <Icon name="check_circle" className="text-4xl text-emerald-600" />
                     </div>
-                    <div className="text-right">
-                      <p className="font-black text-primary">{plan.price}</p>
+                    <h2 className="text-3xl font-black text-primary tracking-tight mb-3">Cadastro concluido!</h2>
+                    <p className="text-primary/50 font-medium mb-4">
+                      Conta criada com sucesso. Redirecionando para o painel...
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <h2 className="text-4xl font-black text-primary tracking-tight mb-3">Escolha seu Plano</h2>
+                    <p className="text-primary/50 font-medium mb-10">Selecione o volume operacional que melhor atende ao seu escritorio.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {[
+                        { name: "Essencial", price: "R$ 290", desc: "Ate 20 processos ativos", icon: "bolt" },
+                        { name: "Profissional", price: "R$ 590", desc: "Ate 80 processos ativos", recommended: true, icon: "verified" },
+                        { name: "Enterprise", price: "Consulta", desc: "Volume ilimitado + SLA", icon: "hub" },
+                      ].map((p) => (
+                        <button
+                          key={p.name}
+                          className={`text-left p-6 rounded-[24px] border-2 transition-all relative group ${
+                            p.recommended
+                              ? "border-secondary bg-secondary/[0.03]"
+                              : "border-[#F3F4F6] hover:border-primary/20 bg-white"
+                          }`}
+                          style={p.recommended ? { borderColor: ACCENT } : {}}
+                        >
+                          {p.recommended && (
+                            <div className="absolute -top-3 left-6 px-3 py-1 bg-secondary rounded-full">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-white">Recomendado</span>
+                            </div>
+                          )}
+                          <div className={`w-10 h-10 rounded-xl mb-4 flex items-center justify-center transition-transform group-hover:scale-110 ${p.recommended ? "bg-secondary text-white" : "bg-[#F9FAFB] text-primary/30"}`}>
+                            <Icon name={p.icon} />
+                          </div>
+                          <p className="text-xl font-black text-primary">{p.name}</p>
+                          <p className="text-2xl font-black mt-2 text-primary">
+                            {p.price}
+                            {p.price !== "Consulta" && <span className="text-xs text-primary/40 font-bold tracking-tight">/mes</span>}
+                          </p>
+                          <p className="text-xs text-primary/40 font-bold mt-4 leading-relaxed">{p.desc}</p>
+                        </button>
+                      ))}
                     </div>
-                  </label>
-                ))}
-                
-                <div className="mt-6 p-4 rounded-lg bg-surface-2 flex gap-3">
-                  <Icon name="info" className="text-secondary shrink-0" />
-                  <p className="text-[11px] text-primary/60 leading-normal font-medium">
-                    Ao clicar em finalizar, você concorda com nossos Termos de Uso e Política de Privacidade. Seu acesso será liberado após a verificação dos dados profissionais.
-                  </p>
-                </div>
+                  </>
+                )}
               </div>
             )}
-
-            <div className="flex items-center justify-between pt-6 border-t border-outline">
-              {step > 1 ? (
-                <button 
-                  type="button" 
-                  onClick={prevStep}
-                  className="px-6 py-3 text-xs font-extrabold uppercase tracking-widest text-primary/40 hover:text-primary transition-colors"
-                >
-                  Voltar
-                </button>
-              ) : <div />}
-              
-              <GoldButton type="submit" className="min-w-[200px]" icon={loading ? "autorenew" : (step === 3 ? "check" : "arrow_forward")}>
-                {loading ? "Processando..." : (step === 3 ? "Finalizar Cadastro" : "Continuar")}
-              </GoldButton>
+          </div>
+          
+          <div className="flex items-center gap-4 group cursor-pointer mb-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
+            <div className="relative">
+              <input 
+                type="checkbox" 
+                required
+                className="peer appearance-none w-6 h-6 border-2 border-[#F3F4F6] rounded-lg checked:bg-secondary checked:border-secondary transition-all cursor-pointer"
+              />
+              <Icon name="check" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none text-xs" />
             </div>
-          </form>
-        </Card>
+            <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest leading-relaxed">
+              Li e aceito os <span className="text-secondary border-b border-secondary/30">Termos de Uso</span> e a <span className="text-secondary border-b border-secondary/30">Política de Privacidade (LGPD)</span>.
+            </p>
+          </div>
 
-        <div className="mt-12 text-center">
-          <p className="text-sm text-on-surface-variant font-medium">
-            Já possui acesso? <Link to="/login" className="text-secondary font-black hover:underline ml-1">Fazer Login</Link>
-          </p>
+          {/* Navegação do Rodapé */}
+          {!success && (
+            <div className="flex items-center justify-between mt-12 pb-12">
+              <button
+                onClick={() => (step === 1 ? navigate("/login") : setStep(step - 1))}
+                className="px-8 py-3 text-xs font-black uppercase tracking-widest text-primary/40 hover:text-primary transition-all flex items-center gap-2"
+              >
+                <Icon name="west" />
+                {step === 1 ? "Voltar ao Login" : "Etapa Anterior"}
+              </button>
+
+              {step < totalSteps ? (
+                <GoldButton onClick={() => setStep(step + 1)} icon="east" className="px-10 py-5">
+                  Proxima Etapa
+                </GoldButton>
+              ) : (
+                <GoldButton onClick={handleFinish} icon={loading ? "autorenew" : "check"} className="px-12 py-5" disabled={loading}>
+                  {loading ? "Processando..." : "Finalizar Cadastro"}
+                </GoldButton>
+              )}
+            </div>
+          )}
         </div>
+      </main>
+
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 opacity-20 pointer-events-none">
+        <p className="text-[9px] font-black uppercase tracking-[0.8em] text-primary">Sovereign Gilded Framework v1.2</p>
       </div>
     </div>
   );

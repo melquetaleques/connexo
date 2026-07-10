@@ -1,0 +1,11 @@
+web/node_modules/
+web/dist/
+web/.env
+web/.env.local
+api/.env
+api/bin/*
+!api/bin/.gitkeep
+api/bin/*.exe
+mobile/node_modules/
+.DS_Store
+*.log

@@ -1,0 +1,93 @@
+# Canonical local development stack for Connexo
+# Usage (from app/):
+#   cp api/.env.example api/.env   # optional; compose sets defaults below
+#   docker compose up -d --build
+#
+# Web: http://localhost:3000
+# API: http://localhost:8080
+# MinIO console: http://localhost:9001  (local-dev only defaults)
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: connexo
+      POSTGRES_PASSWORD: connexo
+      POSTGRES_DB: connexo
+    ports:
+      - "15432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U connexo -d connexo"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: development
+      CONNEXO_HTTP_ADDR: ":8080"
+      CONNEXO_DATABASE_URL: postgres://connexo:connexo@db:5432/connexo?sslmode=disable
+      CONNEXO_REDIS_URL: redis://redis:6379
+      JWT_SECRET: connexo-dev-secret
+      CONNEXO_JWT_SECRET: connexo-dev-secret
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      CONNEXO_STORAGE_ENDPOINT: minio:9000
+      CONNEXO_STORAGE_ACCESS_KEY: minioadmin
+      CONNEXO_STORAGE_SECRET_KEY: minioadmin
+      CORS_ALLOWED_ORIGIN: "*"
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
+        condition: service_started
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  miniodata:
