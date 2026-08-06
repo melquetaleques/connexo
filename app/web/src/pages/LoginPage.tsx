@@ -43,7 +43,7 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center overflow-hidden relative bg-[#F9FAFB] font-['Plus_Jakarta_Sans']">
-      {/* Watermarks de Fundo (North Star: Sovereign Architect) */}
+      {/* Watermarks de fundo */}
       <div className="fixed inset-0 z-0 overflow-hidden select-none pointer-events-none opacity-[0.03]">
         <span className="absolute -top-10 -left-10 text-[10rem] font-black text-primary leading-none">CONNEXO</span>
         <span className="absolute bottom-10 right-10 text-[10rem] font-black text-primary leading-none">EST. 2002</span>
@@ -189,9 +189,6 @@ export function LoginPage() {
         </div>
       </main>
       
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 opacity-20 pointer-events-none">
-        <p className="text-[9px] font-black uppercase tracking-[0.8em] text-primary">Sovereign Gilded Framework v1.2</p>
-      </div>
     </div>
   );
 }

@@ -258,9 +258,6 @@ export function RegisterPage() {
         </div>
       </main>
 
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 opacity-20 pointer-events-none">
-        <p className="text-[9px] font-black uppercase tracking-[0.8em] text-primary">Sovereign Gilded Framework v1.2</p>
-      </div>
     </div>
   );
 }

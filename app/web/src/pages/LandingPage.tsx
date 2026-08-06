@@ -1,57 +1,6 @@
 import { Link } from "react-router-dom";
 import { Icon, GoldButton } from "@/components/ui/connexo-primitives";
 
-const PLANS = [
-  {
-    id: "trial",
-    name: "Teste Gratuito",
-    price: "Grátis",
-    period: "30 dias",
-    highlight: false,
-    features: [
-      "Até 3 processos ativos",
-      "1 contador vinculado",
-      "Gestão básica de perícias",
-      "Suporte por e-mail",
-    ],
-    cta: "Cadastrar Escritório",
-    ctaLink: "/register?role=advogado",
-  },
-  {
-    id: "basico",
-    name: "Essencial",
-    price: "R$ 297",
-    period: "/mês",
-    highlight: false,
-    features: [
-      "Até 10 processos ativos",
-      "Até 3 contadores vinculados",
-      "Painel de indicadores",
-      "Convites para equipe",
-      "Suporte prioritário",
-    ],
-    cta: "Cadastrar Escritório",
-    ctaLink: "/register?role=advogado",
-  },
-  {
-    id: "profissional",
-    name: "Profissional",
-    price: "R$ 597",
-    period: "/mês",
-    highlight: true,
-    features: [
-      "Processos ilimitados",
-      "Contadores ilimitados",
-      "Relatórios avançados",
-      "Gestão documental completa",
-      "Integração LGPD total",
-      "Suporte dedicado 24h",
-    ],
-    cta: "Cadastrar Escritório",
-    ctaLink: "/register?role=advogado",
-  },
-];
-
 const FAQS = [
   {
     q: "O que é o Connexo?",
@@ -64,10 +13,6 @@ const FAQS = [
   {
     q: "Como funciona a proteção de dados (LGPD)?",
     a: "O Connexo possui sistema completo de consentimento LGPD: o cliente autoriza expressamente o compartilhamento de dados, cada documento tem controle granular de acesso, e todas as interações são registradas em logs de auditoria. Seus dados e os dos seus clientes estão protegidos.",
-  },
-  {
-    q: "Quanto custa e como funciona o período de teste?",
-    a: "Oferecemos 30 dias de teste gratuito, sem compromisso. Você pode cadastrar seu escritório, convidar clientes e testar todos os recursos básicos. Após o trial, você escolhe entre o plano Essencial (R$ 297/mês) ou Profissional (R$ 597/mês). Não há cobrança durante o período de teste.",
   },
   {
     q: "Preciso ter conhecimento técnico em contabilidade?",
@@ -144,12 +89,6 @@ function HeroSection() {
                 LGPD Ready
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <Icon name="verified" className="text-emerald-400 text-lg" />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-white/40">
-                Trial Grátis 30 Dias
-              </span>
-            </div>
           </div>
         </div>
       </div>
@@ -162,7 +101,7 @@ function ComoFuncionaSection() {
     {
       step: "01",
       title: "Advogado cadastra",
-      desc: "Você cria seu escritório na plataforma, cadastra os processos e descreve a perícia necessária. Ativa o trial de 30 dias sem custo.",
+      desc: "Você cria seu escritório na plataforma, cadastra os processos e descreve a perícia necessária.",
       icon: "how_to_reg",
     },
     {
@@ -223,75 +162,11 @@ function ComoFuncionaSection() {
   );
 }
 
-function PlanosSection() {
+function EticaSection() {
   return (
-    <section className="py-24 lg:py-32 bg-white" id="planos">
+    <section className="py-24 lg:py-32 bg-white" id="etica">
       <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <div className="text-center mb-16">
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-secondary mb-4 block">
-            Planos e Preços
-          </span>
-          <h2 className="text-4xl lg:text-5xl font-black text-primary leading-tight mb-4">
-            Escolha o plano ideal para{" "}
-            <span className="text-secondary italic">seu escritório.</span>
-          </h2>
-          <p className="text-on-surface-variant font-medium max-w-xl mx-auto">
-            Teste grátis por 30 dias, sem compromisso. Cancele quando quiser.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {PLANS.map((plan) => (
-            <div
-              key={plan.id}
-              className={`relative rounded-3xl p-8 lg:p-10 border-2 transition-all ${
-                plan.highlight
-                  ? "border-secondary bg-secondary/5 shadow-2xl shadow-secondary/10 scale-[1.02]"
-                  : "border-outline/60 bg-white hover:border-secondary/30"
-              }`}
-            >
-              {plan.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-secondary text-white text-[9px] font-black uppercase tracking-[0.3em] rounded-full">
-                  Mais Popular
-                </div>
-              )}
-              <div className="mb-8">
-                <h3 className="text-lg font-black text-primary mb-2">{plan.name}</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-primary">{plan.price}</span>
-                  {plan.period && (
-                    <span className="text-sm font-bold text-on-surface-variant">{plan.period}</span>
-                  )}
-                </div>
-              </div>
-              <ul className="space-y-4 mb-10">
-                {plan.features.map((f, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <Icon
-                      name="check_circle"
-                      className={`text-lg shrink-0 mt-0.5 ${
-                        plan.highlight ? "text-secondary" : "text-emerald-500"
-                      }`}
-                    />
-                    <span className="text-sm font-medium text-primary">{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link to={plan.ctaLink}>
-                <GoldButton
-                  variant={plan.highlight ? "primary" : "ghost"}
-                  className="w-full py-3.5 text-xs"
-                  icon="arrow_forward"
-                >
-                  {plan.cta}
-                </GoldButton>
-              </Link>
-            </div>
-          ))}
-        </div>
-
-        {/* Ethical separation notice */}
-        <div className="mt-16 max-w-2xl mx-auto p-6 rounded-2xl bg-surface-1 border border-outline/60">
+        <div className="max-w-2xl mx-auto p-8 rounded-2xl bg-surface-1 border border-outline/60">
           <div className="flex items-start gap-4">
             <Icon name="gavel" className="text-secondary text-2xl shrink-0 mt-0.5" />
             <div>
@@ -299,11 +174,11 @@ function PlanosSection() {
                 Compromisso com a Ética Profissional
               </p>
               <p className="text-xs text-on-surface-variant font-medium leading-relaxed">
-                Em conformidade com o Art. 7º do Código de Ética e Disciplina da OAB, 
-                o contador parceiro recebe exclusivamente pelo serviço técnico prestado, 
-                <strong> nunca por indicação ou intermediação</strong>. Não há qualquer 
-                tipo de repasse, comissão ou participação nos honorários advocatícios. 
-                A relação entre advogado e contador é transparente, profissional e 
+                Em conformidade com o Art. 7º do Código de Ética e Disciplina da OAB,
+                o contador parceiro recebe exclusivamente pelo serviço técnico prestado,
+                <strong> nunca por indicação ou intermediação</strong>. Não há qualquer
+                tipo de repasse, comissão ou participação nos honorários advocatícios.
+                A relação entre advogado e contador é transparente, profissional e
                 juridicamente segregada.
               </p>
             </div>
@@ -387,9 +262,6 @@ function Footer() {
           <p className="text-[11px] font-medium text-white/30">
             &copy; {new Date().getFullYear()} Connexo. Todos os direitos reservados.
           </p>
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/20">
-            Tecnologia Sovereign Gilded
-          </p>
         </div>
       </div>
     </footer>
@@ -428,7 +300,7 @@ export function LandingPage() {
 
       <HeroSection />
       <ComoFuncionaSection />
-      <PlanosSection />
+      <EticaSection />
       <FAQSection />
       <Footer />
     </div>
