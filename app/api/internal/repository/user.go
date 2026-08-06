@@ -266,10 +266,13 @@ type PublicAccountantProfile struct {
 	Availability string    `db:"availability" json:"availability"`
 }
 // SubscriptionInfo representa os dados de assinatura de um advogado.
+//
+// As tags db são obrigatórias: sem elas o sqlx procura a coluna "expiresat" e
+// falha o scan da query, que usa o alias expires_at.
 type SubscriptionInfo struct {
-	Plan      string     `json:"plan"`
-	Status    string     `json:"status"`
-	ExpiresAt *time.Time `json:"expires_at"`
+	Plan      string     `db:"plan" json:"plan"`
+	Status    string     `db:"status" json:"status"`
+	ExpiresAt *time.Time `db:"expires_at" json:"expires_at"`
 }
 
 // GetSubscriptionByUserID retorna os dados de assinatura de um usuário advogado.
