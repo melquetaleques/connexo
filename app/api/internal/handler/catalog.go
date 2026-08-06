@@ -47,6 +47,12 @@ func (h *CatalogHandler) ListPublicAccountants(w http.ResponseWriter, req *http.
 		accountants = filtered
 	}
 
+	// Catálogo vazio responde [], não null — o frontend itera direto sobre a
+	// resposta.
+	if accountants == nil {
+		accountants = []*repository.Accountant{}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(accountants)
 }

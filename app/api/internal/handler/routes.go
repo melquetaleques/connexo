@@ -440,6 +440,10 @@ func (r *Router) handleLawyerUsers(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if members == nil {
+		members = []*repository.User{}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(members)
 }
@@ -596,6 +600,9 @@ func (r *Router) handleAccountantPosts(w http.ResponseWriter, req *http.Request)
 		if err != nil {
 			http.Error(w, "Erro ao buscar postagens: "+err.Error(), http.StatusInternalServerError)
 			return
+		}
+		if posts == nil {
+			posts = []*repository.Post{}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(posts)
