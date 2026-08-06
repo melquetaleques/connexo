@@ -27,7 +27,7 @@ func (r *userRepo) Create(ctx context.Context, u *domain.User) error {
 
 func (r *userRepo) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
 	var u domain.User
-	query := `SELECT * FROM users WHERE email = $1`
+	query := `SELECT id, email, password_hash, role, name, phone, created_at, updated_at FROM users WHERE email = $1`
 	err := r.db.GetContext(ctx, &u, query, email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -40,7 +40,7 @@ func (r *userRepo) FindByEmail(ctx context.Context, email string) (*domain.User,
 
 func (r *userRepo) FindByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	var u domain.User
-	query := `SELECT * FROM users WHERE id = $1`
+	query := `SELECT id, email, password_hash, role, name, phone, created_at, updated_at FROM users WHERE id = $1`
 	err := r.db.GetContext(ctx, &u, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
