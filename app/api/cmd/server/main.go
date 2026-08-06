@@ -1,13 +1,14 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
+	migrations "app/api/db"
 	"app/api/internal/handler"
 	"app/api/internal/repository"
 	"app/api/internal/service"
@@ -42,6 +43,20 @@ func main() {
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(10)
 	db.SetConnMaxLifetime(5 * time.Minute)
+
+	// Apply pending SQL migrations (db/migrations/*.sql) before anything else
+	// touches the schema.
+	migrationCtx, cancelMigrations := context.WithTimeout(context.Background(), 2*time.Minute)
+	applied, err := migrations.Migrate(migrationCtx, db)
+	cancelMigrations()
+	if err != nil {
+		log.Fatalf("Migration failed: %v", err)
+	}
+	if len(applied) > 0 {
+		log.Printf("Applied %d migration(s): %v", len(applied), applied)
+	} else {
+		log.Print("Schema up to date, no migrations applied")
+	}
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
@@ -83,16 +98,13 @@ func main() {
 	// New-arch domain repos for services
 	repoDB := &repository.DB{DB: db}
 
-	// Run schema migrations using the canonical schema
-	if err := repoDB.AutoMigrate(); err != nil {
-		log.Fatalf("Migration failed: %v", err)
-	}
 	domainUserRepo := repository.NewDomainUserRepo(repoDB)
 	domainLawyerRepo := repository.NewLawyerRepository(repoDB)
 	domainAccountantRepo := repository.NewAccountantRepository(repoDB)
 	domainClientRepo := repository.NewClientRepository(repoDB)
 	domainProcessRepo := repository.NewProcessRepository(repoDB)
 	domainAuditRepo := repository.NewAuditRepository(repoDB)
+	domainLinkRepo := repository.NewLinkRepositoryDomain(repoDB)
 
 	// JWT secret: JWT_SECRET preferred; CONNEXO_JWT_SECRET accepted as alias.
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -165,8 +177,50 @@ func main() {
 		}
 	}))
 	mux.HandleFunc("/api/adv/dashboard", jwtMW(lawyerHandler.Dashboard))
+	mux.HandleFunc("GET /api/adv/processes/{id}/timeline", jwtMW(router.HandleProcessTimeline))
+
+	// userMW carrega o usuário do banco no contexto, para os handlers que
+	// operam sobre *domain.User.
+	userMW := func(h http.HandlerFunc) http.HandlerFunc {
+		return handler.JWTAuthUser(jwtMaker, domainUserRepo, h)
+	}
+
+	// Client panel routes
+	clientHandler := handler.NewClientHandler(
+		domainProcessRepo,
+		domainLinkRepo,
+		domainClientRepo,
+		domainUserRepo,
+		linkService,
+	)
+	mux.HandleFunc("GET /api/cli/processes", userMW(clientHandler.ListProcesses))
+	mux.HandleFunc("POST /api/cli/vincular-contador", userMW(clientHandler.BindAccountant))
+	mux.HandleFunc("GET /api/cli/notifications", jwtMW(router.HandleListNotifications))
+
+	// Accountant panel routes
+	accountantHandler := handler.NewAccountantHandler(
+		domainAccountantRepo,
+		domainClientRepo,
+		domainLinkRepo,
+		domainProcessRepo,
+	)
+	mux.HandleFunc("GET /api/acc/dashboard", userMW(accountantHandler.Dashboard))
+	mux.HandleFunc("GET /api/acc/profile", userMW(accountantHandler.GetProfile))
+	mux.HandleFunc("PUT /api/acc/profile", userMW(accountantHandler.UpdateProfile))
+	mux.HandleFunc("GET /api/acc/processes", userMW(accountantHandler.ListProcesses))
+	mux.HandleFunc("GET /api/acc/processes/{id}", userMW(accountantHandler.GetProcess))
+
+	// Document routes — só existem com MinIO disponível.
+	if docRepo != nil {
+		documentHandler := handler.NewDocumentHandler(docRepo, domainProcessRepo, domainLinkRepo)
+		mux.HandleFunc("/api/adv/processes/{id}/documents", userMW(documentHandler.HandleProcessDocuments))
+		mux.HandleFunc("PUT /api/adv/documents/{id}/visibility", userMW(documentHandler.ToggleVisibility))
+	} else {
+		log.Print("Warning: document routes disabled (MinIO unavailable)")
+	}
 
 	router.LawyerHandler = lawyerHandler
+	router.AccountantServiceRepo = repository.NewAccountantServiceRepository(repoDB)
 
 	// Register all other routes
 	router.RegisterRoutes(mux)
@@ -198,87 +252,4 @@ func main() {
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
-}
-
-// runMigrations applies SQL migration files in order.
-func runMigrations(db *sql.DB) error {
-	migrations := []struct {
-		Name string
-		SQL  string
-	}{
-		// Migrations are organized in order of application.
-		// Each migration should be idempotent (use IF NOT EXISTS / IF EXISTS).
-		{
-			Name: "01_initial_schema",
-			SQL: `
-				CREATE TABLE IF NOT EXISTS users (
-					id UUID PRIMARY KEY,
-					email TEXT UNIQUE NOT NULL,
-					password TEXT NOT NULL,
-					name TEXT NOT NULL,
-					role TEXT NOT NULL DEFAULT 'cliente',
-					created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-				);
-			`,
-		},
-		{
-			Name: "02_law_firms_and_posts",
-			SQL: `
-				CREATE TABLE IF NOT EXISTS law_firms (
-					id UUID PRIMARY KEY,
-					name TEXT NOT NULL,
-					owner_id UUID REFERENCES users(id),
-					created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-				);
-				CREATE TABLE IF NOT EXISTS law_firm_members (
-					firm_id UUID REFERENCES law_firms(id),
-					user_id UUID REFERENCES users(id),
-					role TEXT NOT NULL DEFAULT 'member',
-					joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-					PRIMARY KEY (firm_id, user_id)
-				);
-				CREATE TABLE IF NOT EXISTS posts (
-					id UUID PRIMARY KEY,
-					accountant_id UUID REFERENCES users(id),
-					title TEXT NOT NULL,
-					content TEXT NOT NULL,
-					tag TEXT NOT NULL DEFAULT 'geral',
-					cover_url TEXT NOT NULL DEFAULT '',
-					excerpt TEXT NOT NULL DEFAULT '',
-					created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-				);
-			`,
-		},
-		{
-			Name: "03_links_and_events",
-			SQL: `
-				CREATE TABLE IF NOT EXISTS process_links (
-					id UUID PRIMARY KEY,
-					process_id UUID NOT NULL,
-					client_id UUID REFERENCES users(id),
-					accountant_id UUID REFERENCES users(id),
-					status TEXT NOT NULL DEFAULT 'solicitado',
-					created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-					updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-				);
-				CREATE TABLE IF NOT EXISTS process_events (
-					id UUID PRIMARY KEY,
-					process_id UUID NOT NULL,
-					event_type TEXT NOT NULL,
-					description TEXT NOT NULL DEFAULT '',
-					actor_id UUID REFERENCES users(id),
-					created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-				);
-			`,
-		},
-	}
-
-	for _, m := range migrations {
-		if _, err := db.Exec(m.SQL); err != nil {
-			return fmt.Errorf("migration %s failed: %w", m.Name, err)
-		}
-		log.Printf("Migration %s applied successfully", m.Name)
-	}
-
-	return nil
 }

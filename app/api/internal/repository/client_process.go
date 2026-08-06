@@ -48,6 +48,13 @@ func (r *clientRepo) FindByID(ctx context.Context, id uuid.UUID) (*domain.Client
 	return &c, nil
 }
 
+func (r *clientRepo) ListByUser(ctx context.Context, userID uuid.UUID) ([]domain.Client, error) {
+	var clients []domain.Client
+	query := `SELECT * FROM clients WHERE user_id = $1 ORDER BY created_at DESC`
+	err := r.db.SelectContext(ctx, &clients, query, userID)
+	return clients, err
+}
+
 func (r *clientRepo) ListByLawyer(ctx context.Context, lawyerID uuid.UUID) ([]domain.Client, error) {
 	var clients []domain.Client
 	query := `SELECT * FROM clients WHERE lawyer_id = $1 ORDER BY name ASC`

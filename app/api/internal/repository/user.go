@@ -15,7 +15,7 @@ import (
 type User struct {
 	ID        uuid.UUID `db:"id"`
 	Email     string    `db:"email"`
-	Password  string    `db:"password"`
+	PasswordHash string `db:"password_hash"`
 	Name      string    `db:"name"`
 	Role      string    `db:"role"` // advogado, contador, cliente, admin
 	CreatedAt time.Time `db:"created_at"`
@@ -69,8 +69,8 @@ func (r *UserRepository) Create(ctx context.Context, user *User) error {
 
 	// 1. Inserir o usuário
 	queryUser := `
-		INSERT INTO users (id, email, password, name, role, created_at)
-		VALUES (:id, :email, :password, :name, :role, :created_at)
+		INSERT INTO users (id, email, password_hash, name, role, created_at)
+		VALUES (:id, :email, :password_hash, :name, :role, :created_at)
 	`
 	_, err = tx.NamedExecContext(ctx, queryUser, user)
 	if err != nil {
@@ -130,7 +130,7 @@ func (r *UserRepository) Create(ctx context.Context, user *User) error {
 // GetByID busca um usuário por ID.
 func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*User, error) {
 	var user User
-	query := `SELECT id, email, password, name, role, created_at FROM users WHERE id = $1`
+	query := `SELECT id, email, password_hash, name, role, created_at FROM users WHERE id = $1`
 	err := r.db.GetContext(ctx, &user, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -168,7 +168,7 @@ func (r *UserRepository) GetFirmByOwnerID(ctx context.Context, ownerID uuid.UUID
 func (r *UserRepository) ListMembers(ctx context.Context, userID uuid.UUID) ([]*User, error) {
 	var users []*User
 	query := `
-		SELECT u.id, u.email, u.password, u.name, u.role, u.created_at
+		SELECT u.id, u.email, u.password_hash, u.name, u.role, u.created_at
 		FROM users u
 		JOIN law_firm_members lfm ON u.id = lfm.user_id
 		WHERE lfm.firm_id = (

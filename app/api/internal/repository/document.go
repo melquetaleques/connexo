@@ -7,24 +7,16 @@ import (
 	"io"
 	"time"
 
+	"app/api/internal/domain"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-// Document representa o documento enviado pelo cliente ou advogado.
-type Document struct {
-	ID        uuid.UUID `db:"id" json:"id"`
-	UserID    uuid.UUID `db:"user_id" json:"user_id"`
-	Name      string    `db:"name" json:"name"`
-	Bucket    string    `db:"bucket" json:"bucket"`
-	Key       string    `db:"key" json:"key"`
-	URL       string    `db:"url" json:"url"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
-}
-
 // DocumentRepository gerencia documentos no banco e no MinIO.
+//
+// Implementa domain.DocumentRepository e adiciona as operações de storage.
 type DocumentRepository struct {
 	db          *sqlx.DB
 	minioClient *minio.Client
@@ -65,48 +57,78 @@ func NewDocumentRepository(db *sqlx.DB) (*DocumentRepository, error) {
 	}, nil
 }
 
-// Save insere o registro do documento no banco de dados.
-func (r *DocumentRepository) Save(ctx context.Context, doc *Document) error {
+const documentColumns = `id, process_id, uploaded_by, name, size_bytes, mime_type, bucket, object_key, storage_path, visible_to_accountant, created_at`
+
+// Create insere o registro do documento no banco de dados.
+func (r *DocumentRepository) Create(ctx context.Context, doc *domain.Document) error {
 	if doc.ID == uuid.Nil {
 		doc.ID = uuid.New()
 	}
-	doc.CreatedAt = time.Now()
+	if doc.CreatedAt.IsZero() {
+		doc.CreatedAt = time.Now()
+	}
+	if doc.MimeType == "" {
+		doc.MimeType = "application/octet-stream"
+	}
 
 	query := `
-		INSERT INTO documents (id, user_id, name, bucket, key, url, created_at)
-		VALUES (:id, :user_id, :name, :bucket, :key, :url, :created_at)
+		INSERT INTO documents
+			(id, process_id, uploaded_by, name, size_bytes, mime_type, bucket, object_key, storage_path, visible_to_accountant, created_at)
+		VALUES
+			(:id, :process_id, :uploaded_by, :name, :size_bytes, :mime_type, :bucket, :object_key, :storage_path, :visible_to_accountant, :created_at)
 	`
 	_, err := r.db.NamedExecContext(ctx, query, doc)
 	return err
 }
 
-// Upload realiza o upload físico do documento para o MinIO.
-func (r *DocumentRepository) Upload(ctx context.Context, reader io.Reader, size int64, filename string, contentType string) (*Document, error) {
-	key := uuid.New().String() + "_" + filename
+// ListByProcess lista os documentos de um processo.
+//
+// Quando forAccountant é true, retorna apenas os documentos que o advogado
+// marcou como visíveis ao contador.
+func (r *DocumentRepository) ListByProcess(ctx context.Context, processID uuid.UUID, forAccountant bool) ([]domain.Document, error) {
+	var docs []domain.Document
+	query := `SELECT ` + documentColumns + ` FROM documents WHERE process_id = $1`
+	if forAccountant {
+		query += ` AND visible_to_accountant = true`
+	}
+	query += ` ORDER BY created_at DESC`
 
-	// Executa o upload no MinIO
-	_, err := r.minioClient.PutObject(ctx, r.bucketName, key, reader, size, minio.PutObjectOptions{
-		ContentType: contentType,
-	})
-	if err != nil {
+	if err := r.db.SelectContext(ctx, &docs, query, processID); err != nil {
 		return nil, err
 	}
+	return docs, nil
+}
 
-	// URL interna fictícia para compatibilidade
-	url := "/api/media/" + r.bucketName + "/" + key
+// SetAccountantVisibility marca ou desmarca um documento como visível ao contador.
+func (r *DocumentRepository) SetAccountantVisibility(ctx context.Context, docID uuid.UUID, visible bool) error {
+	res, err := r.db.ExecContext(ctx,
+		`UPDATE documents SET visible_to_accountant = $1 WHERE id = $2`, visible, docID)
+	if err != nil {
+		return err
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
 
-	return &Document{
-		Name:   filename,
-		Bucket: r.bucketName,
-		Key:    key,
-		URL:    url,
-	}, nil
+// Upload envia o arquivo para o MinIO e devolve bucket, chave e URL interna.
+func (r *DocumentRepository) Upload(ctx context.Context, reader io.Reader, size int64, filename, contentType string) (bucket, key, url string, err error) {
+	key = uuid.New().String() + "_" + filename
+
+	if _, err = r.minioClient.PutObject(ctx, r.bucketName, key, reader, size, minio.PutObjectOptions{
+		ContentType: contentType,
+	}); err != nil {
+		return "", "", "", err
+	}
+
+	return r.bucketName, key, "/api/media/" + r.bucketName + "/" + key, nil
 }
 
 // GetByID busca o registro de um documento por ID.
-func (r *DocumentRepository) GetByID(ctx context.Context, id uuid.UUID) (*Document, error) {
-	var doc Document
-	query := `SELECT id, user_id, name, bucket, key, url, created_at FROM documents WHERE id = $1`
+func (r *DocumentRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Document, error) {
+	var doc domain.Document
+	query := `SELECT ` + documentColumns + ` FROM documents WHERE id = $1`
 	err := r.db.GetContext(ctx, &doc, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -115,6 +137,14 @@ func (r *DocumentRepository) GetByID(ctx context.Context, id uuid.UUID) (*Docume
 		return nil, err
 	}
 	return &doc, nil
+}
+
+// LogAccess registra o acesso individual a um documento (LGPD, escopo §5).
+func (r *DocumentRepository) LogAccess(ctx context.Context, docID, userID uuid.UUID, ip string) error {
+	_, err := r.db.ExecContext(ctx,
+		`INSERT INTO document_access_logs (document_id, user_id, ip_address) VALUES ($1, $2, $3)`,
+		docID, userID, ip)
+	return err
 }
 
 // GetObjectStream busca o arquivo físico no MinIO como stream.

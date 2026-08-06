@@ -7,10 +7,11 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
+	"strconv"
 	"strings"
-	"sync"
 	"time"
 
+	"app/api/internal/domain"
 	"app/api/internal/repository"
 	"app/api/internal/service"
 	"github.com/google/uuid"
@@ -32,6 +33,9 @@ type Router struct {
 	JWTMaker          service.JWTMaker
 	lgpdHandler       *LGPDHandler
 	LawyerHandler     *LawyerHandler
+
+	// AccountantServiceRepo persiste os serviços oferecidos pelo contador.
+	AccountantServiceRepo domain.AccountantServiceRepository
 }
 
 // NewRouter cria um novo Router.
@@ -163,6 +167,11 @@ func (r *Router) handleAccLinkRoutes(w http.ResponseWriter, req *http.Request) {
 		r.handleLinkTransitions(w, req)
 		return
 	}
+	// /api/acc/links/{id}/accept e /api/acc/links/{id}/reject
+	if strings.HasSuffix(path, "/accept") || strings.HasSuffix(path, "/reject") {
+		r.handleLinkDecision(w, req)
+		return
+	}
 	// /api/acc/links/{id} - detalhes
 	parts := strings.Split(strings.TrimSuffix(path, "/"), "/")
 	if len(parts) == 5 && parts[4] != "" {
@@ -217,6 +226,205 @@ func (r *Router) handleCliLinkRoutes(w http.ResponseWriter, req *http.Request) {
 }
 
 // 1. GET /api/adv/usuarios -> Lista membros do law_firm do advogado autenticado (D-03).
+// HandleProcessTimeline atende GET /api/adv/processes/{id}/timeline e devolve
+// os eventos do processo em ordem cronológica.
+func (r *Router) HandleProcessTimeline(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	processID, err := uuid.Parse(req.PathValue("id"))
+	if err != nil {
+		respondErr(w, http.StatusBadRequest, "id do processo inválido")
+		return
+	}
+
+	if r.ProcessEventsRepo == nil {
+		respondErr(w, http.StatusServiceUnavailable, "timeline indisponível")
+		return
+	}
+
+	events, err := r.ProcessEventsRepo.ListByProcess(req.Context(), processID)
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, "erro ao carregar timeline")
+		return
+	}
+	if events == nil {
+		events = []*repository.ProcessEvent{}
+	}
+
+	respond(w, http.StatusOK, events)
+}
+
+// handleAccountantServices atende GET e POST em /api/acc/servicos.
+func (r *Router) handleAccountantServices(w http.ResponseWriter, req *http.Request) {
+	if r.AccountantServiceRepo == nil {
+		respondErr(w, http.StatusServiceUnavailable, "serviços indisponíveis")
+		return
+	}
+
+	userID, err := uuid.Parse(req.Header.Get("X-Authenticated-User-ID"))
+	if err != nil {
+		respondErr(w, http.StatusUnauthorized, "não autenticado")
+		return
+	}
+
+	switch req.Method {
+	case http.MethodGet:
+		list, err := r.AccountantServiceRepo.ListByAccountant(req.Context(), userID)
+		if err != nil {
+			respondErr(w, http.StatusInternalServerError, "erro ao listar serviços")
+			return
+		}
+		if list == nil {
+			list = []domain.AccountantService{}
+		}
+		respond(w, http.StatusOK, list)
+
+	case http.MethodPost:
+		var payload domain.AccountantService
+		if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
+			respondErr(w, http.StatusBadRequest, "payload inválido")
+			return
+		}
+		if strings.TrimSpace(payload.Title) == "" {
+			respondErr(w, http.StatusBadRequest, "título é obrigatório")
+			return
+		}
+
+		existing, err := r.AccountantServiceRepo.ListByAccountant(req.Context(), userID)
+		if err != nil {
+			respondErr(w, http.StatusInternalServerError, "erro ao validar serviço")
+			return
+		}
+		for _, s := range existing {
+			if strings.EqualFold(s.Title, payload.Title) {
+				respondErr(w, http.StatusConflict, "já existe um serviço com este título")
+				return
+			}
+		}
+
+		payload.ID = uuid.New()
+		payload.AccountantID = userID
+		payload.CreatedAt = time.Now()
+		if payload.Areas == nil {
+			payload.Areas = []string{}
+		}
+		if payload.AvgDays <= 0 {
+			payload.AvgDays = 7
+		}
+
+		if err := r.AccountantServiceRepo.Create(req.Context(), &payload); err != nil {
+			respondErr(w, http.StatusInternalServerError, "erro ao criar serviço")
+			return
+		}
+		respond(w, http.StatusCreated, payload)
+
+	default:
+		respondErr(w, http.StatusMethodNotAllowed, "método não permitido")
+	}
+}
+
+// handleLinkDecision atende POST /api/acc/links/{id}/accept e .../reject.
+//
+// Passa pelo LinkService para que notificações e eventos de timeline sejam
+// disparados junto da mudança de estado.
+func (r *Router) handleLinkDecision(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, err := uuid.Parse(req.Header.Get("X-Authenticated-User-ID"))
+	if err != nil {
+		respondErr(w, http.StatusUnauthorized, "não autenticado")
+		return
+	}
+
+	path := strings.TrimSuffix(req.URL.Path, "/")
+	accept := strings.HasSuffix(path, "/accept")
+	parts := strings.Split(path, "/")
+	if len(parts) < 6 {
+		respondErr(w, http.StatusBadRequest, "rota inválida")
+		return
+	}
+	linkID, err := uuid.Parse(parts[4])
+	if err != nil {
+		respondErr(w, http.StatusBadRequest, "id do vínculo inválido")
+		return
+	}
+
+	link, err := r.LinkRepo.FindByID(req.Context(), linkID)
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, "erro ao buscar vínculo")
+		return
+	}
+	if link == nil {
+		respondErr(w, http.StatusNotFound, "vínculo não encontrado")
+		return
+	}
+	if link.AccountantID != userID {
+		respondErr(w, http.StatusForbidden, "este vínculo não pertence a você")
+		return
+	}
+
+	if accept {
+		err = r.LinkService.AcceptLink(req.Context(), linkID)
+	} else {
+		err = r.LinkService.RejectLink(req.Context(), linkID)
+	}
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	status := "recusado"
+	if accept {
+		status = "aceito"
+	}
+	respond(w, http.StatusOK, map[string]string{"status": status})
+}
+
+// HandleListNotifications atende GET /api/cli/notifications e devolve as
+// notificações do usuário autenticado, mais recentes primeiro.
+func (r *Router) HandleListNotifications(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, err := uuid.Parse(req.Header.Get("X-Authenticated-User-ID"))
+	if err != nil {
+		respondErr(w, http.StatusUnauthorized, "não autenticado")
+		return
+	}
+
+	limit := 50
+	offset := 0
+	if v := req.URL.Query().Get("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 200 {
+			limit = n
+		}
+	}
+	if v := req.URL.Query().Get("offset"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
+			offset = n
+		}
+	}
+
+	items, err := r.NotificationRepo.ListByUser(req.Context(), userID, limit, offset)
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, "erro ao listar notificações")
+		return
+	}
+	if items == nil {
+		items = []*repository.Notification{}
+	}
+
+	respond(w, http.StatusOK, items)
+}
+
 func (r *Router) handleLawyerUsers(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -829,59 +1037,3 @@ func (r *Router) handlePublicAccountantProfile(w http.ResponseWriter, req *http.
 	})
 }
 
-type ServicePayload struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Price       string `json:"price"`
-	Duration    int    `json:"duration"`
-}
-
-var (
-	mockServices   = []ServicePayload{}
-	mockServicesMu sync.Mutex
-)
-
-// handleAccountantServices gerencia a listagem e criação de serviços dos contadores
-func (r *Router) handleAccountantServices(w http.ResponseWriter, req *http.Request) {
-	switch req.Method {
-	case http.MethodGet:
-		mockServicesMu.Lock()
-		defer mockServicesMu.Unlock()
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockServices)
-
-	case http.MethodPost:
-		var payload ServicePayload
-		if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
-			http.Error(w, "Bad request", http.StatusBadRequest)
-			return
-		}
-
-		if payload.Title == "" || payload.Description == "" || payload.Price == "" || payload.Duration <= 0 {
-			http.Error(w, "Campos obrigatórios ausentes", http.StatusBadRequest)
-			return
-		}
-
-		mockServicesMu.Lock()
-		// Verificar duplicidade de título
-		for _, s := range mockServices {
-			if strings.ToLower(s.Title) == strings.ToLower(payload.Title) {
-				mockServicesMu.Unlock()
-				http.Error(w, "Já existe um serviço com este título.", http.StatusBadRequest)
-				return
-			}
-		}
-
-		payload.ID = uuid.New().String()
-		mockServices = append(mockServices, payload)
-		mockServicesMu.Unlock()
-
-		w.WriteHeader(http.StatusCreated)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(payload)
-
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}
-}

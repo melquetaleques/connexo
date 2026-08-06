@@ -53,7 +53,11 @@ type pendingRequest struct {
 // Dashboard godoc
 // GET /api/acc/dashboard
 func (h *AccountantHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value(userContextKey).(*domain.User)
+	user := userFromContext(r.Context())
+	if user == nil {
+		respondErr(w, http.StatusUnauthorized, "não autenticado")
+		return
+	}
 
 	acc, err := h.accountants.FindByUserID(r.Context(), user.ID)
 	if err != nil || acc == nil {
@@ -61,13 +65,13 @@ func (h *AccountantHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pendingLinks, err := h.links.ListPendingByAccountant(r.Context(), acc.ID)
+	pendingLinks, err := h.links.ListPendingByAccountant(r.Context(), user.ID)
 	if err != nil {
 		respondErr(w, http.StatusInternalServerError, "erro ao buscar solicitações pendentes")
 		return
 	}
 
-	allLinks, err := h.links.ListByAccountant(r.Context(), acc.ID)
+	allLinks, err := h.links.ListByAccountant(r.Context(), user.ID)
 	if err != nil {
 		respondErr(w, http.StatusInternalServerError, "erro ao buscar vínculos")
 		return
@@ -95,7 +99,7 @@ func (h *AccountantHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 				ProcessNumber: p.Number,
 				ProcessType:   p.Type,
 				ClientName:    h.clientName(r.Context(), p.ClientID),
-				CreatedAt:     l.ChosenAt.Format("2006-01-02T15:04:05Z"),
+				CreatedAt:     l.CreatedAt.Format("2006-01-02T15:04:05Z"),
 			})
 		}
 	}
@@ -103,86 +107,14 @@ func (h *AccountantHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	respond(w, http.StatusOK, resp)
 }
 
-// AcceptLink godoc
-// POST /api/acc/links/{id}/accept
-func (h *AccountantHandler) AcceptLink(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value(userContextKey).(*domain.User)
-
-	idStr := r.PathValue("id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		respondErr(w, http.StatusBadRequest, "id inválido")
-		return
-	}
-
-	link, err := h.links.FindByID(r.Context(), id)
-	if err != nil || link == nil {
-		respondErr(w, http.StatusNotFound, "vínculo não encontrado")
-		return
-	}
-
-	acc, err := h.accountants.FindByUserID(r.Context(), user.ID)
-	if err != nil || acc == nil {
-		respondErr(w, http.StatusNotFound, "perfil de contador não encontrado")
-		return
-	}
-
-	if link.AccountantID != acc.ID {
-		respondErr(w, http.StatusForbidden, "este vínculo não pertence a você")
-		return
-	}
-
-	link.Status = "ativo"
-	if err := h.links.Update(r.Context(), link); err != nil {
-		respondErr(w, http.StatusInternalServerError, "erro ao aceitar vínculo")
-		return
-	}
-
-	respond(w, http.StatusOK, map[string]string{"message": "vínculo aceito"})
-}
-
-// RejectLink godoc
-// POST /api/acc/links/{id}/reject
-func (h *AccountantHandler) RejectLink(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value(userContextKey).(*domain.User)
-
-	idStr := r.PathValue("id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		respondErr(w, http.StatusBadRequest, "id inválido")
-		return
-	}
-
-	link, err := h.links.FindByID(r.Context(), id)
-	if err != nil || link == nil {
-		respondErr(w, http.StatusNotFound, "vínculo não encontrado")
-		return
-	}
-
-	acc, err := h.accountants.FindByUserID(r.Context(), user.ID)
-	if err != nil || acc == nil {
-		respondErr(w, http.StatusNotFound, "perfil de contador não encontrado")
-		return
-	}
-
-	if link.AccountantID != acc.ID {
-		respondErr(w, http.StatusForbidden, "este vínculo não pertence a você")
-		return
-	}
-
-	link.Status = "recusado"
-	if err := h.links.Update(r.Context(), link); err != nil {
-		respondErr(w, http.StatusInternalServerError, "erro ao recusar vínculo")
-		return
-	}
-
-	respond(w, http.StatusOK, map[string]string{"message": "vínculo recusado"})
-}
-
 // GetProfile godoc
 // GET /api/acc/profile
 func (h *AccountantHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value(userContextKey).(*domain.User)
+	user := userFromContext(r.Context())
+	if user == nil {
+		respondErr(w, http.StatusUnauthorized, "não autenticado")
+		return
+	}
 
 	acc, err := h.accountants.FindByUserID(r.Context(), user.ID)
 	if err != nil || acc == nil {
@@ -196,7 +128,11 @@ func (h *AccountantHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 // UpdateProfile godoc
 // PUT /api/acc/profile
 func (h *AccountantHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value(userContextKey).(*domain.User)
+	user := userFromContext(r.Context())
+	if user == nil {
+		respondErr(w, http.StatusUnauthorized, "não autenticado")
+		return
+	}
 
 	acc, err := h.accountants.FindByUserID(r.Context(), user.ID)
 	if err != nil || acc == nil {
@@ -265,7 +201,11 @@ type processItem struct {
 // ListProcesses godoc
 // GET /api/acc/processes
 func (h *AccountantHandler) ListProcesses(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value(userContextKey).(*domain.User)
+	user := userFromContext(r.Context())
+	if user == nil {
+		respondErr(w, http.StatusUnauthorized, "não autenticado")
+		return
+	}
 
 	acc, err := h.accountants.FindByUserID(r.Context(), user.ID)
 	if err != nil || acc == nil {
@@ -273,7 +213,7 @@ func (h *AccountantHandler) ListProcesses(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	links, err := h.links.ListByAccountant(r.Context(), acc.ID)
+	links, err := h.links.ListByAccountant(r.Context(), user.ID)
 	if err != nil {
 		respondErr(w, http.StatusInternalServerError, "erro ao buscar processos")
 		return
@@ -314,7 +254,11 @@ type processDetailResponse struct {
 // GetProcess godoc
 // GET /api/acc/processes/{id}
 func (h *AccountantHandler) GetProcess(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value(userContextKey).(*domain.User)
+	user := userFromContext(r.Context())
+	if user == nil {
+		respondErr(w, http.StatusUnauthorized, "não autenticado")
+		return
+	}
 
 	acc, err := h.accountants.FindByUserID(r.Context(), user.ID)
 	if err != nil || acc == nil {
@@ -335,7 +279,7 @@ func (h *AccountantHandler) GetProcess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if link.AccountantID != acc.ID {
+	if link.AccountantID != user.ID {
 		respondErr(w, http.StatusForbidden, "este processo nao pertence a voce")
 		return
 	}

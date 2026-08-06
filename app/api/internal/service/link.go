@@ -35,29 +35,42 @@ func NewLinkService(
 	}
 }
 
-// RequestLink cria um novo vínculo pendente ("solicitado") e notifica o contador.
-func (s *LinkService) RequestLink(ctx context.Context, clientID, accountantID uuid.UUID) error {
+// RequestLink cria um novo vínculo pendente ("solicitado") para um processo e
+// notifica o contador.
+//
+// Um processo só pode ter um vínculo vigente por vez: se já houver outro
+// contador vigente no processo, a solicitação é rejeitada.
+func (s *LinkService) RequestLink(ctx context.Context, processID, clientID, accountantID uuid.UUID) (*repository.Link, error) {
 	// 1. Verificar se o cliente e o contador existem
 	client, err := s.userRepo.GetByID(ctx, clientID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if client == nil {
-		return fmt.Errorf("cliente %s não encontrado", clientID)
+		return nil, fmt.Errorf("cliente %s não encontrado", clientID)
 	}
 
 	accountant, err := s.userRepo.GetByID(ctx, accountantID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if accountant == nil {
-		return fmt.Errorf("contador %s não encontrado", accountantID)
+		return nil, fmt.Errorf("contador %s não encontrado", accountantID)
 	}
 
-	// 2. Verificar se já existe um vínculo
-	existing, err := s.linkRepo.FindByClientAndAccountant(ctx, clientID, accountantID)
+	// 2. Verificar se já existe vínculo vigente neste processo
+	vigente, err := s.linkRepo.FindVigenteByProcess(ctx, processID)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	if vigente != nil && vigente.AccountantID != accountantID {
+		return nil, fmt.Errorf("processo já possui um contador vinculado")
+	}
+
+	// 3. Reaproveitar vínculo anterior com o mesmo contador, se houver
+	existing, err := s.linkRepo.FindByProcessAndAccountant(ctx, processID, accountantID)
+	if err != nil {
+		return nil, err
 	}
 
 	var link *repository.Link
@@ -67,6 +80,7 @@ func (s *LinkService) RequestLink(ctx context.Context, clientID, accountantID uu
 		err = s.linkRepo.Update(ctx, link)
 	} else {
 		link = &repository.Link{
+			ProcessID:    processID,
 			ClientID:     clientID,
 			AccountantID: accountantID,
 			Status:       "solicitado",
@@ -74,16 +88,48 @@ func (s *LinkService) RequestLink(ctx context.Context, clientID, accountantID uu
 		err = s.linkRepo.Create(ctx, link)
 	}
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// 3. Notificar o contador
+	// 4. Registrar o evento na timeline do processo
+	s.recordEvent(ctx, processID, "vinculo_solicitado", clientID, "cliente", map[string]interface{}{
+		"accountant_id": accountantID.String(),
+		"link_id":       link.ID.String(),
+	})
+
+	// 5. Notificar o contador
 	notification := &repository.Notification{
 		UserID:  accountantID,
 		Title:   "Nova Solicitação de Vínculo",
 		Message: fmt.Sprintf("O cliente %s solicitou um vínculo com você no portal.", client.Name),
 	}
-	return s.notificationRepo.Create(ctx, notification)
+	if err := s.notificationRepo.Create(ctx, notification); err != nil {
+		return nil, err
+	}
+	return link, nil
+}
+
+// recordEvent grava um evento na timeline do processo, ignorando falhas — a
+// timeline é auditoria complementar e não deve bloquear o fluxo principal.
+func (s *LinkService) recordEvent(
+	ctx context.Context,
+	processID uuid.UUID,
+	eventType string,
+	actorID uuid.UUID,
+	actorRole string,
+	metadata map[string]interface{},
+) {
+	if s.processEventsRepo == nil || processID == uuid.Nil {
+		return
+	}
+	metadataJSON, _ := json.Marshal(metadata)
+	_ = s.processEventsRepo.Create(ctx, &repository.ProcessEvent{
+		ProcessID: processID,
+		EventType: eventType,
+		ActorID:   actorID,
+		ActorRole: actorRole,
+		Metadata:  json.RawMessage(metadataJSON),
+	})
 }
 
 // AcceptLink aceita a solicitação de vínculo e notifica o cliente e o advogado.
@@ -102,6 +148,8 @@ func (s *LinkService) AcceptLink(ctx context.Context, linkID uuid.UUID) error {
 	if err != nil {
 		return err
 	}
+
+	s.recordEvent(ctx, link.ProcessID, "vinculo_aceito", link.AccountantID, "contador", nil)
 
 	// 2. Buscar o contador e o cliente para os nomes das notificações
 	accountant, err := s.userRepo.GetByID(ctx, link.AccountantID)
@@ -165,6 +213,8 @@ func (s *LinkService) RejectLink(ctx context.Context, linkID uuid.UUID) error {
 		return err
 	}
 
+	s.recordEvent(ctx, link.ProcessID, "vinculo_recusado", link.AccountantID, "contador", nil)
+
 	// 2. Buscar o contador
 	accountant, err := s.userRepo.GetByID(ctx, link.AccountantID)
 	if err != nil {
@@ -208,25 +258,11 @@ func (s *LinkService) TransitionStatus(ctx context.Context, linkID uuid.UUID, ne
 		return err
 	}
 
-	// 4. Buscar process_id para o evento
-	processID, err := s.linkRepo.GetProcessIDByClientID(ctx, link.ClientID)
-	if err == nil && processID != uuid.Nil {
-		// 5. Insere evento em process_events (D-20)
-		metadataMap := map[string]interface{}{
-			"from_status": currentStatus,
-			"to_status":   newStatus,
-		}
-		metadataJSON, _ := json.Marshal(metadataMap)
-
-		event := &repository.ProcessEvent{
-			ProcessID: processID,
-			EventType: "mudanca_estado_vinculo",
-			ActorID:   actorID,
-			ActorRole: actorRole,
-			Metadata:  json.RawMessage(metadataJSON),
-		}
-		_ = s.processEventsRepo.Create(ctx, event)
-	}
+	// 4. Registrar a mudança na timeline do processo (D-20)
+	s.recordEvent(ctx, link.ProcessID, "mudanca_estado_vinculo", actorID, actorRole, map[string]interface{}{
+		"from_status": currentStatus,
+		"to_status":   newStatus,
+	})
 
 	// 6. Buscar o contador e o cliente para os nomes das notificações
 	accountant, _ := s.userRepo.GetByID(ctx, link.AccountantID)

@@ -24,6 +24,9 @@ type ClientRepository interface {
 	Create(ctx context.Context, c *Client) error
 	Update(ctx context.Context, c *Client) error
 	FindByID(ctx context.Context, id uuid.UUID) (*Client, error)
+	// ListByUser lista os cadastros de cliente associados a um usuário do
+	// painel. Um mesmo usuário pode ser cliente de mais de um advogado.
+	ListByUser(ctx context.Context, userID uuid.UUID) ([]Client, error)
 	ListByLawyer(ctx context.Context, lawyerID uuid.UUID) ([]Client, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }

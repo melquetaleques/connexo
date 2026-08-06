@@ -1,0 +1,101 @@
+# Connexo — stack isolada para o servidor hetzner (2.28.2.222)
+#
+# Isolamento:
+#   - Projeto compose próprio ("connexo"): volumes e rede default ficam
+#     prefixados e não colidem com paginas_melque, crm_escritorio ou claw.
+#   - Nenhuma porta publicada no host. O Nginx Proxy Manager alcança o
+#     container `connexo-web` pelo nome, via rede externa `proxy`.
+#   - Apenas o `web` entra na rede `proxy`. Banco, MinIO e API ficam
+#     exclusivamente na rede interna do projeto.
+#
+# Uso (no servidor, em /root/projetos/connexo):
+#   docker compose -f deploy/hetzner/docker-compose.yml --env-file .env up -d --build
+
+name: connexo
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: connexo-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${CONNEXO_DB_USER:-connexo}
+      POSTGRES_PASSWORD: ${CONNEXO_DB_PASSWORD:?defina CONNEXO_DB_PASSWORD no .env}
+      POSTGRES_DB: ${CONNEXO_DB_NAME:-connexo}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CONNEXO_DB_USER:-connexo} -d ${CONNEXO_DB_NAME:-connexo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: connexo-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:?defina MINIO_ACCESS_KEY no .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?defina MINIO_SECRET_KEY no .env}
+    volumes:
+      - miniodata:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  api:
+    build:
+      context: ../../app/api
+      dockerfile: Dockerfile
+    container_name: connexo-api
+    restart: unless-stopped
+    environment:
+      CONNEXO_DATABASE_URL: postgres://${CONNEXO_DB_USER:-connexo}:${CONNEXO_DB_PASSWORD}@db:5432/${CONNEXO_DB_NAME:-connexo}?sslmode=disable
+      CONNEXO_HTTP_ADDR: ":8080"
+      APP_ENV: production
+      JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env}
+      JWT_EXPIRY_HOURS: ${JWT_EXPIRY_HOURS:-72}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      CONNEXO_STORAGE_ENDPOINT: minio:9000
+      CONNEXO_STORAGE_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      CONNEXO_STORAGE_SECRET_KEY: ${MINIO_SECRET_KEY}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-https://connexo.ad.vlog.br}
+    networks:
+      - internal
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+  web:
+    build:
+      context: ../../app/web
+      dockerfile: Dockerfile
+    container_name: connexo-web
+    restart: unless-stopped
+    networks:
+      # `internal` para alcançar a API; `proxy` para ser alcançado pelo NPM.
+      - internal
+      - proxy
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  miniodata:
+
+networks:
+  internal:
+    driver: bridge
+  proxy:
+    external: true

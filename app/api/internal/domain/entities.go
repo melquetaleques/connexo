@@ -91,6 +91,8 @@ type Document struct {
 	Name                string    `db:"name" json:"name"`
 	SizeBytes           int64     `db:"size_bytes" json:"size_bytes"`
 	MimeType            string    `db:"mime_type" json:"mime_type"`
+	Bucket              string    `db:"bucket" json:"-"`
+	ObjectKey           string    `db:"object_key" json:"-"`
 	StoragePath         string    `db:"storage_path" json:"storage_path"`
 	VisibleToAccountant bool      `db:"visible_to_accountant" json:"visible_to_accountant"`
 	CreatedAt           time.Time `db:"created_at" json:"created_at"`
@@ -180,17 +182,21 @@ const (
 	LinkStatusCancelado             LinkStatus = "cancelado"
 )
 
-// ProcessAccountantLink representa a entidade de vínculo entre cliente/processo e contador.
+// ProcessAccountantLink representa o vínculo entre um processo e um contador.
+//
+// ClientID e AccountantID referenciam users(id): são os atores notificados e
+// autorizados pelo vínculo.
 type ProcessAccountantLink struct {
 	ID           uuid.UUID  `db:"id" json:"id"`
 	ProcessID    uuid.UUID  `db:"process_id" json:"process_id"`
+	ClientID     uuid.UUID  `db:"client_id" json:"client_id"`
 	AccountantID uuid.UUID  `db:"accountant_id" json:"accountant_id"`
-	ChosenBy     uuid.UUID  `db:"chosen_by" json:"chosen_by"`
 	Status       LinkStatus `db:"status" json:"status"`
-	ChosenAt     time.Time  `db:"chosen_at" json:"chosen_at"`
 	AcceptedAt   *time.Time `db:"accepted_at" json:"accepted_at"`
 	EndedAt      *time.Time `db:"ended_at" json:"ended_at"`
 	EndReason    string     `db:"end_reason" json:"end_reason"`
+	CreatedAt    time.Time  `db:"created_at" json:"created_at"`
+	UpdatedAt    time.Time  `db:"updated_at" json:"updated_at"`
 }
 
 // Deliverable representa um entregável enviado pelo contador.

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"app/api/internal/domain"
+	"app/api/internal/service"
 	"github.com/google/uuid"
 )
 
@@ -12,38 +13,78 @@ import (
 type ClientHandler struct {
 	processes   domain.ProcessRepository
 	links       domain.LinkRepository
-	accountants domain.AccountantRepository
 	clients     domain.ClientRepository
+	users       domain.UserRepository
+	linkService *service.LinkService
 }
 
 // NewClientHandler constrói um ClientHandler.
 func NewClientHandler(
 	processes domain.ProcessRepository,
 	links domain.LinkRepository,
-	accountants domain.AccountantRepository,
 	clients domain.ClientRepository,
+	users domain.UserRepository,
+	linkService *service.LinkService,
 ) *ClientHandler {
 	return &ClientHandler{
 		processes:   processes,
 		links:       links,
-		accountants: accountants,
 		clients:     clients,
+		users:       users,
+		linkService: linkService,
 	}
+}
+
+type clientProcessItem struct {
+	domain.Process
+	AccountantID   *uuid.UUID `json:"accountant_id"`
+	AccountantName string     `json:"accountant_name"`
+	LinkID         *uuid.UUID `json:"link_id"`
+	LinkStatus     string     `json:"link_status"`
 }
 
 // ListProcesses godoc
 // GET /api/cli/processes
+//
+// Lista os processos dos cadastros de cliente associados ao usuário logado,
+// junto do vínculo vigente de cada processo.
 func (h *ClientHandler) ListProcesses(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value(userContextKey).(*domain.User)
-
-	// TODO: No futuro, associar User ao Client para buscar o ClientID real.
-	list, err := h.processes.ListByClient(r.Context(), user.ID)
-	if err != nil {
-		respondErr(w, http.StatusInternalServerError, "erro ao listar processos")
+	user := userFromContext(r.Context())
+	if user == nil {
+		respondErr(w, http.StatusUnauthorized, "não autenticado")
 		return
 	}
 
-	respond(w, http.StatusOK, list)
+	clients, err := h.clients.ListByUser(r.Context(), user.ID)
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, "erro ao buscar cadastro do cliente")
+		return
+	}
+
+	items := []clientProcessItem{}
+	for _, c := range clients {
+		list, err := h.processes.ListByClient(r.Context(), c.ID)
+		if err != nil {
+			respondErr(w, http.StatusInternalServerError, "erro ao listar processos")
+			return
+		}
+		for _, p := range list {
+			item := clientProcessItem{Process: p}
+			if link, err := h.links.FindActiveByProcess(r.Context(), p.ID); err == nil && link != nil {
+				accountantID := link.AccountantID
+				linkID := link.ID
+				item.AccountantID = &accountantID
+				item.LinkID = &linkID
+				item.LinkStatus = string(link.Status)
+				if acc, err := h.users.FindByID(r.Context(), accountantID); err == nil && acc != nil {
+					item.AccountantName = acc.Name
+				}
+			}
+			items = append(items, item)
+		}
+	}
+
+	respond(w, http.StatusOK, items)
 }
 
 type bindRequest struct {
@@ -53,8 +94,16 @@ type bindRequest struct {
 
 // BindAccountant godoc
 // POST /api/cli/vincular-contador
+//
+// Registra a escolha do contador pelo cliente para um processo específico. A
+// criação do vínculo, a validação de exclusividade e a notificação do contador
+// ficam a cargo do LinkService.
 func (h *ClientHandler) BindAccountant(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value(userContextKey).(*domain.User)
+	user := userFromContext(r.Context())
+	if user == nil {
+		respondErr(w, http.StatusUnauthorized, "não autenticado")
+		return
+	}
 
 	var req bindRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -74,7 +123,7 @@ func (h *ClientHandler) BindAccountant(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Verificar se o processo pertence ao cliente
+	// O processo precisa pertencer a um cadastro de cliente deste usuário.
 	process, err := h.processes.FindByID(r.Context(), pID)
 	if err != nil || process == nil {
 		respondErr(w, http.StatusNotFound, "processo não encontrado")
@@ -91,18 +140,15 @@ func (h *ClientHandler) BindAccountant(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Criar o vínculo
-	link := &domain.ProcessAccountantLink{
-		ID:           uuid.New(),
-		ProcessID:    pID,
-		AccountantID: accID,
-		Status:       "pendente",
-	}
-
-	if err := h.links.Create(r.Context(), link); err != nil {
-		respondErr(w, http.StatusInternalServerError, "erro ao criar vínculo")
+	link, err := h.linkService.RequestLink(r.Context(), pID, user.ID, accID)
+	if err != nil {
+		respondErr(w, http.StatusConflict, err.Error())
 		return
 	}
 
-	respond(w, http.StatusCreated, map[string]string{"message": "solicitação de vínculo enviada com sucesso"})
+	respond(w, http.StatusCreated, map[string]any{
+		"message": "solicitação de vínculo enviada com sucesso",
+		"link_id": link.ID,
+		"status":  link.Status,
+	})
 }

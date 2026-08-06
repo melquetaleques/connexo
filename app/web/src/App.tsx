@@ -23,6 +23,7 @@ import { ClientNotificationsPage } from "./pages/ClientNotificationsPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { LawyerProcessesPage } from "./pages/LawyerProcessesPage";
 import { LawyerSubscriptionPage } from "./pages/LawyerSubscriptionPage";
+import { LandingPage } from "./pages/LandingPage";
 import { AppShell } from "./components/layout/AppShell";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
@@ -33,8 +34,8 @@ export default function App() {
     <ErrorBoundary>
       <ToastProvider>
         <Routes>
-        {/* ── Raiz ───────────────────────────────────────────────────────── */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* ── Raiz: landing page comercial pública ───────────────────────── */}
+        <Route path="/" element={<LandingPage />} />
 
         {/* ── Rotas públicas ─────────────────────────────────────────────── */}
         <Route path="/login" element={<LoginPage />} />

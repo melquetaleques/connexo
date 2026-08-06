@@ -350,16 +350,12 @@ func (r *Router) handleLinkDetails(w http.ResponseWriter, req *http.Request) {
 		deliverables = []repository.Deliverable{}
 	}
 
-	// Buscar process_events via LinkService (precisamos do processID)
-	processID, err := r.LinkRepo.GetProcessIDByClientID(req.Context(), link.ClientID)
+	// Timeline do processo do vínculo
 	var processEvents []*repository.ProcessEvent
-	if err == nil && processID != uuid.Nil {
-		// Usar o ProcessEventsRepo se disponível no Router
-		if r.ProcessEventsRepo != nil {
-			events, err := r.ProcessEventsRepo.ListByProcess(req.Context(), processID)
-			if err == nil {
-				processEvents = events
-			}
+	if link.ProcessID != uuid.Nil && r.ProcessEventsRepo != nil {
+		events, err := r.ProcessEventsRepo.ListByProcess(req.Context(), link.ProcessID)
+		if err == nil {
+			processEvents = events
 		}
 	}
 	if processEvents == nil {
