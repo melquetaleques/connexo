@@ -167,8 +167,9 @@ func main() {
 
 	// Lawyer routes (JWT protected)
 	jwtMW := func(h http.HandlerFunc) http.HandlerFunc { return handler.JWTAuth(jwtMaker, h) }
-	mux.HandleFunc("/api/adv/clients", jwtMW(lawyerHandler.ListClients))
-	mux.HandleFunc("/api/adv/clients/", jwtMW(lawyerHandler.GetClient))
+	mux.HandleFunc("GET /api/adv/clients", jwtMW(lawyerHandler.ListClients))
+	mux.HandleFunc("POST /api/adv/clients", jwtMW(lawyerHandler.CreateClient))
+	mux.HandleFunc("GET /api/adv/clients/{id}", jwtMW(lawyerHandler.GetClient))
 	mux.HandleFunc("/api/adv/processes", jwtMW(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			lawyerHandler.CreateProcess(w, r)

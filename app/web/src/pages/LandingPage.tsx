@@ -162,33 +162,6 @@ function ComoFuncionaSection() {
   );
 }
 
-function EticaSection() {
-  return (
-    <section className="py-24 lg:py-32 bg-white" id="etica">
-      <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <div className="max-w-2xl mx-auto p-8 rounded-2xl bg-surface-1 border border-outline/60">
-          <div className="flex items-start gap-4">
-            <Icon name="gavel" className="text-secondary text-2xl shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-black text-primary mb-1">
-                Compromisso com a Ética Profissional
-              </p>
-              <p className="text-xs text-on-surface-variant font-medium leading-relaxed">
-                Em conformidade com o Art. 7º do Código de Ética e Disciplina da OAB,
-                o contador parceiro recebe exclusivamente pelo serviço técnico prestado,
-                <strong> nunca por indicação ou intermediação</strong>. Não há qualquer
-                tipo de repasse, comissão ou participação nos honorários advocatícios.
-                A relação entre advogado e contador é transparente, profissional e
-                juridicamente segregada.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function FAQSection() {
   return (
     <section className="py-24 lg:py-32 bg-surface-1">
@@ -300,7 +273,6 @@ export function LandingPage() {
 
       <HeroSection />
       <ComoFuncionaSection />
-      <EticaSection />
       <FAQSection />
       <Footer />
     </div>

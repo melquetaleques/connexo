@@ -86,7 +86,7 @@ export function ServicesPage() {
       loadServices();
     } catch (err: any) {
       console.error(err);
-      if (err.response?.status === 400) {
+      if (err.response?.status === 409) {
         setError("Já existe um serviço com este título.");
       } else if (err.response) {
         setError("Erro ao salvar serviço. Verifique os campos e tente novamente.");

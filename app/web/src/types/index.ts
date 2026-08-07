@@ -18,7 +18,7 @@ export interface Client {
   email: string;
   phone: string;
   type: "PF" | "PJ";
-  status: "active" | "inactive" | "pending";
+  status: "ativo" | "atencao" | "encerrado";
   notes?: string;
   created_at: string;
   updated_at: string;

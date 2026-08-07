@@ -8,6 +8,7 @@ export function AccountantProfileEdit() {
   const [profile, setProfile] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     getMyProfile()
@@ -18,12 +19,14 @@ export function AccountantProfileEdit() {
 
   const handleSave = async () => {
     setSaving(true);
+    setError(null);
     try {
       await updateAccountantProfile(profile);
       alert("Perfil atualizado com sucesso!");
       navigate("/acc/dashboard");
-    } catch (error) {
-      console.error("Erro ao salvar perfil:", error);
+    } catch (err: any) {
+      console.error("Erro ao salvar perfil:", err);
+      setError(err?.response?.data?.error || "Erro ao salvar perfil. Tente novamente.");
     } finally {
       setSaving(false);
     }
@@ -48,6 +51,13 @@ export function AccountantProfileEdit() {
           <h1 className="text-4xl font-black text-primary tracking-tight mb-2">Editar Perfil Profissional</h1>
           <p className="text-primary/40 font-bold uppercase tracking-[0.2em] text-xs">Configure como você aparece no catálogo público</p>
         </div>
+
+        {error && (
+          <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 flex items-center gap-3">
+            <Icon name="error_outline" className="text-rose-500" />
+            <p className="text-sm font-bold text-rose-700">{error}</p>
+          </div>
+        )}
 
         <div className="space-y-8">
           <Card className="p-10">

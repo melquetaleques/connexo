@@ -508,7 +508,15 @@ func (r *Router) handleInviteMember(w http.ResponseWriter, req *http.Request) {
 	smtpPass := os.Getenv("SMTP_PASS")
 	smtpFrom := os.Getenv("SMTP_FROM")
 
-	magicLink := fmt.Sprintf("http://localhost:5173/invite/%s", tokenUUID.String())
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		scheme := "https"
+		if req.TLS == nil {
+			scheme = "http"
+		}
+		frontendURL = fmt.Sprintf("%s://%s", scheme, req.Host)
+	}
+	magicLink := fmt.Sprintf("%s/invite/%s", strings.TrimSuffix(frontendURL, "/"), tokenUUID.String())
 
 	// Se SMTP estiver configurado, enviar email real. Caso contrário, simular o envio.
 	if smtpHost != "" && smtpPort != "" {

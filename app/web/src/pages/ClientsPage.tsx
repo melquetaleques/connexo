@@ -17,7 +17,7 @@ import {
 import api from "@/services/api";
 import type { Client } from "@/types";
 
-type FilterKey = "todos" | "active" | "inactive" | "pending";
+type FilterKey = "todos" | "ativo" | "atencao" | "encerrado";
 
 export function ClientsPage() {
   const navigate = useNavigate();
@@ -53,9 +53,9 @@ export function ClientsPage() {
 
   const tabs: { k: FilterKey; l: string; n: number }[] = [
     { k: "todos", l: "Todos", n: clients.length },
-    { k: "active", l: "Ativos", n: clients.filter((c) => c.status === "active").length },
-    { k: "pending", l: "Pendente", n: clients.filter((c) => c.status === "pending").length },
-    { k: "inactive", l: "Inativos", n: clients.filter((c) => c.status === "inactive").length },
+    { k: "ativo", l: "Ativos", n: clients.filter((c) => c.status === "ativo").length },
+    { k: "atencao", l: "Atenção", n: clients.filter((c) => c.status === "atencao").length },
+    { k: "encerrado", l: "Encerrados", n: clients.filter((c) => c.status === "encerrado").length },
   ];
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -277,9 +277,9 @@ export function ClientsPage() {
                       <p className="text-[10px] font-bold text-primary/40 mt-0.5">{c.phone}</p>
                     </td>
                     <td className="px-8 py-5 text-right">
-                      <Pill tone={c.status === "active" ? "success" : c.status === "pending" ? "warning" : "neutral"}>
-                        <StatusDot tone={c.status === "active" ? "success" : c.status === "pending" ? "warning" : "neutral"} />
-                        {c.status === "active" ? "Ativo" : c.status === "pending" ? "Pendente" : "Encerrado"}
+                      <Pill tone={c.status === "ativo" ? "success" : c.status === "atencao" ? "warning" : "neutral"}>
+                        <StatusDot tone={c.status === "ativo" ? "success" : c.status === "atencao" ? "warning" : "neutral"} />
+                        {c.status === "ativo" ? "Ativo" : c.status === "atencao" ? "Atenção" : "Encerrado"}
                       </Pill>
                     </td>
                     <td className="px-8 py-5">
@@ -301,8 +301,8 @@ export function ClientsPage() {
                 <Card className="hover:border-secondary/40 hover:shadow-xl transition-all p-6">
                   <div className="flex items-start justify-between mb-6">
                     <Avatar initials={c.name.substring(0, 2).toUpperCase()} size="lg" tone="gold" />
-                    <Pill tone={c.status === "active" ? "success" : c.status === "pending" ? "warning" : "neutral"}>
-                      <StatusDot tone={c.status === "active" ? "success" : c.status === "pending" ? "warning" : "neutral"} />
+                    <Pill tone={c.status === "ativo" ? "success" : c.status === "atencao" ? "warning" : "neutral"}>
+                      <StatusDot tone={c.status === "ativo" ? "success" : c.status === "atencao" ? "warning" : "neutral"} />
                     </Pill>
                   </div>
                   <h4 className="text-lg font-black text-primary mb-1 group-hover:text-secondary transition-colors">{c.name}</h4>
