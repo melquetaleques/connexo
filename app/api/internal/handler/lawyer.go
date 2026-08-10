@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"app/api/internal/domain"
@@ -100,6 +101,7 @@ func (h *LawyerHandler) CreateProcess(w http.ResponseWriter, r *http.Request) {
 		case service.ErrUnauthorized:
 			respondErr(w, http.StatusForbidden, "cliente não encontrado")
 		default:
+			log.Printf("CreateProcess: %v", err)
 			respondErr(w, http.StatusInternalServerError, "erro ao criar processo")
 		}
 		return

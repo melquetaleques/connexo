@@ -128,6 +128,9 @@ func (s *LawyerService) CreateProcess(ctx context.Context, userID uuid.UUID, p *
 
 	p.ID = uuid.New()
 	p.LawyerID = lawyer.ID
+	if p.Status == "" {
+		p.Status = "em_andamento"
+	}
 	p.CreatedAt = time.Now()
 	p.UpdatedAt = time.Now()
 
