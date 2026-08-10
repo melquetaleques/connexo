@@ -157,7 +157,7 @@ export function ClientDetailPage() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <GhostButton icon="forum">Mensagens</GhostButton>
+            <GhostButton icon="forum" disabled title="Mensagens em desenvolvimento">Mensagens</GhostButton>
             <GoldButton icon="add" accent={ACCENT} onClick={() => setIsNewProcessOpen(true)}>
               Novo processo
             </GoldButton>

@@ -172,7 +172,7 @@ export function ClientsPage() {
           kicker="Gestão de Carteira" 
           action={
             <div className="flex items-center gap-3">
-              <GhostButton icon="download" className="hidden md:inline-flex">Exportar</GhostButton>
+              <GhostButton icon="download" className="hidden md:inline-flex" disabled title="Exportação em desenvolvimento">Exportar</GhostButton>
               <GoldButton icon="add" onClick={() => setIsAddModalOpen(true)}>Novo Cliente</GoldButton>
             </div>
           }

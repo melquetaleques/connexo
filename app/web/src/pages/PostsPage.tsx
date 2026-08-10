@@ -298,7 +298,7 @@ export function PostsPage() {
                     <span className="text-xs font-bold text-secondary uppercase tracking-widest flex items-center gap-1">
                       Status: {post.status}
                     </span>
-                    <GhostButton type="button" className="text-xs font-bold p-0 flex items-center gap-1">
+                    <GhostButton type="button" className="text-xs font-bold p-0 flex items-center gap-1" disabled title="Página pública de artigo em desenvolvimento">
                       Ver artigo <Icon name="arrow_forward" className="text-sm" />
                     </GhostButton>
                   </div>

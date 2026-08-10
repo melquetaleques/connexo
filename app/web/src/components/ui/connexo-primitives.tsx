@@ -118,6 +118,7 @@ interface GoldButtonProps {
   variant?: "primary" | "ghost";
   accent?: string;
   tone?: string;
+  title?: string;
 }
 
 export function GoldButton({
@@ -128,6 +129,7 @@ export function GoldButton({
   disabled,
   onClick,
   variant = "primary",
+  title,
 }: GoldButtonProps) {
   const base = cn(
     "inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-extrabold uppercase tracking-widest transition-all",
@@ -140,7 +142,7 @@ export function GoldButton({
   );
 
   return (
-    <button type={type} className={base} disabled={disabled} onClick={onClick}>
+    <button type={type} className={base} disabled={disabled} onClick={onClick} title={title}>
       {icon && <Icon name={icon} className="text-lg" />}
       {children}
     </button>
@@ -155,6 +157,7 @@ export function GhostButton({
   disabled,
   type = "button",
   tone,
+  title,
 }: {
   children?: React.ReactNode;
   className?: string;
@@ -163,6 +166,7 @@ export function GhostButton({
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
   tone?: string;
+  title?: string;
 }) {
   return (
     <button
@@ -175,6 +179,7 @@ export function GhostButton({
       )}
       onClick={onClick}
       disabled={disabled}
+      title={title}
     >
       {icon && <Icon name={icon} className="text-lg" />}
       {children}

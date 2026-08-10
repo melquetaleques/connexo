@@ -41,8 +41,8 @@ export function AccountantCatalogPage() {
         />
         
         <div className="flex items-center gap-3">
-          <GhostButton icon="filter_list">Filtros Avançados</GhostButton>
-          <GhostButton icon="sort">Ordenar por: Relevância</GhostButton>
+          <GhostButton icon="filter_list" disabled title="Filtros avançados em desenvolvimento">Filtros Avançados</GhostButton>
+          <GhostButton icon="sort" disabled title="Ordenação em desenvolvimento">Ordenar por: Relevância</GhostButton>
         </div>
       </div>
 

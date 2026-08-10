@@ -104,7 +104,7 @@ export function ClientProcessDetail() {
                 </div>
               </div>
 
-              <GhostButton icon="mail" className="w-full py-4 text-xs">Enviar Mensagem</GhostButton>
+              <GhostButton icon="mail" className="w-full py-4 text-xs" disabled title="Mensagens em desenvolvimento">Enviar Mensagem</GhostButton>
             </Card>
           ) : (
             <Card className="p-10 text-center bg-secondary/5 border-2 border-dashed border-secondary/30">

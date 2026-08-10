@@ -178,7 +178,7 @@ export function LawyerSubscriptionPage() {
                 <li className="text-xs text-on-surface-variant">Até 10 processos ativos</li>
                 <li className="text-xs text-on-surface-variant">Até 3 contadores</li>
               </ul>
-              <GoldButton variant="ghost" className="w-full text-[10px] py-2.5" icon="sell">
+              <GoldButton variant="ghost" className="w-full text-[10px] py-2.5" icon="sell" disabled title="Troca de plano em desenvolvimento">
                 Contratar
               </GoldButton>
             </div>
@@ -189,7 +189,7 @@ export function LawyerSubscriptionPage() {
                 <li className="text-xs text-on-surface-variant">Processos ilimitados</li>
                 <li className="text-xs text-on-surface-variant">Contadores ilimitados</li>
               </ul>
-              <GoldButton className="w-full text-[10px] py-2.5" icon="sell">
+              <GoldButton className="w-full text-[10px] py-2.5" icon="sell" disabled title="Troca de plano em desenvolvimento">
                 Contratar
               </GoldButton>
             </div>

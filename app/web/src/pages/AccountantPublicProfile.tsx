@@ -93,7 +93,7 @@ export function AccountantPublicProfile() {
             >
               Contratar para Processo
             </GoldButton>
-            <GhostButton className="w-full py-4 text-xs font-bold" icon="mail">
+            <GhostButton className="w-full py-4 text-xs font-bold" icon="mail" disabled title="Mensagens em desenvolvimento">
               Enviar Mensagem
             </GhostButton>
           </Card>

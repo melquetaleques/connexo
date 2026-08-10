@@ -22,6 +22,7 @@ import { ClientDocumentsPage } from "./pages/ClientDocumentsPage";
 import { ClientNotificationsPage } from "./pages/ClientNotificationsPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { LawyerProcessesPage } from "./pages/LawyerProcessesPage";
+import { LawyerProcessDetail } from "./pages/adv/LawyerProcessDetail";
 import { LawyerSubscriptionPage } from "./pages/LawyerSubscriptionPage";
 import { LandingPage } from "./pages/LandingPage";
 import { AppShell } from "./components/layout/AppShell";
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="/adv/clientes/:id" element={<ClientDetailPage />} />
             <Route path="/adv/processos" element={<LawyerProcessesPage />} />
             <Route path="/adv/processos/:id" element={<ProcessPage />} />
+            <Route path="/adv/vinculos/:id" element={<LawyerProcessDetail />} />
             <Route path="/adv/usuarios" element={<UsersPage />} />
             <Route path="/adv/assinatura" element={<LawyerSubscriptionPage />} />
             <Route path="/adv/configuracoes" element={<SettingsPage />} />

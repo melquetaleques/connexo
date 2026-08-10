@@ -150,7 +150,7 @@ export function LawyerDashboard() {
               <p className="text-sm text-on-surface-variant mb-6">
                 Sua assinatura renova automaticamente em 15 de Junho de 2026.
               </p>
-              <GhostButton className="w-full justify-center" icon="credit_card">Gerenciar Assinatura</GhostButton>
+              <GhostButton className="w-full justify-center" icon="credit_card" onClick={() => navigate("/adv/assinatura")}>Gerenciar Assinatura</GhostButton>
             </Card>
           </div>
         </div>

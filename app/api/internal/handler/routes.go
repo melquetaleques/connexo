@@ -124,6 +124,7 @@ func (r *Router) RegisterRoutes(mux *http.ServeMux) {
 
 	// Rotas do advogado (ADV)
 	mux.HandleFunc("/api/adv/links/", r.authMiddleware(r.handleAdvLinkRoutes))
+	mux.HandleFunc("GET /api/adv/processes/{id}/link", r.authMiddleware(r.handleProcessLink))
 
 	// Rotas do cliente (CLI) - readonly
 	mux.HandleFunc("/api/cli/links/", r.authMiddleware(r.handleCliLinkRoutes))
@@ -179,6 +180,36 @@ func (r *Router) handleAccLinkRoutes(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	http.Error(w, "Rota não encontrada", http.StatusNotFound)
+}
+
+// handleProcessLink busca o vínculo vigente (não recusado/cancelado/concluído)
+// de um processo, se houver. GET /api/adv/processes/{id}/link
+func (r *Router) handleProcessLink(w http.ResponseWriter, req *http.Request) {
+	claims := claimsFromContext(req.Context())
+	processID, err := uuid.Parse(req.PathValue("id"))
+	if err != nil {
+		respondErr(w, http.StatusBadRequest, "id do processo inválido")
+		return
+	}
+
+	// Reaproveita a checagem de posse já feita pelo LawyerService.
+	if _, err := r.LawyerHandler.svc.GetProcess(req.Context(), claims.UserID, processID); err != nil {
+		respondErr(w, http.StatusNotFound, "processo não encontrado")
+		return
+	}
+
+	link, err := r.LinkRepo.FindVigenteByProcess(req.Context(), processID)
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, "erro ao buscar vínculo")
+		return
+	}
+	if link == nil {
+		respond(w, http.StatusOK, map[string]any{"link": nil})
+		return
+	}
+
+	accountant, _ := r.UserRepo.GetByID(req.Context(), link.AccountantID)
+	respond(w, http.StatusOK, map[string]any{"link": link, "accountant": accountant})
 }
 
 // handleAdvLinkRoutes dispatches /api/adv/links/{id}/... routes

@@ -103,7 +103,7 @@ export function DashboardPage() {
             <GoldButton icon="add" onClick={() => navigate("/adv/clientes")}>
               Cadastrar Primeiro Cliente
             </GoldButton>
-            <GhostButton icon="help_outline">Ver Tutorial</GhostButton>
+            <GhostButton icon="help_outline" disabled title="Tutorial em desenvolvimento">Ver Tutorial</GhostButton>
           </div>
         </Card>
       </PageContainer>
@@ -233,7 +233,7 @@ export function DashboardPage() {
               <div className="p-4 rounded-xl bg-surface-2 border border-outline/60 mb-6">
                 <p className="text-xs font-medium text-primary/60 italic">"Nossos peritos estão disponíveis 24/7 para casos de liminares e urgências."</p>
               </div>
-              <GoldButton className="w-full" icon="support_agent">Falar com Consultor</GoldButton>
+              <GoldButton className="w-full" icon="support_agent" disabled title="Canal de suporte em desenvolvimento">Falar com Consultor</GoldButton>
             </Card>
           </div>
         </div>

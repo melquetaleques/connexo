@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   Card,
   GoldButton,
@@ -13,13 +13,39 @@ import {
 } from "@/components/ui/connexo-primitives";
 import { DocumentManager } from "@/components/shared/DocumentManager";
 import { getProcess, getProcessTimeline, type TimelineEntry } from "@/services/processes";
+import api from "@/services/api";
 import type { Process } from "@/types";
+
+interface ProcessLink {
+  id: string;
+  status: string;
+}
+
+interface LinkAccountant {
+  id: string;
+  name: string;
+}
+
+const LINK_STATUS_LABELS: Record<string, string> = {
+  solicitado: "Solicitado",
+  aceito: "Aceito",
+  ativo: "Ativo",
+  em_andamento: "Em Andamento",
+  entregue: "Entregue",
+  revisao_solicitada: "Revisão Solicitada",
+  cancelamento_solicitado: "Cancelamento Solicitado",
+};
 
 export function ProcessPage() {
   const { id: _id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [process, setProcess] = useState<Process | null>(null);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [link, setLink] = useState<ProcessLink | null>(null);
+  const [linkAccountant, setLinkAccountant] = useState<LinkAccountant | null>(null);
+  const [linkLoading, setLinkLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (_id) {
@@ -31,8 +57,26 @@ export function ProcessPage() {
         setTimeline(t);
         setLoading(false);
       }).catch(() => setLoading(false));
+
+      api.get(`/adv/processes/${_id}/link`)
+        .then((res) => {
+          setLink(res.data?.link ?? null);
+          setLinkAccountant(res.data?.accountant ?? null);
+        })
+        .catch(() => setLink(null))
+        .finally(() => setLinkLoading(false));
     }
   }, [_id]);
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      alert("Não foi possível copiar o link. Copie manualmente: " + window.location.href);
+    }
+  };
 
   if (loading) {
     return (
@@ -76,8 +120,12 @@ export function ProcessPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <GhostButton icon="share">Compartilhar</GhostButton>
-            <GoldButton icon="history_edu">Solicitar Perícia</GoldButton>
+            <GhostButton icon={copied ? "check" : "share"} onClick={handleShare}>
+              {copied ? "Link copiado!" : "Compartilhar"}
+            </GhostButton>
+            <GoldButton icon="history_edu" disabled title="Solicitação de perícia pelo advogado em desenvolvimento">
+              Solicitar Perícia
+            </GoldButton>
           </div>
         </div>
       </div>
@@ -124,19 +172,34 @@ export function ProcessPage() {
           <Card className="p-8">
             <h3 className="text-sm font-black text-primary uppercase tracking-widest mb-6 border-b border-outline/60 pb-4">Contador Responsavel</h3>
             <div className="flex flex-col items-center text-center">
-              <Avatar initials="--" size="lg" tone="gold" />
-              <h4 className="mt-4 text-lg font-black text-primary">Aguardando vinculacao</h4>
-              <p className="text-xs font-bold text-secondary uppercase tracking-widest">Nenhum perito designado</p>
-              
-              <div className="mt-6 w-full space-y-4">
-                <div className="p-4 rounded-xl bg-surface-1 border border-outline/60 text-left">
-                  <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest mb-1">Status do Vínculo</p>
-                  <Pill tone="success" className="w-full justify-center py-2">Aceito & Ativo</Pill>
-                </div>
-                
-                <GoldButton className="w-full" icon="chat">Enviar Mensagem</GoldButton>
-                <GhostButton className="w-full" icon="person_search">Mudar Contador</GhostButton>
-              </div>
+              {linkLoading ? (
+                <div className="w-8 h-8 rounded-full border-4 border-secondary/20 border-t-secondary animate-spin" />
+              ) : link ? (
+                <>
+                  <Avatar initials={(linkAccountant?.name || "CT").substring(0, 2).toUpperCase()} size="lg" tone="gold" />
+                  <h4 className="mt-4 text-lg font-black text-primary">{linkAccountant?.name || "Contador"}</h4>
+                  <p className="text-xs font-bold text-secondary uppercase tracking-widest">Contador Perito Judicial</p>
+
+                  <div className="mt-6 w-full space-y-4">
+                    <div className="p-4 rounded-xl bg-surface-1 border border-outline/60 text-left">
+                      <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest mb-1">Status do Vínculo</p>
+                      <Pill tone="success" className="w-full justify-center py-2">
+                        {LINK_STATUS_LABELS[link.status] || link.status}
+                      </Pill>
+                    </div>
+
+                    <GoldButton className="w-full" icon="visibility" onClick={() => navigate(`/adv/vinculos/${link.id}`)}>
+                      Ver Vínculo
+                    </GoldButton>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Avatar initials="--" size="lg" tone="gold" />
+                  <h4 className="mt-4 text-lg font-black text-primary">Aguardando vinculação</h4>
+                  <p className="text-xs font-bold text-secondary uppercase tracking-widest">Nenhum perito designado</p>
+                </>
+              )}
             </div>
           </Card>
 
