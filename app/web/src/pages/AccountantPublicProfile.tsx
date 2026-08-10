@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { PageContainer, GoldButton, Avatar, Icon, Card, SectionTitle, GhostButton } from "@/components/ui/connexo-primitives";
+import { PageContainer, GoldButton, Avatar, Icon, Card, SectionTitle, GhostButton, SuccessDialog } from "@/components/ui/connexo-primitives";
 import { getAccountantProfile, AccountantCatalogItem } from "@/services/catalog";
 import { BindProcessModal } from "@/components/marketplace/BindProcessModal";
 
@@ -10,6 +10,7 @@ export function AccountantPublicProfile() {
   const [accountant, setAccountant] = useState<AccountantCatalogItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -141,15 +142,22 @@ export function AccountantPublicProfile() {
       </div>
 
       {isModalOpen && accountant && (
-        <BindProcessModal 
-          accountant={accountant} 
+        <BindProcessModal
+          accountant={accountant}
           onClose={() => setIsModalOpen(false)}
           onSuccess={() => {
             setIsModalOpen(false);
-            alert("Vínculo solicitado com sucesso! O perito será notificado.");
+            setShowSuccess(true);
           }}
         />
       )}
+
+      <SuccessDialog
+        open={showSuccess}
+        title="Vínculo solicitado!"
+        message={`${accountant?.name || "O perito"} foi notificado e vai responder em breve.`}
+        onClose={() => setShowSuccess(false)}
+      />
     </PageContainer>
   );
 }

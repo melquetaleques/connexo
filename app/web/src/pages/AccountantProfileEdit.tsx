@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PageContainer, Card, Icon, SectionTitle, GoldButton, GhostButton, Pill } from "@/components/ui/connexo-primitives";
+import { PageContainer, Card, Icon, SectionTitle, GoldButton, GhostButton, Pill, SuccessDialog } from "@/components/ui/connexo-primitives";
 import { getMyProfile, updateAccountantProfile } from "@/services/accountant";
 import { useNavigate } from "react-router-dom";
 
@@ -9,6 +9,7 @@ export function AccountantProfileEdit() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [cityInput, setCityInput] = useState("");
   const [specialtyInput, setSpecialtyInput] = useState("");
 
@@ -52,8 +53,7 @@ export function AccountantProfileEdit() {
     setError(null);
     try {
       await updateAccountantProfile(profile);
-      alert("Perfil atualizado com sucesso!");
-      navigate("/acc/dashboard");
+      setShowSuccess(true);
     } catch (err: any) {
       console.error("Erro ao salvar perfil:", err);
       setError(err?.response?.data?.error || "Erro ao salvar perfil. Tente novamente.");
@@ -224,6 +224,13 @@ export function AccountantProfileEdit() {
           </div>
         </div>
       </div>
+
+      <SuccessDialog
+        open={showSuccess}
+        title="Perfil atualizado!"
+        message="Suas alterações já estão visíveis no catálogo público."
+        onClose={() => navigate("/acc/dashboard")}
+      />
     </PageContainer>
   );
 }

@@ -189,6 +189,34 @@ export function GhostButton({
   );
 }
 
+// ---- SuccessDialog ----
+// Modal de confirmação com marca própria — nunca usar window.alert().
+interface SuccessDialogProps {
+  open: boolean;
+  title: string;
+  message?: string;
+  actionLabel?: string;
+  onClose: () => void;
+}
+
+export function SuccessDialog({ open, title, message, actionLabel = "Continuar", onClose }: SuccessDialogProps) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-[32px] shadow-2xl max-w-sm w-full p-10 text-center animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+        <div className="w-20 h-20 mx-auto rounded-full bg-emerald-50 flex items-center justify-center mb-6">
+          <Icon name="check_circle" fill className="text-5xl text-emerald-500" />
+        </div>
+        <h3 className="text-2xl font-black text-primary tracking-tight mb-2">{title}</h3>
+        {message && <p className="text-sm text-primary/50 font-medium mb-8">{message}</p>}
+        <GoldButton className="w-full py-4 justify-center" onClick={onClose}>
+          {actionLabel}
+        </GoldButton>
+      </div>
+    </div>
+  );
+}
+
 // ---- Field ----
 interface FieldProps {
   label: string;
