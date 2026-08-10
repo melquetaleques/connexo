@@ -95,7 +95,7 @@ export function DocumentManager({ processId, readOnly = false }: DocumentManager
                 <div>
                   <p className="text-sm font-black text-primary mb-1">{doc.name}</p>
                   <p className="text-[10px] font-bold text-primary/30 uppercase tracking-widest">
-                    {new Date(doc.created_at).toLocaleDateString()} • PDF
+                    {doc.created_at ? new Date(doc.created_at).toLocaleDateString() : "—"} • PDF
                   </p>
                 </div>
               </div>
@@ -103,7 +103,7 @@ export function DocumentManager({ processId, readOnly = false }: DocumentManager
               <div className="flex items-center gap-4">
                 {!readOnly && (
                   <button 
-                    onClick={() => handleToggleVisibility(doc.id, doc.visible_to_accountant)}
+                    onClick={() => handleToggleVisibility(doc.id, !!doc.visible_to_accountant)}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
                       doc.visible_to_accountant 
                       ? 'bg-emerald-500/10 text-emerald-600' 

@@ -6,11 +6,6 @@ export interface AccountantCatalogItem extends Accountant {
   avatar_url?: string;
 }
 
-export interface AccountantListResponse {
-  data: AccountantCatalogItem[];
-  total: number;
-}
-
 export interface AccountantFilterParams {
   specialty?: string;
   city?: string;
@@ -19,7 +14,7 @@ export interface AccountantFilterParams {
 }
 
 export async function listAccountants(filters: AccountantFilterParams = {}) {
-  const { data } = await api.get<AccountantListResponse>("/public/accountants", {
+  const { data } = await api.get<AccountantCatalogItem[]>("/public/accountants", {
     params: filters,
   });
   return data;

@@ -214,7 +214,7 @@ func main() {
 
 	// Document routes — só existem com MinIO disponível.
 	if docRepo != nil {
-		documentHandler := handler.NewDocumentHandler(docRepo, domainProcessRepo, domainLinkRepo)
+		documentHandler := handler.NewDocumentHandler(docRepo, domainProcessRepo, domainLinkRepo, domainLawyerRepo)
 		mux.HandleFunc("/api/adv/processes/{id}/documents", userMW(documentHandler.HandleProcessDocuments))
 		mux.HandleFunc("PUT /api/adv/documents/{id}/visibility", userMW(documentHandler.ToggleVisibility))
 	} else {
@@ -222,6 +222,8 @@ func main() {
 	}
 
 	router.LawyerHandler = lawyerHandler
+	router.ClientRepo = domainClientRepo
+	router.LawyerRepo = domainLawyerRepo
 	router.AccountantServiceRepo = repository.NewAccountantServiceRepository(repoDB)
 
 	// Register all other routes

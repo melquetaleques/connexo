@@ -19,6 +19,7 @@ type DocumentHandler struct {
 	docs      *repository.DocumentRepository
 	processes domain.ProcessRepository
 	links     domain.LinkRepository
+	lawyers   domain.LawyerRepository
 }
 
 // NewDocumentHandler constroi um DocumentHandler.
@@ -26,11 +27,13 @@ func NewDocumentHandler(
 	docRepo *repository.DocumentRepository,
 	processRepo domain.ProcessRepository,
 	linkRepo domain.LinkRepository,
+	lawyerRepo domain.LawyerRepository,
 ) *DocumentHandler {
 	return &DocumentHandler{
 		docs:      docRepo,
 		processes: processRepo,
 		links:     linkRepo,
+		lawyers:   lawyerRepo,
 	}
 }
 
@@ -39,8 +42,12 @@ func NewDocumentHandler(
 func (h *DocumentHandler) canAccessProcess(r *http.Request, processID uuid.UUID, user *domain.User) bool {
 	switch user.Role {
 	case domain.RoleAdvogado, domain.RoleAdmin:
+		lawyer, err := h.lawyers.FindByUserID(r.Context(), user.ID)
+		if err != nil || lawyer == nil {
+			return false
+		}
 		process, err := h.processes.FindByID(r.Context(), processID)
-		return err == nil && process != nil && process.LawyerID == user.ID
+		return err == nil && process != nil && process.LawyerID == lawyer.ID
 	case domain.RoleContador:
 		link, err := h.links.FindActiveByProcess(r.Context(), processID)
 		return err == nil && link != nil && link.AccountantID == user.ID
@@ -208,8 +215,13 @@ func (h *DocumentHandler) ToggleVisibility(w http.ResponseWriter, r *http.Reques
 	}
 
 	// O documento precisa pertencer a um processo do advogado.
+	lawyer, err := h.lawyers.FindByUserID(r.Context(), user.ID)
+	if err != nil || lawyer == nil {
+		respondErr(w, http.StatusForbidden, "este documento não pertence a você")
+		return
+	}
 	process, err := h.processes.FindByID(r.Context(), doc.ProcessID)
-	if err != nil || process == nil || process.LawyerID != user.ID {
+	if err != nil || process == nil || process.LawyerID != lawyer.ID {
 		respondErr(w, http.StatusForbidden, "este documento não pertence a você")
 		return
 	}

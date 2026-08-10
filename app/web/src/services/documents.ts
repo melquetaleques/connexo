@@ -31,8 +31,8 @@ export async function uploadDocument(processId: string, file: File): Promise<Doc
   return res.data;
 }
 
-export async function toggleDocumentVisibility(documentId: string): Promise<{ visible: boolean }> {
-  const res = await api.post<{ visible: boolean }>(`/adv/documents/${documentId}/visibility`);
+export async function toggleDocumentVisibility(documentId: string, visible: boolean): Promise<{ visible: boolean }> {
+  const res = await api.put<{ visible: boolean }>(`/adv/documents/${documentId}/visibility`, { visible });
   return res.data;
 }
 

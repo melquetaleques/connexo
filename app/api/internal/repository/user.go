@@ -127,6 +127,20 @@ func (r *UserRepository) Create(ctx context.Context, user *User) error {
 	return tx.Commit()
 }
 
+// FindByEmail busca um usuário pelo e-mail, ou nil se não existir.
+func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*User, error) {
+	var u User
+	query := `SELECT id, email, password_hash, name, role, created_at FROM users WHERE email = $1`
+	err := r.db.GetContext(ctx, &u, query, email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &u, nil
+}
+
 // GetByID busca um usuário por ID.
 func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*User, error) {
 	var user User

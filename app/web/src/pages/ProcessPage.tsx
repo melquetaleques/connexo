@@ -3,16 +3,17 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   Card,
   GoldButton,
+  GhostButton,
   Icon,
   PageContainer,
   Pill,
   StatusDot,
   Stat,
   Avatar,
-  GhostButton
 } from "@/components/ui/connexo-primitives";
 import { DocumentManager } from "@/components/shared/DocumentManager";
 import { getProcess, getProcessTimeline, type TimelineEntry } from "@/services/processes";
+import { listAccountants, type AccountantCatalogItem } from "@/services/catalog";
 import api from "@/services/api";
 import type { Process } from "@/types";
 
@@ -45,7 +46,25 @@ export function ProcessPage() {
   const [link, setLink] = useState<ProcessLink | null>(null);
   const [linkAccountant, setLinkAccountant] = useState<LinkAccountant | null>(null);
   const [linkLoading, setLinkLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
+
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [accountants, setAccountants] = useState<AccountantCatalogItem[]>([]);
+  const [accountantsLoading, setAccountantsLoading] = useState(false);
+  const [selectedAccountantId, setSelectedAccountantId] = useState<string | null>(null);
+  const [requesting, setRequesting] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
+
+  const refreshLink = () => {
+    if (!_id) return;
+    setLinkLoading(true);
+    api.get(`/adv/processes/${_id}/link`)
+      .then((res) => {
+        setLink(res.data?.link ?? null);
+        setLinkAccountant(res.data?.accountant ?? null);
+      })
+      .catch(() => setLink(null))
+      .finally(() => setLinkLoading(false));
+  };
 
   useEffect(() => {
     if (_id) {
@@ -58,23 +77,39 @@ export function ProcessPage() {
         setLoading(false);
       }).catch(() => setLoading(false));
 
-      api.get(`/adv/processes/${_id}/link`)
-        .then((res) => {
-          setLink(res.data?.link ?? null);
-          setLinkAccountant(res.data?.accountant ?? null);
-        })
-        .catch(() => setLink(null))
-        .finally(() => setLinkLoading(false));
+      refreshLink();
     }
   }, [_id]);
 
-  const handleShare = async () => {
+  useEffect(() => {
+    if (isRequestModalOpen) {
+      setAccountantsLoading(true);
+      listAccountants()
+        .then(setAccountants)
+        .catch(() => setAccountants([]))
+        .finally(() => setAccountantsLoading(false));
+    }
+  }, [isRequestModalOpen]);
+
+  const handleRequestPericia = async () => {
+    if (!_id || !selectedAccountantId) return;
+    setRequesting(true);
+    setRequestError(null);
     try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      alert("Não foi possível copiar o link. Copie manualmente: " + window.location.href);
+      await api.post(`/adv/processes/${_id}/solicitar-pericia`, { accountant_id: selectedAccountantId });
+      setIsRequestModalOpen(false);
+      setSelectedAccountantId(null);
+      refreshLink();
+    } catch (err: any) {
+      if (err?.response?.status === 422) {
+        setRequestError(err.response.data?.error || "Cliente sem e-mail cadastrado.");
+      } else if (err?.response?.status === 409) {
+        setRequestError(err.response.data?.error || "Este processo já tem um contador vinculado.");
+      } else {
+        setRequestError(err?.response?.data?.error || "Erro ao solicitar perícia. Tente novamente.");
+      }
+    } finally {
+      setRequesting(false);
     }
   };
 
@@ -119,14 +154,13 @@ export function ProcessPage() {
             <p className="text-on-surface-variant font-medium mt-1">{process.court}</p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <GhostButton icon={copied ? "check" : "share"} onClick={handleShare}>
-              {copied ? "Link copiado!" : "Compartilhar"}
-            </GhostButton>
-            <GoldButton icon="history_edu" disabled title="Solicitação de perícia pelo advogado em desenvolvimento">
-              Solicitar Perícia
-            </GoldButton>
-          </div>
+          {!link && (
+            <div className="flex items-center gap-3">
+              <GoldButton icon="history_edu" onClick={() => setIsRequestModalOpen(true)}>
+                Solicitar Perícia
+              </GoldButton>
+            </div>
+          )}
         </div>
       </div>
 
@@ -198,6 +232,9 @@ export function ProcessPage() {
                   <Avatar initials="--" size="lg" tone="gold" />
                   <h4 className="mt-4 text-lg font-black text-primary">Aguardando vinculação</h4>
                   <p className="text-xs font-bold text-secondary uppercase tracking-widest">Nenhum perito designado</p>
+                  <GoldButton className="w-full mt-6" icon="history_edu" onClick={() => setIsRequestModalOpen(true)}>
+                    Solicitar Perícia
+                  </GoldButton>
                 </>
               )}
             </div>
@@ -226,6 +263,70 @@ export function ProcessPage() {
           </Card>
         </div>
       </div>
+
+      {isRequestModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/40 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-lg shadow-2xl p-0 overflow-hidden">
+            <div className="bg-primary p-6 text-white flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-black uppercase tracking-tight">Solicitar Perícia</h3>
+                <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Escolha um perito para {process.number}</p>
+              </div>
+              <button
+                onClick={() => setIsRequestModalOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+              >
+                <Icon name="close" />
+              </button>
+            </div>
+
+            <div className="p-8 max-h-[60vh] overflow-y-auto space-y-4">
+              {requestError && (
+                <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm font-bold text-rose-700">
+                  {requestError}
+                </div>
+              )}
+
+              {accountantsLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-8 h-8 rounded-full border-4 border-secondary/20 border-t-secondary animate-spin" />
+                </div>
+              ) : accountants.length === 0 ? (
+                <p className="text-sm font-bold text-primary/40 text-center py-8">Nenhum contador disponível no catálogo.</p>
+              ) : (
+                accountants.map((acc) => (
+                  <div
+                    key={acc.id}
+                    onClick={() => setSelectedAccountantId(acc.id)}
+                    className={`p-4 rounded-2xl border-2 cursor-pointer flex items-center gap-4 transition-all ${
+                      selectedAccountantId === acc.id ? "border-secondary bg-secondary/5" : "border-outline/30 hover:border-secondary/40"
+                    }`}
+                  >
+                    <Avatar initials={acc.name.substring(0, 2).toUpperCase()} tone="navy" />
+                    <div className="flex-1">
+                      <p className="text-sm font-black text-primary">{acc.name}</p>
+                      <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">{acc.city}, {acc.state}</p>
+                    </div>
+                    {selectedAccountantId === acc.id && <Icon name="check_circle" className="text-secondary" />}
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-8 bg-[#F9FAFB] flex gap-4">
+              <GhostButton className="flex-1 py-4" onClick={() => setIsRequestModalOpen(false)}>Cancelar</GhostButton>
+              <GoldButton
+                className="flex-[2] py-4"
+                disabled={!selectedAccountantId || requesting}
+                icon={requesting ? "autorenew" : "check"}
+                onClick={handleRequestPericia}
+              >
+                {requesting ? "Enviando..." : "Confirmar Solicitação"}
+              </GoldButton>
+            </div>
+          </Card>
+        </div>
+      )}
     </PageContainer>
   );
 }

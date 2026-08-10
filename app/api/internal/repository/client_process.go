@@ -68,6 +68,12 @@ func (r *clientRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+func (r *clientRepo) SetUserID(ctx context.Context, id, userID uuid.UUID) error {
+	query := `UPDATE clients SET user_id = $1, updated_at = NOW() WHERE id = $2`
+	_, err := r.db.ExecContext(ctx, query, userID, id)
+	return err
+}
+
 type processRepo struct {
 	db *DB
 }

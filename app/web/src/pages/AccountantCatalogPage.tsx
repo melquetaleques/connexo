@@ -17,7 +17,7 @@ export function AccountantCatalogPage() {
     setLoading(true);
     try {
       const response = await listAccountants(filters);
-      setAccountants(response.data);
+      setAccountants(response);
     } catch (error) {
       console.error("Erro ao carregar contadores:", error);
     } finally {

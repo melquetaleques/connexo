@@ -29,6 +29,9 @@ type ClientRepository interface {
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]Client, error)
 	ListByLawyer(ctx context.Context, lawyerID uuid.UUID) ([]Client, error)
 	Delete(ctx context.Context, id uuid.UUID) error
+	// SetUserID vincula o cadastro de cliente a uma conta de usuário do
+	// portal, permitindo que ele passe a acessar seus processos.
+	SetUserID(ctx context.Context, id, userID uuid.UUID) error
 }
 
 // ProcessRepository define operações de persistência de processos.

@@ -41,6 +41,17 @@ func NewLinkService(
 // Um processo só pode ter um vínculo vigente por vez: se já houver outro
 // contador vigente no processo, a solicitação é rejeitada.
 func (s *LinkService) RequestLink(ctx context.Context, processID, clientID, accountantID uuid.UUID) (*repository.Link, error) {
+	return s.requestLink(ctx, processID, clientID, accountantID, clientID, "cliente")
+}
+
+// RequestLinkAsLawyer cria o mesmo vínculo, mas registra o advogado (não o
+// cliente) como autor da solicitação na timeline — usado quando é o
+// escritório, e não o cliente, quem contrata o perito.
+func (s *LinkService) RequestLinkAsLawyer(ctx context.Context, processID, clientID, accountantID, lawyerUserID uuid.UUID) (*repository.Link, error) {
+	return s.requestLink(ctx, processID, clientID, accountantID, lawyerUserID, "advogado")
+}
+
+func (s *LinkService) requestLink(ctx context.Context, processID, clientID, accountantID, actorID uuid.UUID, actorRole string) (*repository.Link, error) {
 	// 1. Verificar se o cliente e o contador existem
 	client, err := s.userRepo.GetByID(ctx, clientID)
 	if err != nil {
@@ -92,7 +103,7 @@ func (s *LinkService) RequestLink(ctx context.Context, processID, clientID, acco
 	}
 
 	// 4. Registrar o evento na timeline do processo
-	s.recordEvent(ctx, processID, "vinculo_solicitado", clientID, "cliente", map[string]interface{}{
+	s.recordEvent(ctx, processID, "vinculo_solicitado", actorID, actorRole, map[string]interface{}{
 		"accountant_id": accountantID.String(),
 		"link_id":       link.ID.String(),
 	})

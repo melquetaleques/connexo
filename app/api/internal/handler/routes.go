@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/smtp"
 	"os"
@@ -15,6 +16,7 @@ import (
 	"app/api/internal/repository"
 	"app/api/internal/service"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Router abriga todos os repositórios e serviços para servir as rotas HTTP.
@@ -33,6 +35,8 @@ type Router struct {
 	JWTMaker          service.JWTMaker
 	lgpdHandler       *LGPDHandler
 	LawyerHandler     *LawyerHandler
+	ClientRepo        domain.ClientRepository
+	LawyerRepo        domain.LawyerRepository
 
 	// AccountantServiceRepo persiste os serviços oferecidos pelo contador.
 	AccountantServiceRepo domain.AccountantServiceRepository
@@ -125,6 +129,7 @@ func (r *Router) RegisterRoutes(mux *http.ServeMux) {
 	// Rotas do advogado (ADV)
 	mux.HandleFunc("/api/adv/links/", r.authMiddleware(r.handleAdvLinkRoutes))
 	mux.HandleFunc("GET /api/adv/processes/{id}/link", r.authMiddleware(r.handleProcessLink))
+	mux.HandleFunc("POST /api/adv/processes/{id}/solicitar-pericia", r.authMiddleware(r.handleRequestPericia))
 
 	// Rotas do cliente (CLI) - readonly
 	mux.HandleFunc("/api/cli/links/", r.authMiddleware(r.handleCliLinkRoutes))
@@ -210,6 +215,104 @@ func (r *Router) handleProcessLink(w http.ResponseWriter, req *http.Request) {
 
 	accountant, _ := r.UserRepo.GetByID(req.Context(), link.AccountantID)
 	respond(w, http.StatusOK, map[string]any{"link": link, "accountant": accountant})
+}
+
+// handleRequestPericia permite que o advogado solicite um perito para um
+// processo — o mesmo fluxo que o cliente faz em /cli/vincular-contador,
+// só que iniciado pelo escritório. Como o cadastro de cliente
+// (POST /api/adv/clients) não cria conta de acesso ao portal, um usuário é
+// provisionado na hora para satisfazer a FK do vínculo; essa conta nasce
+// sem senha utilizável — não é um convite, só o registro necessário para
+// notificações e para identificar de quem é o processo.
+func (r *Router) handleRequestPericia(w http.ResponseWriter, req *http.Request) {
+	claims := claimsFromContext(req.Context())
+	processID, err := uuid.Parse(req.PathValue("id"))
+	if err != nil {
+		respondErr(w, http.StatusBadRequest, "id do processo inválido")
+		return
+	}
+
+	var body struct {
+		AccountantID string `json:"accountant_id"`
+	}
+	if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+		respondErr(w, http.StatusBadRequest, "corpo inválido")
+		return
+	}
+	accountantID, err := uuid.Parse(body.AccountantID)
+	if err != nil {
+		respondErr(w, http.StatusBadRequest, "id do contador inválido")
+		return
+	}
+
+	process, err := r.LawyerHandler.svc.GetProcess(req.Context(), claims.UserID, processID)
+	if err != nil {
+		respondErr(w, http.StatusNotFound, "processo não encontrado")
+		return
+	}
+
+	client, err := r.ClientRepo.FindByID(req.Context(), process.ClientID)
+	if err != nil || client == nil {
+		respondErr(w, http.StatusNotFound, "cliente não encontrado")
+		return
+	}
+
+	var clientUserID uuid.UUID
+	if client.UserID != nil {
+		clientUserID = *client.UserID
+	} else {
+		if client.Email == "" {
+			respondErr(w, http.StatusUnprocessableEntity, "cadastre um e-mail para este cliente antes de solicitar perícia")
+			return
+		}
+		existing, err := r.UserRepo.FindByEmail(req.Context(), client.Email)
+		if err != nil {
+			respondErr(w, http.StatusInternalServerError, "erro ao provisionar acesso do cliente")
+			return
+		}
+		if existing != nil {
+			clientUserID = existing.ID
+		} else {
+			randomPass, err := uuid.NewRandom()
+			if err != nil {
+				respondErr(w, http.StatusInternalServerError, "erro ao provisionar acesso do cliente")
+				return
+			}
+			hash, err := bcrypt.GenerateFromPassword([]byte(randomPass.String()), bcrypt.DefaultCost)
+			if err != nil {
+				respondErr(w, http.StatusInternalServerError, "erro ao provisionar acesso do cliente")
+				return
+			}
+			newUser := &repository.User{
+				Email:        client.Email,
+				PasswordHash: string(hash),
+				Name:         client.Name,
+				Role:         "cliente",
+			}
+			if err := r.UserRepo.Create(req.Context(), newUser); err != nil {
+				respondErr(w, http.StatusInternalServerError, "erro ao provisionar acesso do cliente")
+				return
+			}
+			clientUserID = newUser.ID
+		}
+		if err := r.ClientRepo.SetUserID(req.Context(), client.ID, clientUserID); err != nil {
+			respondErr(w, http.StatusInternalServerError, "erro ao vincular acesso do cliente")
+			return
+		}
+	}
+
+	link, err := r.LinkService.RequestLinkAsLawyer(req.Context(), processID, clientUserID, accountantID, claims.UserID)
+	if err != nil {
+		log.Printf("RequestLinkAsLawyer: %v", err)
+		respondErr(w, http.StatusConflict, err.Error())
+		return
+	}
+
+	respond(w, http.StatusCreated, map[string]any{
+		"message": "solicitação de perícia enviada com sucesso",
+		"link_id": link.ID,
+		"status":  link.Status,
+	})
 }
 
 // handleAdvLinkRoutes dispatches /api/adv/links/{id}/... routes
