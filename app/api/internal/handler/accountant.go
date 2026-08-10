@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
+	"unicode"
 
 	"app/api/internal/domain"
 	"github.com/google/uuid"
@@ -124,7 +126,27 @@ func (h *AccountantHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respond(w, http.StatusOK, acc)
+	// domain.Accountant não guarda nome/e-mail (vivem em users); o formulário
+	// de edição de perfil precisa dos dois, então a resposta os embute aqui.
+	respond(w, http.StatusOK, map[string]any{
+		"id":              acc.ID,
+		"user_id":         acc.UserID,
+		"name":            user.Name,
+		"email":           user.Email,
+		"crc_number":      acc.CRCNumber,
+		"crc_state":       acc.CRCState,
+		"bio":             acc.Bio,
+		"specialties":     acc.Specialties,
+		"city":            acc.City,
+		"cities":          acc.Cities,
+		"state":           acc.State,
+		"slug":            acc.Slug,
+		"is_public":       acc.IsPublic,
+		"rating":          acc.Rating,
+		"completed_cases": acc.CompletedCases,
+		"created_at":      acc.CreatedAt,
+		"updated_at":      acc.UpdatedAt,
+	})
 }
 
 // UpdateProfile godoc
@@ -145,6 +167,7 @@ func (h *AccountantHandler) UpdateProfile(w http.ResponseWriter, r *http.Request
 	var input struct {
 		Bio         string   `json:"bio"`
 		City        string   `json:"city"`
+		Cities      []string `json:"cities"`
 		State       string   `json:"state"`
 		Slug        string   `json:"slug"`
 		IsPublic    *bool    `json:"is_public"`
@@ -160,11 +183,17 @@ func (h *AccountantHandler) UpdateProfile(w http.ResponseWriter, r *http.Request
 	if input.Bio != "" {
 		acc.Bio = input.Bio
 	}
-	if input.City != "" {
-		acc.City = input.City
+	if input.Cities != nil {
+		normalized := normalizeCities(input.Cities)
+		acc.Cities = normalized
+		if len(normalized) > 0 {
+			acc.City = normalized[0]
+		}
+	} else if input.City != "" {
+		acc.City = normalizeCity(input.City)
 	}
 	if input.State != "" {
-		acc.State = input.State
+		acc.State = normalizeUF(input.State)
 	}
 	if input.Slug != "" {
 		acc.Slug = input.Slug
@@ -179,7 +208,7 @@ func (h *AccountantHandler) UpdateProfile(w http.ResponseWriter, r *http.Request
 		acc.CRCNumber = input.CRCNumber
 	}
 	if input.CRCState != "" {
-		acc.CRCState = input.CRCState
+		acc.CRCState = normalizeUF(input.CRCState)
 	}
 
 	if err := h.accountants.Update(r.Context(), acc); err != nil {
@@ -188,6 +217,61 @@ func (h *AccountantHandler) UpdateProfile(w http.ResponseWriter, r *http.Request
 	}
 
 	respond(w, http.StatusOK, acc)
+}
+
+// validUFs são as siglas de estado reconhecidas no Brasil (26 estados + DF).
+var validUFs = map[string]bool{
+	"AC": true, "AL": true, "AP": true, "AM": true, "BA": true, "CE": true,
+	"DF": true, "ES": true, "GO": true, "MA": true, "MT": true, "MS": true,
+	"MG": true, "PA": true, "PB": true, "PR": true, "PE": true, "PI": true,
+	"RJ": true, "RN": true, "RS": true, "RO": true, "RR": true, "SC": true,
+	"SP": true, "SE": true, "TO": true,
+}
+
+// normalizeUF garante a sigla em maiúsculas; entradas inválidas (não uma UF
+// brasileira reconhecida) são descartadas em vez de salvas quebradas.
+func normalizeUF(uf string) string {
+	uf = strings.ToUpper(strings.TrimSpace(uf))
+	if !validUFs[uf] {
+		return ""
+	}
+	return uf
+}
+
+// normalizeCity capitaliza cada palavra do nome do município
+// ("são paulo" -> "São Paulo"), preservando preposições curtas em minúsculo.
+func normalizeCity(city string) string {
+	city = strings.TrimSpace(city)
+	if city == "" {
+		return ""
+	}
+	lowerWords := map[string]bool{"de": true, "da": true, "do": true, "das": true, "dos": true, "e": true}
+	words := strings.Fields(strings.ToLower(city))
+	for i, w := range words {
+		if i > 0 && lowerWords[w] {
+			continue
+		}
+		r := []rune(w)
+		r[0] = unicode.ToUpper(r[0])
+		words[i] = string(r)
+	}
+	return strings.Join(words, " ")
+}
+
+// normalizeCities normaliza e deduplica a lista de cidades de atuação,
+// descartando entradas vazias.
+func normalizeCities(cities []string) []string {
+	seen := map[string]bool{}
+	out := make([]string, 0, len(cities))
+	for _, c := range cities {
+		nc := normalizeCity(c)
+		if nc == "" || seen[nc] {
+			continue
+		}
+		seen[nc] = true
+		out = append(out, nc)
+	}
+	return out
 }
 
 type processItem struct {

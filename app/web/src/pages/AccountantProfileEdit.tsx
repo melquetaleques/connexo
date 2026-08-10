@@ -9,6 +9,21 @@ export function AccountantProfileEdit() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cityInput, setCityInput] = useState("");
+
+  const addCity = () => {
+    const city = cityInput.trim();
+    if (!city) return;
+    const cities: string[] = profile.cities || [];
+    if (!cities.some((c) => c.toLowerCase() === city.toLowerCase())) {
+      setProfile({ ...profile, cities: [...cities, city] });
+    }
+    setCityInput("");
+  };
+
+  const removeCity = (city: string) => {
+    setProfile({ ...profile, cities: (profile.cities || []).filter((c: string) => c !== city) });
+  };
 
   useEffect(() => {
     getMyProfile()
@@ -69,7 +84,7 @@ export function AccountantProfileEdit() {
                   type="text" 
                   value={profile.name || ""} 
                   onChange={e => setProfile({...profile, name: e.target.value})}
-                  className="w-full h-14 px-6 rounded-2xl bg-surface-1 border-2 border-transparent focus:border-secondary focus:bg-white transition-all outline-none font-bold text-primary"
+                  className="w-full h-14 px-6 rounded-2xl bg-surface-1 border-2 border-outline/60 focus:border-secondary focus:bg-white transition-all outline-none font-bold text-primary"
                 />
               </div>
               <div className="space-y-2">
@@ -78,7 +93,7 @@ export function AccountantProfileEdit() {
                   type="text" 
                   value={profile.slug || ""} 
                   onChange={e => setProfile({...profile, slug: e.target.value})}
-                  className="w-full h-14 px-6 rounded-2xl bg-surface-1 border-2 border-transparent focus:border-secondary focus:bg-white transition-all outline-none font-bold text-primary"
+                  className="w-full h-14 px-6 rounded-2xl bg-surface-1 border-2 border-outline/60 focus:border-secondary focus:bg-white transition-all outline-none font-bold text-primary"
                 />
               </div>
             </div>
@@ -89,7 +104,7 @@ export function AccountantProfileEdit() {
                 rows={6}
                 value={profile.bio || ""} 
                 onChange={e => setProfile({...profile, bio: e.target.value})}
-                className="w-full p-6 rounded-2xl bg-surface-1 border-2 border-transparent focus:border-secondary focus:bg-white transition-all outline-none font-bold text-primary resize-none"
+                className="w-full p-6 rounded-2xl bg-surface-1 border-2 border-outline/60 focus:border-secondary focus:bg-white transition-all outline-none font-bold text-primary resize-none"
               />
             </div>
 
@@ -112,24 +127,44 @@ export function AccountantProfileEdit() {
 
           <Card className="p-10">
             <SectionTitle title="Expertise e Atuação" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_120px] gap-8 mb-8">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest px-1">Cidade Principal</label>
-                <input 
-                  type="text" 
-                  value={profile.city || ""} 
-                  onChange={e => setProfile({...profile, city: e.target.value})}
-                  className="w-full h-14 px-6 rounded-2xl bg-surface-1 border-2 border-transparent focus:border-secondary focus:bg-white transition-all outline-none font-bold text-primary"
-                />
+                <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest px-1">Cidades de Atuação</label>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={cityInput}
+                    onChange={e => setCityInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addCity(); } }}
+                    placeholder="Ex: São Paulo"
+                    className="w-full h-14 px-6 rounded-2xl bg-surface-1 border-2 border-outline/60 focus:border-secondary focus:bg-white transition-all outline-none font-bold text-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={addCity}
+                    className="h-14 px-6 rounded-2xl bg-secondary/10 text-secondary font-black uppercase text-xs tracking-widest hover:bg-secondary hover:text-white transition-all shrink-0"
+                  >
+                    Adicionar
+                  </button>
+                </div>
+                {(profile.cities || []).length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {(profile.cities || []).map((c: string) => (
+                      <Pill key={c} tone="gold" className="py-2 px-4 text-xs">
+                        {c} <Icon name="close" className="ml-2 cursor-pointer hover:text-primary transition-colors" onClick={() => removeCity(c)} />
+                      </Pill>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest px-1">UF</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   maxLength={2}
-                  value={profile.state || ""} 
+                  value={profile.state || ""}
                   onChange={e => setProfile({...profile, state: e.target.value.toUpperCase()})}
-                  className="w-full h-14 px-6 rounded-2xl bg-surface-1 border-2 border-transparent focus:border-secondary focus:bg-white transition-all outline-none font-bold text-primary"
+                  className="w-full h-14 px-6 rounded-2xl bg-surface-1 border-2 border-outline/60 focus:border-secondary focus:bg-white transition-all outline-none font-bold text-primary text-center uppercase"
                 />
               </div>
             </div>

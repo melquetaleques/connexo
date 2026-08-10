@@ -75,6 +75,7 @@ type Accountant struct {
 	Bio            string    `db:"bio" json:"bio"`
 	Specialties    []string  `db:"specialties" json:"specialties"`
 	City           string    `db:"city" json:"city"`
+	Cities         []string  `db:"cities" json:"cities"`
 	State          string    `db:"state" json:"state"`
 	Slug           string    `db:"slug" json:"slug"`
 	IsPublic       bool      `db:"is_public" json:"is_public"`

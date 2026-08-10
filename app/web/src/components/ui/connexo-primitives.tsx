@@ -7,12 +7,14 @@ interface IconProps {
   className?: string;
   fill?: boolean;
   style?: React.CSSProperties;
+  onClick?: () => void;
 }
 
-export function Icon({ name, className, fill, style }: IconProps) {
+export function Icon({ name, className, fill, style, onClick }: IconProps) {
   return (
     <span
       style={style}
+      onClick={onClick}
       className={cn(
         "material-symbols-outlined text-[1.2em] leading-none",
         fill ? "material-symbols-filled" : "",

@@ -16,7 +16,6 @@ const NAV: Record<Role, NavItem[]> = {
     { to: "/adv/clientes", label: "Clientes", icon: "group" },
     { to: "/adv/processos", label: "Processos", icon: "balance" },
     { to: "/adv/usuarios", label: "Equipe", icon: "badge" },
-    { to: "/adv/assinatura", label: "Plano & Cobrança", icon: "payments" },
     { to: "/adv/configuracoes", label: "Configurações", icon: "settings" },
   ],
   contador: [
