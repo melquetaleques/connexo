@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"app/api/internal/domain"
@@ -118,6 +119,7 @@ func (h *AccountantHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	acc, err := h.accountants.FindByUserID(r.Context(), user.ID)
 	if err != nil || acc == nil {
+		log.Printf("GetProfile: user.ID=%s user.Role=%s err=%v acc=%v", user.ID, user.Role, err, acc)
 		respondErr(w, http.StatusNotFound, "perfil de contador nao encontrado")
 		return
 	}
