@@ -94,7 +94,14 @@ func (h *LawyerHandler) CreateProcess(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.svc.CreateProcess(r.Context(), claims.UserID, &proc); err != nil {
-		respondErr(w, http.StatusInternalServerError, "erro ao criar processo")
+		switch err {
+		case service.ErrDuplicateProcessNumber:
+			respondErr(w, http.StatusConflict, err.Error())
+		case service.ErrUnauthorized:
+			respondErr(w, http.StatusForbidden, "cliente não encontrado")
+		default:
+			respondErr(w, http.StatusInternalServerError, "erro ao criar processo")
+		}
 		return
 	}
 	respond(w, http.StatusCreated, proc)

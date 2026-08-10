@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Card,
+  Field,
   GhostButton,
   GoldButton,
   Icon,
@@ -11,6 +12,7 @@ import {
   StatusDot,
 } from "@/components/ui/connexo-primitives";
 import api from "@/services/api";
+import type { Process } from "@/types";
 
 const ACCENT = "#C59D5C";
 
@@ -32,6 +34,13 @@ export function ClientDetailPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"processos" | "documentos" | "notificacoes" | "informacoes">("processos");
 
+  const [processes, setProcesses] = useState<Process[]>([]);
+  const [loadingProcesses, setLoadingProcesses] = useState(true);
+  const [isNewProcessOpen, setIsNewProcessOpen] = useState(false);
+  const [savingProcess, setSavingProcess] = useState(false);
+  const [processError, setProcessError] = useState<string | null>(null);
+  const [newProcess, setNewProcess] = useState({ number: "", type: "", court: "", stage: "" });
+
   useEffect(() => {
     async function load() {
       try {
@@ -45,6 +54,49 @@ export function ClientDetailPage() {
     }
     load();
   }, [id]);
+
+  const loadProcesses = async () => {
+    try {
+      setLoadingProcesses(true);
+      const res = await api.get<Process[]>("/adv/processes");
+      setProcesses((res.data || []).filter((p) => p.client_id === id));
+    } catch (err) {
+      console.error("Erro ao carregar processos", err);
+      setProcesses([]);
+    } finally {
+      setLoadingProcesses(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProcesses();
+  }, [id]);
+
+  const handleCreateProcess = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProcess.number.trim()) {
+      setProcessError("Número do processo é obrigatório.");
+      return;
+    }
+    setSavingProcess(true);
+    setProcessError(null);
+    try {
+      await api.post("/adv/processes", { ...newProcess, client_id: id });
+      setIsNewProcessOpen(false);
+      setNewProcess({ number: "", type: "", court: "", stage: "" });
+      loadProcesses();
+    } catch (err: any) {
+      if (err?.response?.status === 409) {
+        setProcessError("Já existe um processo com este número.");
+      } else if (err?.response?.status === 403) {
+        setProcessError("Cliente não encontrado para este advogado.");
+      } else {
+        setProcessError(err?.response?.data?.error || "Erro ao criar processo. Tente novamente.");
+      }
+    } finally {
+      setSavingProcess(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -106,7 +158,7 @@ export function ClientDetailPage() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <GhostButton icon="forum">Mensagens</GhostButton>
-            <GoldButton icon="add" accent={ACCENT}>
+            <GoldButton icon="add" accent={ACCENT} onClick={() => setIsNewProcessOpen(true)}>
               Novo processo
             </GoldButton>
           </div>
@@ -139,12 +191,95 @@ export function ClientDetailPage() {
 
       {tab === "processos" && (
         <Card padded={false}>
-          <div className="py-12 text-center">
-             <Icon name="folder_open" className="text-4xl text-on-surface-variant/30 mb-4" />
-             <p className="text-primary font-bold">Nenhum processo vinculado</p>
-             <p className="text-on-surface-variant text-sm mt-1">Clique em "Novo processo" para começar a gestão pericial.</p>
-          </div>
+          {loadingProcesses ? (
+            <div className="py-24 flex flex-col items-center justify-center gap-4">
+              <div className="w-10 h-10 rounded-full border-4 border-secondary/20 border-t-secondary animate-spin" />
+            </div>
+          ) : processes.length === 0 ? (
+            <div className="py-12 text-center">
+              <Icon name="folder_open" className="text-4xl text-on-surface-variant/30 mb-4" />
+              <p className="text-primary font-bold">Nenhum processo vinculado</p>
+              <p className="text-on-surface-variant text-sm mt-1">Clique em "Novo processo" para começar a gestão pericial.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-outline/40">
+              {processes.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => navigate(`/adv/processos/${p.id}`)}
+                  className="flex items-center justify-between gap-4 px-8 py-5 cursor-pointer hover:bg-surface-2/40 transition-colors"
+                >
+                  <div>
+                    <p className="font-bold text-primary">{p.number}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40 mt-0.5">
+                      {p.type || "—"} {p.court && `• ${p.court}`}
+                    </p>
+                  </div>
+                  <Icon name="chevron_right" className="text-primary/20" />
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
+      )}
+
+      {isNewProcessOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/40 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-lg shadow-2xl p-0 overflow-hidden">
+            <div className="bg-primary p-6 text-white flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-black uppercase tracking-tight">Novo Processo</h3>
+                <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Vinculado a {client.name}</p>
+              </div>
+              <button
+                onClick={() => setIsNewProcessOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+              >
+                <Icon name="close" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateProcess} className="p-8 space-y-5">
+              {processError && (
+                <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm font-bold text-rose-700">
+                  {processError}
+                </div>
+              )}
+              <Field
+                label="Número do Processo"
+                placeholder="0000000-00.0000.0.00.0000"
+                value={newProcess.number}
+                onChange={(e) => setNewProcess({ ...newProcess, number: e.target.value })}
+              />
+              <Field
+                label="Tipo"
+                placeholder="Ex: Cível, Trabalhista"
+                value={newProcess.type}
+                onChange={(e) => setNewProcess({ ...newProcess, type: e.target.value })}
+              />
+              <Field
+                label="Tribunal / Vara"
+                placeholder="Ex: 2ª Vara Cível de São Paulo"
+                value={newProcess.court}
+                onChange={(e) => setNewProcess({ ...newProcess, court: e.target.value })}
+              />
+              <Field
+                label="Fase Atual"
+                placeholder="Ex: Instrução"
+                value={newProcess.stage}
+                onChange={(e) => setNewProcess({ ...newProcess, stage: e.target.value })}
+              />
+              <div className="pt-2 flex justify-end gap-3">
+                <GhostButton type="button" onClick={() => setIsNewProcessOpen(false)}>
+                  Cancelar
+                </GhostButton>
+                <GoldButton type="submit" icon={savingProcess ? "autorenew" : "check"} disabled={savingProcess}>
+                  {savingProcess ? "Salvando..." : "Cadastrar Processo"}
+                </GoldButton>
+              </div>
+            </form>
+          </Card>
+        </div>
       )}
 
       {tab === "informacoes" && (

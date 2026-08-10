@@ -177,6 +177,7 @@ func main() {
 			lawyerHandler.ListProcesses(w, r)
 		}
 	}))
+	mux.HandleFunc("GET /api/adv/processes/{id}", jwtMW(lawyerHandler.GetProcess))
 	mux.HandleFunc("/api/adv/dashboard", jwtMW(lawyerHandler.Dashboard))
 	mux.HandleFunc("GET /api/adv/processes/{id}/timeline", jwtMW(router.HandleProcessTimeline))
 

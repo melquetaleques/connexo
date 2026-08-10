@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"errors"
+	"strings"
 	"time"
 
 	"app/api/internal/domain"
@@ -54,6 +56,10 @@ func (s *LawyerService) GetDashboardData(ctx context.Context, userID uuid.UUID) 
 		"recent_activity":  []any{},
 	}, nil
 }
+
+// ErrDuplicateProcessNumber é retornado ao tentar cadastrar um processo com
+// número já usado por este advogado.
+var ErrDuplicateProcessNumber = errors.New("já existe um processo com este número")
 
 // CreateClient cria um novo cliente vinculado ao advogado.
 func (s *LawyerService) CreateClient(ctx context.Context, userID uuid.UUID, c *domain.Client) error {
@@ -108,6 +114,16 @@ func (s *LawyerService) CreateProcess(ctx context.Context, userID uuid.UUID, p *
 	client, err := s.clients.FindByID(ctx, p.ClientID)
 	if err != nil || client == nil || client.LawyerID != lawyer.ID {
 		return ErrUnauthorized
+	}
+
+	existing, err := s.processes.ListByLawyer(ctx, lawyer.ID)
+	if err != nil {
+		return err
+	}
+	for _, ep := range existing {
+		if strings.EqualFold(strings.TrimSpace(ep.Number), strings.TrimSpace(p.Number)) {
+			return ErrDuplicateProcessNumber
+		}
 	}
 
 	p.ID = uuid.New()
