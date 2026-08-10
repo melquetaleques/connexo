@@ -10,6 +10,7 @@ export function AccountantProfileEdit() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cityInput, setCityInput] = useState("");
+  const [specialtyInput, setSpecialtyInput] = useState("");
 
   const addCity = () => {
     const city = cityInput.trim();
@@ -23,6 +24,20 @@ export function AccountantProfileEdit() {
 
   const removeCity = (city: string) => {
     setProfile({ ...profile, cities: (profile.cities || []).filter((c: string) => c !== city) });
+  };
+
+  const addSpecialty = () => {
+    const specialty = specialtyInput.trim();
+    if (!specialty) return;
+    const specialties: string[] = profile.specialties || [];
+    if (!specialties.some((s) => s.toLowerCase() === specialty.toLowerCase())) {
+      setProfile({ ...profile, specialties: [...specialties, specialty] });
+    }
+    setSpecialtyInput("");
+  };
+
+  const removeSpecialty = (specialty: string) => {
+    setProfile({ ...profile, specialties: (profile.specialties || []).filter((s: string) => s !== specialty) });
   };
 
   useEffect(() => {
@@ -171,13 +186,25 @@ export function AccountantProfileEdit() {
 
             <div className="space-y-4">
               <label className="text-[10px] font-black text-primary/40 uppercase tracking-widest px-1">Especialidades Selecionadas</label>
-              <div className="flex flex-wrap gap-3">
-                {profile.specialties?.map((s: string) => (
+              <div className="flex flex-wrap gap-3 items-center">
+                {(profile.specialties || []).map((s: string) => (
                   <Pill key={s} tone="gold" className="py-2 px-4 text-xs">
-                    {s} <Icon name="close" className="ml-2 cursor-pointer hover:text-primary transition-colors" />
+                    {s} <Icon name="close" className="ml-2 cursor-pointer hover:text-primary transition-colors" onClick={() => removeSpecialty(s)} />
                   </Pill>
                 ))}
-                <button className="h-10 px-4 rounded-full border-2 border-dashed border-outline/30 text-primary/30 hover:border-secondary/40 hover:text-secondary transition-all flex items-center gap-2 text-xs font-black">
+                <input
+                  type="text"
+                  value={specialtyInput}
+                  onChange={e => setSpecialtyInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addSpecialty(); } }}
+                  placeholder="Ex: Perícia Trabalhista"
+                  className="h-10 px-4 rounded-full bg-surface-1 border-2 border-outline/60 focus:border-secondary focus:bg-white transition-all outline-none font-bold text-primary text-xs w-48"
+                />
+                <button
+                  type="button"
+                  onClick={addSpecialty}
+                  className="h-10 px-4 rounded-full border-2 border-dashed border-outline/30 text-primary/30 hover:border-secondary/40 hover:text-secondary transition-all flex items-center gap-2 text-xs font-black"
+                >
                   <Icon name="add" /> Adicionar
                 </button>
               </div>
