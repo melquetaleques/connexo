@@ -10,6 +10,7 @@ import {
   listDocPermissionsByLink,
   toggleDocPermission,
 } from "@/services/documents";
+import { apiErrorMessage } from "@/lib/utils";
 
 interface DocPermissionPanelProps {
   linkId: string;
@@ -54,8 +55,8 @@ export function DocPermissionPanel({
     try {
       const result = await toggleDocPermission(documentId, linkId);
       setPermissions((prev) => ({ ...prev, [documentId]: result.granted }));
-    } catch (err: any) {
-      setError(err.response?.data || "Erro ao alterar permissão");
+    } catch (err) {
+      setError(apiErrorMessage(err, "Erro ao alterar permissão"));
     } finally {
       setToggling((prev) => ({ ...prev, [documentId]: false }));
     }

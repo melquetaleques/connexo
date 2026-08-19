@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, GoldButton, Icon, Badge, PageContainer, SectionTitle } from "@/components/ui/connexo-primitives";
 import api from "@/services/api";
+import { apiErrorMessage } from "@/lib/utils";
 
 interface SubscriptionData {
   plan: string;
@@ -53,8 +54,8 @@ export function LawyerSubscriptionPage() {
       try {
         const res = await api.get("/adv/subscription");
         setSub(res.data);
-      } catch (err: any) {
-        setError(err?.response?.data || "Erro ao carregar dados da assinatura.");
+      } catch (err) {
+        setError(apiErrorMessage(err, "Erro ao carregar dados da assinatura."));
       } finally {
         setLoading(false);
       }

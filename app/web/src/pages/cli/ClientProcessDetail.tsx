@@ -12,6 +12,7 @@ import {
 import api from "@/services/api";
 import { createReview, checkReviewStatus } from "@/services/accountant";
 import type { ReviewData } from "@/services/accountant";
+import { apiErrorMessage } from "@/lib/utils";
 
 interface Deliverable {
   id: string;
@@ -126,8 +127,8 @@ export function ClientProcessDetail() {
             setReviewLoading(false);
           }
         }
-      } catch (err: any) {
-        setError(err.response?.data || "Erro ao carregar dados do vínculo");
+      } catch (err) {
+        setError(apiErrorMessage(err, "Erro ao carregar dados do vínculo"));
       } finally {
         setLoading(false);
       }
@@ -435,10 +436,8 @@ function ReviewCard({
       });
       setExistingReview(result.review);
       setReviewSuccess(true);
-    } catch (err: any) {
-      const msg =
-        err.response?.data || "Erro ao enviar avaliação. Tente novamente.";
-      setReviewError(msg);
+    } catch (err) {
+      setReviewError(apiErrorMessage(err, "Erro ao enviar avaliação. Tente novamente."));
     } finally {
       setSubmitting(false);
     }
