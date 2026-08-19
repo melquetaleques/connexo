@@ -10,7 +10,7 @@ export function AccountantCard({ accountant }: AccountantCardProps) {
   const navigate = useNavigate();
 
   const handleViewProfile = () => {
-    navigate(`/contadores/${accountant.slug}`);
+    navigate(`/contadores/${accountant.slug || accountant.id}`);
   };
 
   return (
@@ -61,12 +61,12 @@ export function AccountantCard({ accountant }: AccountantCardProps) {
         </p>
 
         <div className="flex flex-wrap gap-2 mb-6">
-          {accountant.specialties.slice(0, 3).map((spec) => (
+          {(accountant.specialties || []).slice(0, 3).map((spec) => (
             <Pill key={spec} tone="gold" className="text-[9px] py-0.5 px-2.5">
               {spec}
             </Pill>
           ))}
-          {accountant.specialties.length > 3 && (
+          {(accountant.specialties || []).length > 3 && (
             <span className="text-[10px] font-bold text-primary/30 py-1">+{accountant.specialties.length - 3}</span>
           )}
         </div>

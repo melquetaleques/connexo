@@ -6,14 +6,17 @@ import {
   Icon,
   Pill,
 } from "@/components/ui/connexo-primitives";
+import { useNavigate } from "react-router-dom";
 import { listClientDocumentRequests } from "@/services/documents";
 import type { DocumentRequest } from "@/services/documents";
+import { apiErrorMessage } from "@/lib/utils";
 
 /**
  * ClientDocumentRequests — Lista de solicitações de documento para o cliente.
  * Exibe solicitações pendentes do advogado com botão para enviar documento.
  */
 export function ClientDocumentRequests() {
+  const navigate = useNavigate();
   const [requests, setRequests] = useState<DocumentRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,9 +28,7 @@ export function ClientDocumentRequests() {
       const data = await listClientDocumentRequests();
       setRequests(data.requests || []);
     } catch (err: any) {
-      setError(
-        err.response?.data || "Erro ao carregar solicitações de documentos",
-      );
+      setError(apiErrorMessage(err, "Erro ao carregar solicitações de documentos"));
     } finally {
       setLoading(false);
     }
@@ -134,13 +135,7 @@ export function ClientDocumentRequests() {
                   <GoldButton
                     icon="upload_file"
                     className="text-xs py-2 px-3 shrink-0"
-                    onClick={() => {
-                      // Navega para o upload de documento
-                      // Idealmente redireciona para a página do processo com modal de upload
-                      alert(
-                        "Faça o upload do documento na página do processo.",
-                      );
-                    }}
+                    onClick={() => navigate(`/cli/processos/${req.process_id}`)}
                   >
                     Enviar Documento
                   </GoldButton>

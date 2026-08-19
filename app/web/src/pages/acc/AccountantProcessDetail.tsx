@@ -11,6 +11,7 @@ import {
   Avatar,
 } from "@/components/ui/connexo-primitives";
 import api from "@/services/api";
+import { apiErrorMessage } from "@/lib/utils";
 
 interface Deliverable {
   id: string;
@@ -119,8 +120,8 @@ export function AccountantProcessDetail() {
       setEvents(data.process_events || []);
       setClient(data.client || null);
       setAccountant(data.accountant || null);
-    } catch (err: any) {
-      setError(err.response?.data || "Erro ao carregar dados do vínculo");
+    } catch (err) {
+      setError(apiErrorMessage(err, "Erro ao carregar dados do vínculo"));
     } finally {
       setLoading(false);
     }
@@ -134,8 +135,8 @@ export function AccountantProcessDetail() {
     try {
       await api.post(`/acc/links/${id}/status`, { status: newStatus });
       loadData();
-    } catch (err: any) {
-      alert(err.response?.data || "Erro ao atualizar status");
+    } catch (err) {
+      setError(apiErrorMessage(err, "Erro ao atualizar status"));
     }
   };
 
@@ -161,8 +162,8 @@ export function AccountantProcessDetail() {
       setContentText("");
       setFile(null);
       loadData();
-    } catch (err: any) {
-      setError(err.response?.data || "Erro ao submeter entregável");
+    } catch (err) {
+      setError(apiErrorMessage(err, "Erro ao submeter entregável"));
     } finally {
       setSubmitting(false);
     }
@@ -197,7 +198,7 @@ export function AccountantProcessDetail() {
 
   return (
     <PageContainer>
-      <Link to="/cnt/processos" className="flex items-center gap-2 text-primary/40 hover:text-primary transition-colors mb-6 group">
+      <Link to="/acc/processos" className="flex items-center gap-2 text-primary/40 hover:text-primary transition-colors mb-6 group">
         <Icon name="arrow_back" className="text-xl" />
         <span className="text-xs font-bold uppercase tracking-widest">Voltar para Perícias Ativas</span>
       </Link>

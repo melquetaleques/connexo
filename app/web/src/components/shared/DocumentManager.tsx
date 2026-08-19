@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, Icon, GoldButton, GhostButton } from "@/components/ui/connexo-primitives";
 import { listDocumentsByProcess, uploadDocument, toggleDocumentVisibility, Document } from "@/services/documents";
+import { apiErrorMessage } from "@/lib/utils";
 
 interface DocumentManagerProps {
   processId: string;
@@ -11,6 +12,8 @@ export function DocumentManager({ processId, readOnly = false }: DocumentManager
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -37,11 +40,14 @@ export function DocumentManager({ processId, readOnly = false }: DocumentManager
     if (!file) return;
 
     setUploading(true);
+    setError(null);
+    setSuccess(null);
     try {
       await uploadDocument(processId, file);
-      loadDocs();
-    } catch (error) {
-      console.error("Erro no upload:", error);
+      await loadDocs();
+      setSuccess("Documento enviado com sucesso.");
+    } catch (err) {
+      setError(apiErrorMessage(err, "Erro no upload do documento."));
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -65,6 +71,12 @@ export function DocumentManager({ processId, readOnly = false }: DocumentManager
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700 text-xs font-bold">{error}</div>
+      )}
+      {success && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700 text-xs font-bold">{success}</div>
+      )}
       {!readOnly && (
         <div className="flex justify-between items-center bg-surface-1 p-6 rounded-[24px] border-2 border-dashed border-outline/30">
           <div>

@@ -68,6 +68,10 @@ func (h *LawyerHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.svc.CreateClient(r.Context(), claims.UserID, &client); err != nil {
+		if err == service.ErrInvalidRegister {
+			respondErr(w, http.StatusBadRequest, "nome do cliente é obrigatório")
+			return
+		}
 		respondErr(w, http.StatusInternalServerError, "erro ao criar cliente")
 		return
 	}

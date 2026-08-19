@@ -41,18 +41,18 @@ export function AccountantProcessesPage() {
       {processes.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {processes.map((p) => (
-            <div key={p.id} className="cursor-pointer group" onClick={() => navigate(`/acc/processos/${p.process_id}`)}>
+            <div key={p.id} className="cursor-pointer group" onClick={() => navigate(`/acc/processos/${p.id}`)}>
             <Card className="p-8 hover:border-secondary/40 transition-all">
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
                   <p className="text-lg font-black text-primary mb-1">{p.process_number}</p>
                   <div className="flex items-center gap-2">
-                    <Pill tone="navy">{p.process_type}</Pill>
-                    <span className="text-xs font-bold text-primary/40 uppercase tracking-widest">{p.court}</span>
+                    <Pill tone="navy">{p.process_type ?? ""}</Pill>
+                    <span className="text-xs font-bold text-primary/40 uppercase tracking-widest">{String(p.court ?? "")}</span>
                   </div>
                 </div>
                 <Pill tone={p.status === "ativo" ? "success" : p.status === "recusado" ? "error" : "gold"}>
-                  {p.status}
+                  {p.status ?? ""}
                 </Pill>
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-outline/20">

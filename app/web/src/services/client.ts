@@ -5,6 +5,8 @@ export interface ClientProcess extends Process {
   lawyer_name: string;
   accountant_id?: string;
   accountant_name?: string;
+  link_id?: string;
+  link_status?: string;
 }
 
 export async function listMyProcesses() {

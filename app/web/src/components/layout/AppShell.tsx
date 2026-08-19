@@ -27,6 +27,7 @@ const NAV: Record<Role, NavItem[]> = {
     { to: "/acc/configuracoes", label: "Configurações", icon: "settings" },
   ],
   cliente: [
+    { to: "/cli/dashboard", label: "Painel", icon: "dashboard" },
     { to: "/cli/processos", label: "Processos", icon: "balance" },
     { to: "/cli/catalogo", label: "Contratar", icon: "search" },
     { to: "/cli/documentos", label: "Documentos", icon: "folder_open" },

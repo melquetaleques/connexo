@@ -8,11 +8,10 @@ import {
   PageContainer,
   Pill,
   StatusDot,
-  SectionTitle,
   Avatar,
 } from "@/components/ui/connexo-primitives";
 import api from "@/services/api";
-import { useAuth } from "@/hooks/useAuth";
+import { apiErrorMessage } from "@/lib/utils";
 
 interface Deliverable {
   id: string;
@@ -88,7 +87,6 @@ const EVENT_LABELS: Record<string, string> = {
 
 export function LawyerProcessDetail() {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [linkData, setLinkData] = useState<LinkData | null>(null);
@@ -96,6 +94,9 @@ export function LawyerProcessDetail() {
   const [events, setEvents] = useState<ProcessEvent[]>([]);
   const [client, setClient] = useState<UserData | null>(null);
   const [accountant, setAccountant] = useState<UserData | null>(null);
+  const [reviewDeliverableId, setReviewDeliverableId] = useState<string | null>(null);
+  const [reviewComment, setReviewComment] = useState("");
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const loadData = async () => {
     if (!id) return;
@@ -109,8 +110,8 @@ export function LawyerProcessDetail() {
       setEvents(data.process_events || []);
       setClient(data.client || null);
       setAccountant(data.accountant || null);
-    } catch (err: any) {
-      setError(err.response?.data || "Erro ao carregar dados do vínculo");
+    } catch (err) {
+      setError(apiErrorMessage(err, "Erro ao carregar dados do vínculo"));
     } finally {
       setLoading(false);
     }
@@ -124,31 +125,35 @@ export function LawyerProcessDetail() {
     try {
       await api.put(`/adv/links/${id}/entregas/${deliverableId}/aprovar`);
       loadData();
-    } catch (err: any) {
-      alert(err.response?.data || "Erro ao aprovar entregável");
+    } catch (err) {
+      setError(apiErrorMessage(err, "Erro ao aprovar entregável"));
     }
   };
 
-  const handleRequestReview = async (deliverableId: string) => {
-    const comment = prompt("Comentário de revisão (obrigatório):");
-    if (!comment || comment.trim() === "") return;
+  const handleRequestReview = async () => {
+    if (!reviewDeliverableId || !reviewComment.trim()) {
+      setError("O comentário de revisão é obrigatório.");
+      return;
+    }
     try {
-      await api.put(`/adv/links/${id}/entregas/${deliverableId}/revisar`, {
-        review_comment: comment,
+      await api.put(`/adv/links/${id}/entregas/${reviewDeliverableId}/revisar`, {
+        review_comment: reviewComment.trim(),
       });
+      setReviewDeliverableId(null);
+      setReviewComment("");
       loadData();
-    } catch (err: any) {
-      alert(err.response?.data || "Erro ao solicitar revisão");
+    } catch (err) {
+      setError(apiErrorMessage(err, "Erro ao solicitar revisão"));
     }
   };
 
   const handleCancelRequest = async () => {
-    if (!confirm("Tem certeza que deseja solicitar o cancelamento deste vínculo?")) return;
     try {
       await api.post(`/adv/links/${id}/cancelar`);
+      setConfirmCancel(false);
       loadData();
-    } catch (err: any) {
-      alert(err.response?.data || "Erro ao solicitar cancelamento");
+    } catch (err) {
+      setError(apiErrorMessage(err, "Erro ao solicitar cancelamento"));
     }
   };
 
@@ -241,7 +246,7 @@ export function LawyerProcessDetail() {
                   </GoldButton>
                   <GhostButton icon="rate_review" onClick={() => {
                     if (deliverables.length > 0) {
-                      handleRequestReview(deliverables[0].id);
+                      setReviewDeliverableId(deliverables[0].id);
                     }
                   }}>
                     Solicitar Revisão
@@ -249,7 +254,7 @@ export function LawyerProcessDetail() {
                 </>
               )}
               {canCancel && (
-                <GhostButton icon="cancel" onClick={handleCancelRequest} tone="danger">
+                <GhostButton icon="cancel" onClick={() => setConfirmCancel(true)} tone="danger">
                   Solicitar Cancelamento
                 </GhostButton>
               )}
@@ -287,7 +292,7 @@ export function LawyerProcessDetail() {
                             <GhostButton icon="check_circle" onClick={() => handleApprove(d.id)}>
                               Aprovar
                             </GhostButton>
-                            <GhostButton icon="rate_review" onClick={() => handleRequestReview(d.id)}>
+                            <GhostButton icon="rate_review" onClick={() => setReviewDeliverableId(d.id)}>
                               Revisar
                             </GhostButton>
                           </>
@@ -371,6 +376,39 @@ export function LawyerProcessDetail() {
           </Card>
         </div>
       </div>
+
+      {reviewDeliverableId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/40 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-lg p-8 space-y-4">
+            <h3 className="text-lg font-black text-primary">Solicitar revisão</h3>
+            <p className="text-sm text-primary/50">Descreva o que precisa ser ajustado no entregável.</p>
+            <textarea
+              value={reviewComment}
+              onChange={(e) => setReviewComment(e.target.value)}
+              rows={4}
+              className="w-full rounded-xl border border-outline/60 bg-surface-2 px-4 py-3 text-sm font-medium text-primary focus:ring-2 focus:ring-secondary/40 outline-none"
+              placeholder="Comentário obrigatório"
+            />
+            <div className="flex justify-end gap-3">
+              <GhostButton onClick={() => { setReviewDeliverableId(null); setReviewComment(""); }}>Cancelar</GhostButton>
+              <GoldButton icon="send" onClick={handleRequestReview} disabled={!reviewComment.trim()}>Enviar revisão</GoldButton>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {confirmCancel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/40 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-md p-8 space-y-4">
+            <h3 className="text-lg font-black text-primary">Cancelar vínculo?</h3>
+            <p className="text-sm text-primary/50">Essa ação solicita o cancelamento do serviço com o contador.</p>
+            <div className="flex justify-end gap-3">
+              <GhostButton onClick={() => setConfirmCancel(false)}>Voltar</GhostButton>
+              <GoldButton icon="cancel" onClick={handleCancelRequest}>Confirmar cancelamento</GoldButton>
+            </div>
+          </Card>
+        </div>
+      )}
     </PageContainer>
   );
 }

@@ -4,6 +4,7 @@ import { PageContainer, Card, Icon, GhostButton, SectionTitle } from "@/componen
 import { listDocumentsByProcess } from "@/services/documents";
 import api from "@/services/api";
 import type { Process } from "@/types";
+import { ClientDocumentRequests } from "@/components/lgpd/ClientDocumentRequests";
 
 interface DocGroup {
   processNumber: string;
@@ -28,7 +29,12 @@ export function ClientDocumentsPage() {
               results.push({
                 processNumber: p.number,
                 processId: p.id,
-                documents: docs.map(d => ({ id: d.id, name: d.name, created_at: d.created_at, type: d.type })),
+                documents: docs.map(d => ({
+                  id: d.id,
+                  name: d.name,
+                  created_at: d.created_at ?? "",
+                  type: "documento",
+                })),
               });
             }
           } catch { /* processo sem documentos */ }
@@ -56,6 +62,10 @@ export function ClientDocumentsPage() {
       <div className="mb-12">
         <h1 className="text-4xl font-black text-primary tracking-tight mb-2">Meus Documentos</h1>
         <p className="text-primary/40 font-bold uppercase tracking-[0.2em] text-xs">Documentos anexados aos seus processos</p>
+      </div>
+
+      <div className="mb-10">
+        <ClientDocumentRequests />
       </div>
 
       {groups.length > 0 ? (

@@ -2,19 +2,31 @@ import { useState, useEffect } from "react";
 import { PageContainer, Card, Icon, SectionTitle, GoldButton, Pill } from "@/components/ui/connexo-primitives";
 import { listMyProcesses, ClientProcess } from "@/services/client";
 import { useNavigate } from "react-router-dom";
+import { apiErrorMessage } from "@/lib/utils";
 
 export function ClientDashboard() {
+  return <ClientProcessesPage title="Painel do Cliente" kicker="Resumo dos seus processos e perícias" />;
+}
+
+export function ClientProcessesPage({
+  title = "Meus Processos",
+  kicker = "Acompanhamento de Perícias e Prazos",
+}: {
+  title?: string;
+  kicker?: string;
+} = {}) {
   const navigate = useNavigate();
   const [processes, setProcesses] = useState<ClientProcess[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
         const data = await listMyProcesses();
         setProcesses(data);
-      } catch (error) {
-        console.error("Erro ao carregar processos do cliente:", error);
+      } catch (err) {
+        setError(apiErrorMessage(err, "Erro ao carregar processos do cliente."));
       } finally {
         setLoading(false);
       }
@@ -34,8 +46,8 @@ export function ClientDashboard() {
     <PageContainer>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
         <div>
-          <h1 className="text-4xl font-black text-primary tracking-tight mb-2">Meus Processos</h1>
-          <p className="text-primary/40 font-bold uppercase tracking-[0.2em] text-xs">Acompanhamento de Perícias e Prazos</p>
+          <h1 className="text-4xl font-black text-primary tracking-tight mb-2">{title}</h1>
+          <p className="text-primary/40 font-bold uppercase tracking-[0.2em] text-xs">{kicker}</p>
         </div>
         <GoldButton icon="search" onClick={() => navigate("/cli/catalogo")}>
           Buscar Novos Peritos
@@ -46,6 +58,11 @@ export function ClientDashboard() {
         {/* Lista de Processos */}
         <div className="lg:col-span-2 space-y-6">
           <SectionTitle title="Atividades Recentes" />
+          {error && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700 text-xs font-bold">
+              {error}
+            </div>
+          )}
           {processes.length > 0 ? (
             processes.map((p) => (
               <div 

@@ -43,6 +43,8 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		switch err {
 		case service.ErrEmailAlreadyExists:
 			respondErr(w, http.StatusConflict, err.Error())
+		case service.ErrInvalidRegister:
+			respondErr(w, http.StatusBadRequest, err.Error())
 		default:
 			respondErr(w, http.StatusInternalServerError, "erro interno")
 		}
@@ -90,11 +92,50 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // Me godoc
-// GET /api/auth/me
+// GET /api/auth/me  — identidade do usuário autenticado
+// PUT /api/auth/me  — atualiza nome/telefone do perfil
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	claims := claimsFromContext(r.Context())
-	respond(w, http.StatusOK, map[string]any{
-		"id":   claims.UserID,
-		"role": claims.Role,
-	})
+	if claims == nil {
+		respondErr(w, http.StatusUnauthorized, "não autenticado")
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet, http.MethodHead:
+		respond(w, http.StatusOK, map[string]any{
+			"id":   claims.UserID,
+			"role": claims.Role,
+		})
+	case http.MethodPut, http.MethodPatch:
+		var body struct {
+			Name  string `json:"name"`
+			Phone string `json:"phone"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			respondErr(w, http.StatusBadRequest, "corpo inválido")
+			return
+		}
+		user, err := h.svc.UpdateProfile(r.Context(), claims.UserID, body.Name, body.Phone)
+		if err != nil {
+			switch err {
+			case service.ErrInvalidRegister:
+				respondErr(w, http.StatusBadRequest, "nome é obrigatório")
+			case service.ErrUnauthorized:
+				respondErr(w, http.StatusUnauthorized, "não autenticado")
+			default:
+				respondErr(w, http.StatusInternalServerError, "erro ao atualizar perfil")
+			}
+			return
+		}
+		respond(w, http.StatusOK, map[string]any{
+			"id":    user.ID,
+			"name":  user.Name,
+			"email": user.Email,
+			"role":  user.Role,
+			"phone": user.Phone,
+		})
+	default:
+		respondErr(w, http.StatusMethodNotAllowed, "método não permitido")
+	}
 }

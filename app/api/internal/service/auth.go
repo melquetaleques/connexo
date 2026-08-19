@@ -17,6 +17,9 @@ var ErrInvalidCredentials = errors.New("credenciais inválidas")
 // ErrEmailAlreadyExists é retornado quando o email já está cadastrado.
 var ErrEmailAlreadyExists = errors.New("email já cadastrado")
 
+// ErrInvalidRegister é retornado quando os dados de cadastro são inválidos.
+var ErrInvalidRegister = errors.New("dados de cadastro inválidos")
+
 // ErrUnauthorized é retornado quando o usuário não tem permissão.
 var ErrUnauthorized = errors.New("acesso não autorizado")
 
@@ -82,8 +85,24 @@ func NewAuthService(
 	}
 }
 
+func isRegisterRole(role domain.Role) bool {
+	switch role {
+	case domain.RoleAdvogado, domain.RoleContador, domain.RoleCliente:
+		return true
+	default:
+		return false
+	}
+}
+
 // Register cria um novo usuário e, se for advogado, um perfil de Lawyer.
 func (s *AuthService) Register(ctx context.Context, in RegisterInput, ip string) (*AuthResult, error) {
+	in.Name = strings.TrimSpace(in.Name)
+	in.Email = strings.ToLower(strings.TrimSpace(in.Email))
+	in.Phone = strings.TrimSpace(in.Phone)
+	if in.Name == "" || in.Email == "" || !strings.Contains(in.Email, "@") || len(in.Pass) < 8 || !isRegisterRole(in.Role) {
+		return nil, ErrInvalidRegister
+	}
+
 	// Verificar duplicidade de e-mail
 	existing, _ := s.users.FindByEmail(ctx, in.Email)
 	if existing != nil {
@@ -178,4 +197,25 @@ func (s *AuthService) Login(ctx context.Context, email, pass, ip string) (*AuthR
 	})
 
 	return &AuthResult{User: u, Token: token}, nil
+}
+
+// UpdateProfile atualiza nome e telefone do usuário autenticado.
+func (s *AuthService) UpdateProfile(ctx context.Context, userID uuid.UUID, name, phone string) (*domain.User, error) {
+	u, err := s.users.FindByID(ctx, userID)
+	if err != nil || u == nil {
+		return nil, ErrUnauthorized
+	}
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, ErrInvalidRegister
+	}
+	u.Name = name
+	if phone != "" {
+		u.Phone = strings.TrimSpace(phone)
+	}
+	u.UpdatedAt = time.Now()
+	if err := s.users.Update(ctx, u); err != nil {
+		return nil, err
+	}
+	return u, nil
 }

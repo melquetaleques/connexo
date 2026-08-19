@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageContainer, Card, Icon, SectionTitle, GoldButton, GhostButton, Pill, Avatar } from "@/components/ui/connexo-primitives";
 import { getAccountantDashboard, AccountantDashboardData, acceptLinkRequest, rejectLinkRequest } from "@/services/accountant";
+import { apiErrorMessage } from "@/lib/utils";
 
 export function AccountantDashboard() {
   const navigate = useNavigate();
   const [data, setData] = useState<AccountantDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -23,17 +25,17 @@ export function AccountantDashboard() {
   }, []);
 
   const handleAction = async (id: string, action: 'accept' | 'reject') => {
+    setActionError(null);
     try {
       if (action === 'accept') {
         await acceptLinkRequest(id);
       } else {
         await rejectLinkRequest(id);
       }
-      // Recarregar dados
       const updatedData = await getAccountantDashboard();
       setData(updatedData);
-    } catch (error) {
-      console.error(`Erro ao ${action} solicitação:`, error);
+    } catch (err) {
+      setActionError(apiErrorMessage(err, `Erro ao ${action === "accept" ? "aceitar" : "recusar"} a solicitação.`));
     }
   };
 
@@ -51,6 +53,11 @@ export function AccountantDashboard() {
         <h1 className="text-4xl font-black text-primary tracking-tight mb-2">Painel do Perito</h1>
         <p className="text-primary/40 font-bold uppercase tracking-[0.2em] text-xs">Gestão de Processos e Vínculos</p>
       </div>
+      {actionError && (
+        <div className="mb-8 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700 text-xs font-bold">
+          {actionError}
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">

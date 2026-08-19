@@ -197,7 +197,7 @@ export interface AccountantProcess {
   client_name?: string;
   status?: string;
   link_id?: string;
-  [key: string]: unknown;
+  court?: string;
 }
 
 export type AccountantProcessDetail = AccountantProcess & {

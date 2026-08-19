@@ -361,8 +361,12 @@ func (h *AccountantHandler) GetProcess(w http.ResponseWriter, r *http.Request) {
 
 	link, err := h.links.FindByID(r.Context(), id)
 	if err != nil || link == nil {
-		respondErr(w, http.StatusNotFound, "vinculo nao encontrado")
-		return
+		// Aceita tanto o id do vínculo quanto o id do processo.
+		link, err = h.links.FindActiveByProcess(r.Context(), id)
+		if err != nil || link == nil {
+			respondErr(w, http.StatusNotFound, "vinculo nao encontrado")
+			return
+		}
 	}
 
 	if link.AccountantID != user.ID {

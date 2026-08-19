@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { GoldButton, Icon } from "@/components/ui/connexo-primitives";
 import { useAuth } from "@/hooks/useAuth";
+import { apiErrorMessage } from "@/lib/utils";
 
 const ACCENT = "#C59D5C";
 
@@ -15,8 +16,14 @@ function roleDashboard(role: string): string {
   }
 }
 
+function safeNext(raw: string | null): string | null {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
+
 export function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,20 +31,29 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    if (!user) return;
+    const next = safeNext(searchParams.get("next"));
+    navigate(next || roleDashboard(user.role), { replace: true });
+  }, [user, navigate, searchParams]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim() || !password) {
+      setError("Informe e-mail e senha.");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
       await login(email, password);
-    } catch (err: any) {
-      setError(err?.response?.data?.error || err?.message || "Erro ao autenticar");
+    } catch (err) {
+      setError(apiErrorMessage(err, "Erro ao autenticar"));
       setLoading(false);
     }
   };
 
   if (user) {
-    navigate(roleDashboard(user.role), { replace: true });
     return null;
   }
 
@@ -96,11 +112,11 @@ export function LoginPage() {
         <div className="flex flex-col justify-center p-8 md:p-20 bg-white">
           <div className="mb-12">
             <p className="text-[10px] font-bold uppercase tracking-[0.4em] mb-4" style={{ color: ACCENT }}>
-              Portal do Contador
+              Acesso à plataforma
             </p>
             <h3 className="text-4xl font-black text-primary tracking-tight mb-3">Bem-vindo de volta</h3>
             <p className="text-primary/50 font-medium text-base">
-              Acesse sua conta para gerenciar laudos e processos.
+              Acesse sua conta para gerenciar processos, laudos e documentos.
             </p>
           </div>
 

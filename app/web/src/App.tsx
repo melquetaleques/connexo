@@ -1,9 +1,9 @@
-import { Route, Routes, Navigate } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { LawyerDashboard } from "./pages/LawyerDashboard";
 import { AccountantDashboard } from "./pages/AccountantDashboard";
-import { AccountantCatalogPage } from "./pages/AccountantCatalogPage";
+import { CatalogPage as AccountantCatalogPage } from "./pages/cli/CatalogPage";
 import { ClientsPage } from "./pages/ClientsPage";
 import { ClientDetailPage } from "./pages/ClientDetailPage";
 import { ProcessPage } from "./pages/ProcessPage";
@@ -12,18 +12,18 @@ import { ServicesPage } from "./pages/ServicesPage";
 import { UsersPage } from "./pages/UsersPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { PublicProfilePage } from "./pages/PublicProfilePage";
-import { AccountantPublicProfile } from "./pages/AccountantPublicProfile";
-import { AccountantProfileEdit } from "./pages/AccountantProfileEdit";
+import { AccountantPublicProfile } from "./pages/public/AccountantPublicProfile";
+import { AccountantProfileEdit } from "./pages/acc/AccountantProfileEdit";
 import { AccountantProcessesPage } from "./pages/AccountantProcessesPage";
-import { AccountantProcessDetail } from "./pages/AccountantProcessDetail";
-import { ClientDashboard } from "./pages/ClientDashboard";
+import { AccountantProcessDetail } from "./pages/acc/AccountantProcessDetail";
+import { ClientDashboard, ClientProcessesPage } from "./pages/ClientDashboard";
 import { ClientProcessDetail } from "./pages/ClientProcessDetail";
 import { ClientDocumentsPage } from "./pages/ClientDocumentsPage";
 import { ClientNotificationsPage } from "./pages/ClientNotificationsPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { LawyerProcessesPage } from "./pages/LawyerProcessesPage";
 import { LawyerProcessDetail } from "./pages/adv/LawyerProcessDetail";
-import { LawyerSubscriptionPage } from "./pages/LawyerSubscriptionPage";
+import { LawyerSubscriptionPage } from "./pages/adv/LawyerSubscriptionPage";
 import { LandingPage } from "./pages/LandingPage";
 import { AppShell } from "./components/layout/AppShell";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
@@ -80,7 +80,7 @@ export default function App() {
         <Route element={<ProtectedRoute allowedRoles={["cliente", "admin"]} />}>
           <Route element={<AppShell role="cliente" />}>
             <Route path="/cli/dashboard" element={<ClientDashboard />} />
-            <Route path="/cli/processos" element={<ClientDashboard />} />
+            <Route path="/cli/processos" element={<ClientProcessesPage />} />
             <Route path="/cli/processos/:id" element={<ClientProcessDetail />} />
             <Route path="/cli/catalogo" element={<AccountantCatalogPage />} />
             <Route path="/cli/documentos" element={<ClientDocumentsPage />} />

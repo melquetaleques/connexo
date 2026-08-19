@@ -3,21 +3,23 @@ import { useParams, useNavigate } from "react-router-dom";
 import { PageContainer, Card, Icon, SectionTitle, GhostButton, GoldButton, Pill, Avatar } from "@/components/ui/connexo-primitives";
 import { listMyProcesses, ClientProcess } from "@/services/client";
 import { DocumentManager } from "@/components/shared/DocumentManager";
+import { apiErrorMessage } from "@/lib/utils";
 
 export function ClientProcessDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [process, setProcess] = useState<ClientProcess | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
         const data = await listMyProcesses();
-        const found = data.find(p => p.id === id);
+        const found = data.find(p => p.id === id || p.link_id === id);
         setProcess(found || null);
-      } catch (error) {
-        console.error("Erro ao carregar detalhe do processo:", error);
+      } catch (err) {
+        setError(apiErrorMessage(err, "Erro ao carregar detalhe do processo."));
       } finally {
         setLoading(false);
       }
@@ -30,6 +32,16 @@ export function ClientProcessDetail() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <Icon name="autorenew" className="text-4xl text-secondary animate-spin" />
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageContainer className="text-center py-20">
+        <h2 className="text-2xl font-black text-primary mb-4">Não foi possível carregar o processo</h2>
+        <p className="text-sm font-bold text-rose-600 mb-6">{error}</p>
+        <GhostButton onClick={() => navigate("/cli/processos")}>Voltar para a Lista</GhostButton>
+      </PageContainer>
     );
   }
 
@@ -76,7 +88,7 @@ export function ClientProcessDetail() {
 
           <section>
             <SectionTitle title="Documentos da Perícia" />
-            <DocumentManager processId={id!} />
+            <DocumentManager processId={process.id} />
           </section>
         </div>
 

@@ -20,6 +20,11 @@ interface CatalogAccountant {
   state: string;
   logo_url: string;
   availability: string;
+  slug?: string;
+}
+
+function profilePath(acc: CatalogAccountant) {
+  return `/contadores/${acc.slug || acc.id}`;
 }
 
 const AVAILABILITY_OPTIONS = [
@@ -223,7 +228,7 @@ export function CatalogPage() {
             {accountants.map((acc) => {
               const badge = AVAILABILITY_BADGE[acc.availability] || AVAILABILITY_BADGE.disponivel;
               return (
-                <Card key={acc.id} className="group hover:border-secondary/30 transition-all cursor-pointer" onClick={() => navigate(`/cnt/perfil/${acc.id}`)}>
+                <Card key={acc.id} className="group hover:border-secondary/30 transition-all cursor-pointer" onClick={() => navigate(profilePath(acc))}>
                   <div className="flex flex-col gap-4">
                     {/* Header with logo */}
                     <div className="flex items-center gap-4">
@@ -268,10 +273,7 @@ export function CatalogPage() {
                       <GoldButton
                         className="w-full text-xs py-2.5"
                         icon="handshake"
-                        onClick={(e: any) => {
-                          e.stopPropagation();
-                          navigate(`/cnt/perfil/${acc.id}`);
-                        }}
+                        onClick={() => navigate(profilePath(acc))}
                       >
                         Ver Perfil
                       </GoldButton>

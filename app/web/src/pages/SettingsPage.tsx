@@ -2,21 +2,29 @@ import { useState } from "react";
 import { PageContainer, Card, Icon, SectionTitle, GoldButton } from "@/components/ui/connexo-primitives";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/services/api";
+import { apiErrorMessage } from "@/lib/utils";
 
 export function SettingsPage() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [name, setName] = useState(user?.name ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSave = async () => {
+    if (!name.trim()) {
+      setError("Informe um nome.");
+      return;
+    }
     setSaving(true);
     setSaved(false);
+    setError("");
     try {
-      await api.put("/auth/me", { name });
+      await api.put("/auth/me", { name: name.trim() });
+      updateUser({ name: name.trim() });
       setSaved(true);
     } catch (err) {
-      console.error("Erro ao salvar configuracoes", err);
+      setError(apiErrorMessage(err, "Erro ao salvar configurações."));
     } finally {
       setSaving(false);
     }
@@ -53,6 +61,11 @@ export function SettingsPage() {
                 />
               </div>
             </div>
+            {error && (
+              <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700 text-xs font-bold">
+                {error}
+              </div>
+            )}
             <div className="flex justify-end mt-8">
               {saved && <span className="text-xs font-bold text-emerald-600 mr-4 self-center">Salvo com sucesso!</span>}
               <GoldButton icon={saving ? "autorenew" : "save"} onClick={handleSave} disabled={saving}>

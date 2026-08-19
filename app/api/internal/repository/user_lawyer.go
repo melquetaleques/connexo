@@ -51,6 +51,12 @@ func (r *userRepo) FindByID(ctx context.Context, id uuid.UUID) (*domain.User, er
 	return &u, nil
 }
 
+func (r *userRepo) Update(ctx context.Context, u *domain.User) error {
+	query := `UPDATE users SET name = :name, phone = :phone, updated_at = :updated_at WHERE id = :id`
+	_, err := r.db.NamedExecContext(ctx, query, u)
+	return err
+}
+
 type lawyerRepo struct {
 	db *DB
 }

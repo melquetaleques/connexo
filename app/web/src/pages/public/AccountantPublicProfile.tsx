@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { BindProcessModal } from "@/components/marketplace/BindProcessModal";
+import { useToast } from "@/contexts/ToastContext";
 import {
   Card,
   GhostButton,
@@ -30,6 +33,10 @@ const AVAILABILITY_CONFIG: Record<string, { label: string; color: string; tone: 
 
 export function AccountantPublicProfile() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { addToast } = useToast();
+  const [bindOpen, setBindOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<PublicAccountantProfile | null>(null);
@@ -103,7 +110,7 @@ export function AccountantPublicProfile() {
               O contador que você está procurando não existe ou o link está incorreto.
             </p>
           </div>
-          <Link to="/cli/catalogo">
+          <Link to="/public">
             <GoldButton icon="search">Explorar Catálogo</GoldButton>
           </Link>
         </div>
@@ -177,7 +184,21 @@ export function AccountantPublicProfile() {
 
             {/* CTA */}
             <div className="shrink-0 w-full md:w-auto">
-              <GoldButton icon="handshake" className="w-full md:w-auto">
+              <GoldButton
+                icon="handshake"
+                className="w-full md:w-auto"
+                onClick={() => {
+                  if (!user) {
+                    navigate(`/login?next=/contadores/${slug}`);
+                    return;
+                  }
+                  if (user.role !== "cliente") {
+                    addToast("Apenas clientes podem solicitar o vínculo com um perito.", "info");
+                    return;
+                  }
+                  setBindOpen(true);
+                }}
+              >
                 Contratar
               </GoldButton>
             </div>
@@ -409,6 +430,18 @@ export function AccountantPublicProfile() {
           )}
         </Card>
       </div>
+
+      {bindOpen && profile && (
+        <BindProcessModal
+          accountant={{ id: profile.id, name: profile.name }}
+          onClose={() => setBindOpen(false)}
+          onSuccess={() => {
+            setBindOpen(false);
+            addToast("Solicitação de vínculo enviada.", "success");
+            navigate("/cli/processos");
+          }}
+        />
+      )}
     </PageContainer>
   );
 }

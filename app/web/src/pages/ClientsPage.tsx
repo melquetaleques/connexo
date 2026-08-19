@@ -16,6 +16,8 @@ import {
 // O serviço api será configurado no Plan 1.3. Por enquanto, mantemos a compatibilidade.
 import api from "@/services/api";
 import type { Client } from "@/types";
+import { apiErrorMessage } from "@/lib/utils";
+import { useToast } from "@/contexts/ToastContext";
 
 type FilterKey = "todos" | "ativo" | "atencao" | "encerrado";
 
@@ -58,7 +60,10 @@ export function ClientsPage() {
     { k: "encerrado", l: "Encerrados", n: clients.filter((c) => c.status === "encerrado").length },
   ];
 
+  const { addToast } = useToast();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [newClient, setNewClient] = useState<Partial<Client>>({
     name: "",
     document: "",
@@ -70,17 +75,23 @@ export function ClientsPage() {
 
   async function handleAddClient(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
+    if (!newClient.name?.trim()) {
+      setFormError("Informe o nome completo ou a razão social.");
+      return;
+    }
+    setSaving(true);
+    setFormError(null);
     try {
       await api.post("/adv/clients", newClient);
       setIsAddModalOpen(false);
       setNewClient({ name: "", document: "", email: "", phone: "", type: "PF", notes: "" });
       const res = await api.get<Client[]>("/adv/clients");
       setClients(res.data);
+      addToast("Cliente cadastrado com sucesso.", "success");
     } catch (err) {
-      alert("Erro ao adicionar cliente. Verifique se o backend está rodando.");
+      setFormError(apiErrorMessage(err, "Erro ao adicionar cliente. Verifique se o backend está rodando."));
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   }
 
@@ -106,6 +117,11 @@ export function ClientsPage() {
             </div>
 
             <form onSubmit={handleAddClient} className="p-8 space-y-6">
+              {formError && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700 text-xs font-bold">
+                  {formError}
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <Field 
@@ -157,8 +173,10 @@ export function ClientsPage() {
               </div>
 
               <div className="pt-6 border-t border-outline flex justify-end gap-3">
-                <GhostButton onClick={() => setIsAddModalOpen(false)}>Cancelar</GhostButton>
-                <GoldButton type="submit" icon="check">Cadastrar Cliente</GoldButton>
+                <GhostButton type="button" onClick={() => setIsAddModalOpen(false)}>Cancelar</GhostButton>
+                <GoldButton type="submit" icon="check" disabled={saving}>
+                  {saving ? "Cadastrando..." : "Cadastrar Cliente"}
+                </GoldButton>
               </div>
             </form>
           </Card>

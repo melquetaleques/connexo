@@ -25,6 +25,7 @@ interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
+  updateUser: (patch: Partial<AuthUser>) => void;
   isAuthenticated: boolean;
 }
 
@@ -89,6 +90,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState({ token: null, user: null });
   }, []);
 
+  const updateUser = useCallback((patch: Partial<AuthUser>) => {
+    setState((prev) => {
+      if (!prev.user) return prev;
+      const user = { ...prev.user, ...patch };
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+      return { ...prev, user };
+    });
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -96,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        updateUser,
         isAuthenticated: !!state.token,
       }}
     >

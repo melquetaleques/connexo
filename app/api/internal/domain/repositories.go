@@ -11,6 +11,7 @@ type UserRepository interface {
 	Create(ctx context.Context, u *User) error
 	FindByEmail(ctx context.Context, email string) (*User, error)
 	FindByID(ctx context.Context, id uuid.UUID) (*User, error)
+	Update(ctx context.Context, u *User) error
 }
 
 // LawyerRepository define operações de persistência de advogados.

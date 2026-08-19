@@ -116,7 +116,7 @@ interface GoldButtonProps {
   type?: "button" | "submit" | "reset";
   icon?: string;
   disabled?: boolean;
-  onClick?: () => void;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
   variant?: "primary" | "ghost";
   accent?: string;
   tone?: string;
@@ -190,7 +190,7 @@ export function GhostButton({
 }
 
 // ---- SuccessDialog ----
-// Modal de confirmação com marca própria — nunca usar window.alert().
+// Modal de confirmação com marca própria — não usar alert nativo do navegador.
 interface SuccessDialogProps {
   open: boolean;
   title: string;

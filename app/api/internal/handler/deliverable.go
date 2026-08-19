@@ -340,6 +340,14 @@ func (r *Router) handleLinkDetails(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if link == nil {
+		// Aceita o id do processo quando o vínculo vigente existe.
+		link, err = r.LinkRepo.FindVigenteByProcess(req.Context(), linkID)
+		if err != nil {
+			http.Error(w, "Erro ao buscar vínculo: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+	if link == nil {
 		http.Error(w, "Vínculo não encontrado", http.StatusNotFound)
 		return
 	}

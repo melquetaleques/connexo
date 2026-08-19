@@ -124,7 +124,7 @@ export function LawyerDashboard() {
                   </div>
                 </Card>
               </div>
-              <div className="cursor-pointer group" onClick={() => navigate("/cli/catalogo")}>
+              <div className="cursor-pointer group" onClick={() => navigate("/public")}>
                 <Card className="hover:border-secondary transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-surface-2 group-hover:bg-secondary/10">

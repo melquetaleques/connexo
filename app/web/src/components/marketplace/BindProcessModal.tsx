@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, GoldButton, GhostButton, Icon, Pill } from "@/components/ui/connexo-primitives";
 import { listMyProcesses, bindAccountantToProcess, ClientProcess } from "@/services/client";
-import { AccountantCatalogItem } from "@/services/catalog";
+import { apiErrorMessage } from "@/lib/utils";
 
 interface BindProcessModalProps {
-  accountant: AccountantCatalogItem;
+  accountant: { id: string; name: string };
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -14,6 +14,7 @@ export function BindProcessModal({ accountant, onClose, onSuccess }: BindProcess
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -33,12 +34,13 @@ export function BindProcessModal({ accountant, onClose, onSuccess }: BindProcess
   const handleConfirm = async () => {
     if (!selectedId) return;
     setSubmitting(true);
+    setError(null);
     try {
       await bindAccountantToProcess(selectedId, accountant.id);
       onSuccess();
-    } catch (error) {
-      console.error("Erro ao vincular contador:", error);
-      alert("Erro ao realizar o vínculo. Tente novamente.");
+    } catch (err) {
+      console.error("Erro ao vincular contador:", err);
+      setError(apiErrorMessage(err, "Erro ao realizar o vínculo. Tente novamente."));
     } finally {
       setSubmitting(false);
     }
@@ -64,6 +66,11 @@ export function BindProcessModal({ accountant, onClose, onSuccess }: BindProcess
         </div>
 
         <div className="p-8 max-h-[60vh] overflow-y-auto">
+          {error && (
+            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700 text-xs font-bold">
+              {error}
+            </div>
+          )}
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Icon name="autorenew" className="text-3xl text-secondary animate-spin mb-3" />

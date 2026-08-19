@@ -264,6 +264,7 @@ type Accountant struct {
 	LogoURL      string    `db:"logo_url" json:"logo_url"`
 	Availability string    `db:"availability" json:"availability"`
 	Rating       float64   `db:"rating" json:"rating"`
+	Slug         string    `db:"slug" json:"slug"`
 }
 
 // PublicAccountantProfile representa o perfil completo e público de um contador.
@@ -338,41 +339,43 @@ func (r *UserRepository) ActivateSubscription(ctx context.Context, lawyerID uuid
 func (r *UserRepository) ListPublicAccountants(ctx context.Context, specialty, city, state, search string) ([]*Accountant, error) {
 	var accountants []*Accountant
 	query := `
-		SELECT id, email, name, role, 
-		       COALESCE(specialty, '') as specialty, 
-		       COALESCE(city, '') as city, 
-		       COALESCE(state, '') as state,
-		       COALESCE(logo_url, '') as logo_url,
-		       COALESCE(availability, 'disponivel') as availability,
-		       COALESCE(rating, 0) as rating
-		FROM users
-		WHERE role = 'contador'
+		SELECT u.id, u.email, u.name, u.role,
+		       COALESCE(u.specialty, '') as specialty,
+		       COALESCE(u.city, '') as city,
+		       COALESCE(u.state, '') as state,
+		       COALESCE(u.logo_url, '') as logo_url,
+		       COALESCE(u.availability, 'disponivel') as availability,
+		       COALESCE(u.rating, 0) as rating,
+		       COALESCE(NULLIF(a.slug, ''), u.id::text) as slug
+		FROM users u
+		LEFT JOIN accountants a ON a.user_id = u.id
+		WHERE u.role = 'contador'
 	`
 	var args []interface{}
 	placeholderIdx := 1
 
 	if specialty != "" {
-		query += fmt.Sprintf(" AND specialty = $%d", placeholderIdx)
+		query += fmt.Sprintf(" AND u.specialty = $%d", placeholderIdx)
 		args = append(args, specialty)
 		placeholderIdx++
 	}
 	if city != "" {
-		query += fmt.Sprintf(" AND city = $%d", placeholderIdx)
+		query += fmt.Sprintf(" AND u.city = $%d", placeholderIdx)
 		args = append(args, city)
 		placeholderIdx++
 	}
 	if state != "" {
-		query += fmt.Sprintf(" AND state = $%d", placeholderIdx)
+		query += fmt.Sprintf(" AND u.state = $%d", placeholderIdx)
 		args = append(args, state)
 		placeholderIdx++
 	}
 	if search != "" {
-		query += fmt.Sprintf(" AND (name ILIKE $%d OR email ILIKE $%d)", placeholderIdx, placeholderIdx)
+		query += fmt.Sprintf(" AND (u.name ILIKE $%d OR u.email ILIKE $%d)", placeholderIdx, placeholderIdx)
 		args = append(args, "%"+search+"%")
 		placeholderIdx++
 	}
 
-	query += " ORDER BY name ASC"
+	query += " ORDER BY u.name ASC"
 
 	err := r.db.SelectContext(ctx, &accountants, query, args...)
 	if err != nil {
@@ -386,16 +389,18 @@ func (r *UserRepository) ListPublicAccountants(ctx context.Context, specialty, c
 func (r *UserRepository) GetPublicProfileBySlug(ctx context.Context, slug string) (*PublicAccountantProfile, error) {
 	var profile PublicAccountantProfile
 	query := `
-		SELECT id, email, name,
-		       COALESCE(specialty, '') as specialty,
-		       COALESCE(city, '') as city,
-		       COALESCE(state, '') as state,
-		       COALESCE(bio, '') as bio,
-		       COALESCE(logo_url, '') as logo_url,
-		       COALESCE(photo_urls, '{}') as photo_urls,
-		       COALESCE(availability, 'disponivel') as availability
-		FROM users
-		WHERE (id::text = $1 OR name ILIKE $1) AND role = 'contador'
+		SELECT u.id, u.email, u.name,
+		       COALESCE(u.specialty, '') as specialty,
+		       COALESCE(u.city, '') as city,
+		       COALESCE(u.state, '') as state,
+		       COALESCE(u.bio, '') as bio,
+		       COALESCE(u.logo_url, '') as logo_url,
+		       COALESCE(u.photo_urls, '{}') as photo_urls,
+		       COALESCE(u.availability, 'disponivel') as availability
+		FROM users u
+		LEFT JOIN accountants a ON a.user_id = u.id
+		WHERE u.role = 'contador'
+		  AND (u.id::text = $1 OR a.slug = $1 OR u.name ILIKE $1)
 		LIMIT 1
 	`
 	err := r.db.GetContext(ctx, &profile, query, slug)
@@ -413,7 +418,10 @@ func (r *UserRepository) GetPublicProfileBySlug(ctx context.Context, slug string
 
 // UpdateAvailability atualiza o status de disponibilidade de um contador.
 func (r *UserRepository) UpdateAvailability(ctx context.Context, userID uuid.UUID, availability string) error {
-	valid := map[string]bool{"disponivel": true, "parcial": true, "indisponivel": true}
+	if availability == "ocupado" {
+		availability = "parcial"
+	}
+	valid := map[string]bool{"disponivel": true, "parcial": true, "indisponivel": true, "ocupado": true}
 	if !valid[availability] {
 		return fmt.Errorf("status de disponibilidade inválido: %s", availability)
 	}

@@ -63,6 +63,10 @@ var ErrDuplicateProcessNumber = errors.New("já existe um processo com este núm
 
 // CreateClient cria um novo cliente vinculado ao advogado.
 func (s *LawyerService) CreateClient(ctx context.Context, userID uuid.UUID, c *domain.Client) error {
+	if strings.TrimSpace(c.Name) == "" {
+		return ErrInvalidRegister
+	}
+
 	lawyer, err := s.lawyers.FindByUserID(ctx, userID)
 	if err != nil {
 		return err
