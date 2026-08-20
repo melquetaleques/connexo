@@ -61,6 +61,30 @@ function useLandingReveal() {
   }, []);
 }
 
+function useHeroParallax() {
+  useEffect(() => {
+    const el = document.querySelector<HTMLElement>("[data-hero-parallax]");
+    if (!el) return undefined;
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => {
+      if (media.matches) {
+        el.style.transform = "none";
+        return;
+      }
+      const dy = Math.max(-10, Math.min(10, -(window.scrollY * 8) / 300));
+      el.style.transform = `translate3d(0, ${dy}px, 0)`;
+    };
+    apply();
+    if (media.matches) return undefined;
+    window.addEventListener("scroll", apply, { passive: true });
+    media.addEventListener("change", apply);
+    return () => {
+      window.removeEventListener("scroll", apply);
+      media.removeEventListener("change", apply);
+    };
+  }, []);
+}
+
 function MiniMock({ children, label }: { children: ReactNode; label: string }) {
   return (
     <div className="relative mt-6 h-52 overflow-hidden rounded-[16px]">
@@ -78,6 +102,17 @@ function HeroSection() {
       data-testid="landing-hero"
       className="relative overflow-hidden bg-mg-ink text-white pt-28 pb-8 min-h-[92vh] flex flex-col"
     >
+      <div
+        data-hero-parallax
+        className="landing-hero-parallax mag-photo-frame"
+        aria-hidden="true"
+      >
+        <img
+          src="/landing/hero-campo.jpg"
+          alt=""
+          className="mag-photo-img mag-ken-burns"
+        />
+      </div>
       <div className="mag-field mag-veil landing-field-hero" aria-hidden="true">
         <div className="mag-grain" aria-hidden="true" />
       </div>
@@ -160,6 +195,13 @@ function ProductSection() {
 function ConexaoSection() {
   return (
     <section data-testid="mag-vitrine-grande" className="relative overflow-hidden bg-mg-ink text-white py-24">
+      <div className="mag-photo-frame" aria-hidden="true">
+        <img
+          src="/landing/tile-suave.jpg"
+          alt=""
+          className="mag-photo-img mag-ken-burns mag-ken-burns-rev"
+        />
+      </div>
       <div className="mag-field mag-veil mag-field-ink" aria-hidden="true">
         <div className="mag-grain" aria-hidden="true" />
       </div>
@@ -266,10 +308,10 @@ function PersonasSection() {
         mesmo expediente.
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      <div className="landing-stagger grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <article
           data-testid="bento-claro"
-          className="landing-reveal mag-field mag-field-ivory relative overflow-hidden isolate lg:col-span-7 text-ink p-8 sm:p-10 flex flex-col rounded-[16px]"
+          className="landing-reveal mag-field mag-field-ivory mag-photo-hover-card relative overflow-hidden isolate lg:col-span-7 text-ink p-8 sm:p-10 flex flex-col rounded-[16px]"
         >
           <div className="mag-grain" aria-hidden="true" />
           <div className="relative flex flex-col flex-1" data-testid="persona-cliente">
@@ -310,8 +352,16 @@ function PersonasSection() {
 
         <article
           data-testid="bento-vinho"
-          className="landing-reveal mag-field mag-field-vinho relative overflow-hidden isolate lg:col-span-5 text-white p-8 sm:p-10 flex flex-col rounded-[16px]"
+          className="landing-reveal mag-field mag-field-vinho mag-photo-hover-card relative overflow-hidden isolate lg:col-span-5 text-white p-8 sm:p-10 flex flex-col rounded-[16px]"
         >
+          <div className="mag-photo-frame" aria-hidden="true">
+            <img
+              src="/landing/bento-advogado.jpg"
+              alt=""
+              className="mag-photo-img mag-photo-hover"
+            />
+            <div className="mag-photo-veil mag-photo-veil-vinho" />
+          </div>
           <div className="mag-grain" aria-hidden="true" />
           <div className="relative flex flex-col flex-1" data-testid="persona-advogado">
             <p className="font-ui text-xs text-white mb-2">Quem sustenta a tese</p>
@@ -342,7 +392,7 @@ function PersonasSection() {
 
         <article
           data-testid="bento-ink"
-          className="landing-reveal mag-field mag-field-ink relative overflow-hidden isolate lg:col-span-12 text-white p-8 sm:p-10 rounded-[16px]"
+          className="landing-reveal mag-field mag-field-ink mag-photo-hover-card relative overflow-hidden isolate lg:col-span-12 text-white p-8 sm:p-10 rounded-[16px]"
         >
           <div className="mag-grain" aria-hidden="true" />
           <div className="relative">
@@ -350,7 +400,7 @@ function PersonasSection() {
             <h3 className="font-ui font-bold text-xl mb-6">O rito, com dono em cada etapa</h3>
             <div className="relative h-72 overflow-hidden rounded-[16px]">
               <MockTimeline />
-              <span className="absolute top-10 right-3 sm:right-6 landing-pill bg-mg-magenta backdrop-blur-xl text-white font-ui text-xs font-semibold px-3 min-h-8 inline-flex items-center">
+              <span className="absolute top-10 right-3 sm:right-6 landing-pill mag-chip-contrast backdrop-blur-xl text-white font-ui text-xs font-semibold px-3 min-h-8 inline-flex items-center">
                 Camila · OAB
               </span>
               <span className="absolute bottom-8 left-3 sm:left-6 landing-pill bg-mg-indigo backdrop-blur-xl text-white font-ui text-xs font-semibold px-3 min-h-8 inline-flex items-center">
@@ -362,8 +412,16 @@ function PersonasSection() {
 
         <article
           data-testid="bento-teal"
-          className="landing-reveal mag-field mag-field-teal relative overflow-hidden isolate lg:col-span-12 text-white rounded-[16px] p-8 sm:p-10 grid lg:grid-cols-12 gap-6"
+          className="landing-reveal mag-field mag-field-teal mag-photo-hover-card relative overflow-hidden isolate lg:col-span-12 text-white rounded-[16px] p-8 sm:p-10 grid lg:grid-cols-12 gap-6"
         >
+          <div className="mag-photo-frame" aria-hidden="true">
+            <img
+              src="/landing/bento-contador.jpg"
+              alt=""
+              className="mag-photo-img mag-photo-hover"
+            />
+            <div className="mag-photo-veil mag-photo-veil-teal" />
+          </div>
           <div className="mag-grain" aria-hidden="true" />
           <div className="relative lg:col-span-4" data-testid="persona-contador">
             <p className="font-ui text-xs text-white mb-2">Quem assina o laudo</p>
@@ -391,14 +449,14 @@ function PersonasSection() {
               data-testid="persona-contador-funcionalidades"
               className="flex flex-wrap gap-2 font-ui text-sm list-none"
             >
-              <li className="landing-pill border border-white/30 bg-white/15 backdrop-blur-xl px-3 py-2">Perfil público com slug próprio</li>
-              <li className="landing-pill border border-white/30 bg-white/15 backdrop-blur-xl px-3 py-2">Vitrine de serviços e postagens</li>
-              <li className="landing-pill border border-white/30 bg-white/15 backdrop-blur-xl px-3 py-2">Disponibilidade e avaliações visíveis</li>
-              <li className="landing-pill border border-white/30 bg-white/15 backdrop-blur-xl px-3 py-2">Fila de processos recebidos</li>
+              <li className="landing-pill landing-glass-ink backdrop-blur-xl px-3 py-2">Perfil público com slug próprio</li>
+              <li className="landing-pill landing-glass-ink backdrop-blur-xl px-3 py-2">Vitrine de serviços e postagens</li>
+              <li className="landing-pill landing-glass-ink backdrop-blur-xl px-3 py-2">Disponibilidade e avaliações visíveis</li>
+              <li className="landing-pill landing-glass-ink backdrop-blur-xl px-3 py-2">Fila de processos recebidos</li>
             </ul>
             <div className="relative">
               <MockVitrine />
-              <span className="absolute top-3 right-3 landing-pill border-2 border-mg-magenta text-white font-ui text-xs font-semibold px-4 min-h-9 inline-flex items-center bg-mg-ink/40 backdrop-blur-xl">
+              <span className="absolute top-3 right-3 landing-pill border-2 border-mg-magenta text-white font-ui text-xs font-semibold px-4 min-h-9 inline-flex items-center landing-glass-ink backdrop-blur-xl">
                 ABRIR VITRINE
               </span>
             </div>
@@ -461,6 +519,7 @@ function FluxoSection() {
 
 export function LandingPage() {
   useLandingReveal();
+  useHeroParallax();
   return (
     <div className="landing-root font-ui min-h-screen overflow-x-hidden text-mg-ink">
       <MagNav />

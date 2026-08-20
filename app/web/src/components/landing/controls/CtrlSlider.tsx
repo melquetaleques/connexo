@@ -12,7 +12,7 @@ export function CtrlSlider({ label, value = 62, tone = "dark" }: CtrlSliderProps
     <div data-ctrl="slider" className="w-full">
       <p
         className={`font-ui text-[10px] font-semibold uppercase tracking-[0.12em] mb-2 ${
-          tone === "light" ? "text-on-surface-variant" : "text-white/80"
+          tone === "light" ? "text-mg-ink" : "text-white"
         }`}
       >
         {label}

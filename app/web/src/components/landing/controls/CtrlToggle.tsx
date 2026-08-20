@@ -20,7 +20,7 @@ export function CtrlToggle({ label, on = true, tone = "dark" }: CtrlToggleProps)
     >
       <span
         className={`font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-left ${
-          tone === "light" ? "text-on-surface-variant" : "text-white/80"
+          tone === "light" ? "text-mg-ink" : "text-white"
         }`}
       >
         {label}

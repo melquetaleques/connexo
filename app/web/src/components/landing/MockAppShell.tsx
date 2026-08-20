@@ -77,21 +77,21 @@ export function MockAppShell() {
         </header>
         <div className="p-3 sm:p-4 grid sm:grid-cols-2 gap-3">
           <article className="rounded-[16px] bg-white p-3">
-            <p className="font-ui text-[10px] font-bold uppercase tracking-wide text-on-surface-variant mb-1">
+            <p className="font-ui text-[10px] font-bold uppercase tracking-wide text-mg-ink mb-1">
               Cliente
             </p>
             <p className="font-ui text-sm font-bold text-mg-ink">João Batista Mello</p>
-            <p className="font-ui text-xs text-on-surface-variant mt-1">5 de 7 documentos</p>
+            <p className="font-ui text-xs font-medium text-mg-ink mt-1">5 de 7 documentos</p>
             <div className="mt-3">
               <CtrlToggle label="Acesso do cliente" on tone="light" />
             </div>
           </article>
           <article className="rounded-[16px] bg-white p-3">
-            <p className="font-ui text-[10px] font-bold uppercase tracking-wide text-on-surface-variant mb-1">
+            <p className="font-ui text-[10px] font-bold uppercase tracking-wide text-mg-ink mb-1">
               Contador
             </p>
             <p className="font-ui text-sm font-bold text-mg-ink">Helena Vasconcelos</p>
-            <p className="font-ui text-xs text-on-surface-variant mt-1">CRC 1SP-314567</p>
+            <p className="font-ui text-xs font-medium text-mg-ink mt-1">CRC 1SP-314567</p>
             <div className="mt-3">
               <CtrlSelect
                 label="Papel no rito"

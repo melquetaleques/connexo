@@ -20,7 +20,7 @@ export function MockTimeline() {
       dotClass="bg-mg-indigo"
     >
       <div className="flex items-center justify-between gap-3 min-h-12 px-4 border-b border-outline bg-mg-ivory">
-        <p className="font-ui text-xs text-on-surface-variant">Etapas · datas · responsável</p>
+        <p className="font-ui text-xs font-semibold text-mg-ink">Etapas · datas · responsável</p>
         <StatusPill tone="gold">em andamento</StatusPill>
       </div>
       <div className="px-4 py-3 border-b border-outline bg-mg-ivory">
@@ -28,10 +28,10 @@ export function MockTimeline() {
       </div>
       {ETAPAS.map((e, i) => (
         <MockRow key={e.hora + e.titulo} alt={i % 2 === 1}>
-          <span className="font-ui text-xs font-bold text-mg-indigo w-12 shrink-0">{e.hora}</span>
+          <span className="font-ui text-xs font-bold text-mg-ink w-12 shrink-0">{e.hora}</span>
           <div className="min-w-0 flex-1">
             <p className="font-ui text-sm font-bold text-mg-ink truncate">{e.titulo}</p>
-            <p className="font-ui text-xs text-on-surface-variant truncate">{e.resp}</p>
+            <p className="font-ui text-xs font-medium text-mg-ink truncate">{e.resp}</p>
           </div>
           <StatusPill tone={e.tone}>{e.estado}</StatusPill>
         </MockRow>

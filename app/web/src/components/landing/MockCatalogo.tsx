@@ -71,15 +71,15 @@ export function MockCatalogo() {
       </div>
       <div className="grid grid-cols-3 min-h-12 border-b border-outline bg-mg-ivory">
         <div className="min-w-0 px-3 py-3 border-r border-outline">
-          <p className="font-ui text-xs text-on-surface-variant">CRC</p>
+          <p className="font-ui text-xs font-semibold text-mg-ink">CRC</p>
           <p className="font-ui text-sm font-bold text-mg-ink">38 peritos</p>
         </div>
         <div className="min-w-0 px-3 py-3 border-r border-outline">
-          <p className="font-ui text-xs text-on-surface-variant">Livres</p>
+          <p className="font-ui text-xs font-semibold text-mg-ink">Livres</p>
           <p className="font-ui text-sm font-bold text-mg-ink">12 janelas</p>
         </div>
         <div className="min-w-0 px-3 py-3">
-          <p className="font-ui text-xs text-on-surface-variant">Nota</p>
+          <p className="font-ui text-xs font-semibold text-mg-ink">Nota</p>
           <p className="font-ui text-sm font-bold text-mg-ink">4.7</p>
         </div>
       </div>
@@ -93,12 +93,12 @@ export function MockCatalogo() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="font-ui text-sm font-bold text-mg-ink truncate">{p.nome}</p>
-            <p className="font-ui text-xs text-on-surface-variant truncate">
+            <p className="font-ui text-xs font-medium text-mg-ink truncate">
               {p.crc} · {p.spec} · {p.cidade}
             </p>
           </div>
           <StatusPill tone={p.tone}>{p.disp}</StatusPill>
-          <span className="font-ui text-xs font-bold text-mg-indigo shrink-0">{p.nota}</span>
+          <span className="font-ui text-xs font-bold text-mg-ink shrink-0">{p.nota}</span>
         </MockRow>
       ))}
     </MockShell>

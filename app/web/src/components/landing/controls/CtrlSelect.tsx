@@ -14,7 +14,7 @@ export function CtrlSelect({ label, value, options, tone = "dark" }: CtrlSelectP
     <label data-ctrl="select" className="block w-full">
       <span
         className={`font-ui text-[10px] font-semibold uppercase tracking-[0.12em] ${
-          light ? "text-on-surface-variant" : "text-white/80"
+          light ? "text-mg-ink" : "text-white"
         }`}
       >
         {label}

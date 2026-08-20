@@ -22,7 +22,7 @@ export function MockVitrine() {
         </span>
         <div className="min-w-0 flex-1">
           <p className="font-ui text-sm font-bold text-mg-ink">Helena Vasconcelos</p>
-          <p className="font-ui text-xs text-on-surface-variant">Contadora perita judicial</p>
+          <p className="font-ui text-xs font-medium text-mg-ink">Contadora perita judicial</p>
         </div>
         <StatusPill tone="ok">disponível</StatusPill>
         <StatusPill tone="gold">CRC verificado</StatusPill>
@@ -33,7 +33,7 @@ export function MockVitrine() {
       {LINHAS.map((l, i) => (
         <MockRow key={l.rotulo} alt={i % 2 === 1}>
           <div className="min-w-0 flex-1">
-            <p className="font-ui text-xs text-on-surface-variant">{l.rotulo}</p>
+            <p className="font-ui text-xs font-semibold text-mg-ink">{l.rotulo}</p>
             <p className="font-ui text-sm font-bold text-mg-ink">{l.valor}</p>
           </div>
         </MockRow>

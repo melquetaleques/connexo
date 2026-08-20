@@ -65,17 +65,17 @@ function LaudoComparador() {
       onPointerCancel={onPointerUp}
     >
       <div className="absolute inset-0 bg-mg-ivory p-4">
-        <p className="font-ui text-[10px] uppercase tracking-wide text-on-surface-variant">laudo v.1</p>
+        <p className="font-ui text-[10px] uppercase tracking-wide font-medium text-mg-ink">laudo v.1</p>
         <p className="font-ui text-sm font-bold text-mg-ink mt-2">Cláusula 4.2 — índice omitido</p>
-        <p className="font-ui text-xs text-on-surface-variant mt-2">Protocolado às 14h08 · 1,1 MB</p>
+        <p className="font-ui text-xs font-medium text-mg-ink mt-2">Protocolado às 14h08 · 1,1 MB</p>
       </div>
       <div
         className="absolute inset-0 bg-white p-4"
         style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}
       >
-        <p className="font-ui text-[10px] uppercase tracking-wide text-on-surface-variant">laudo v.2 revisado</p>
+        <p className="font-ui text-[10px] uppercase tracking-wide font-medium text-mg-ink">laudo v.2 revisado</p>
         <p className="font-ui text-sm font-bold text-mg-ink mt-2">Cláusula 4.2 — INPC desde a citação</p>
-        <p className="font-ui text-xs text-on-surface-variant mt-2">Ajuste às 16h48 · 1,4 MB</p>
+        <p className="font-ui text-xs font-medium text-mg-ink mt-2">Ajuste às 16h48 · 1,4 MB</p>
       </div>
       <div className="absolute inset-0 z-10 pointer-events-none">
         <div
@@ -109,7 +109,7 @@ export function MockLaudo() {
   return (
     <MockShell testId="mock-laudo" label="Entrega do laudo" meta="v.2" dotClass="bg-ledger">
       <div className="flex items-center justify-between gap-3 min-h-12 px-4 border-b border-outline bg-mg-ivory">
-        <p className="font-ui text-xs text-on-surface-variant">Status · versão · pedido de ajuste</p>
+        <p className="font-ui text-xs font-medium text-mg-ink">Status · versão · pedido de ajuste</p>
         <div className="flex gap-2">
           <StatusPill tone="gold">aguardando revisão</StatusPill>
           <StatusPill tone="ok">assinado</StatusPill>
@@ -119,7 +119,7 @@ export function MockLaudo() {
       {CAMPOS.map((c, i) => (
         <MockRow key={c.rotulo} alt={i % 2 === 1}>
           <div className="min-w-0 flex-1">
-            <p className="font-ui text-xs text-on-surface-variant">{c.rotulo}</p>
+            <p className="font-ui text-xs font-medium text-mg-ink">{c.rotulo}</p>
             <p className="font-ui text-sm font-bold text-mg-ink">{c.valor}</p>
           </div>
         </MockRow>

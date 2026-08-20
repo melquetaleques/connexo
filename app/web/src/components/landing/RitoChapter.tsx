@@ -31,7 +31,7 @@ export function RitoChapter({
             className="hidden sm:inline-flex w-3 h-3 rounded-full bg-mg-magenta shrink-0"
             aria-hidden="true"
           />
-          <p className="font-ui text-xl font-bold text-mg-magenta">{time}</p>
+          <p className="rito-time font-ui text-xl font-bold">{time}</p>
         </div>
         <h3 className="rito-title font-display font-semibold text-mg-vinho mb-4">
           {titleStart} {titleEnd}

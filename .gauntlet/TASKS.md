@@ -1,4 +1,37 @@
-# TAREFAS — Ciclo 10 (fotografia e movimento)
+# TAREFAS — Ciclo 11 (2 pontos de contraste, e mais nada)
+
+## APROVADO NO CICLO 10 — NÃO refazer, NÃO regredir
+
+10 fotos no lugar certo, M7-M10 (ken-burns, hover-zoom, parallax, marquee),
+reduced-motion limpo, temperatura, h2 vinho, CTAs ink, ordem das seções,
+11 testes, glass 44, ctrl 17.
+
+## F1 — Véu local sob `mag-hero-lista`
+
+**Fazer:** os itens de texto da lista do hero (`Catálogo com CRC`, `Timeline
+do rito`, etc.) caem sobre a região clara do céu na foto — quase ilegíveis.
+Reforçar véu escuro **local** atrás da lista (não a página toda — o hero já
+está com hue e escuridão corretos).
+
+**Êxito:** contraste por pixel de cada item da lista ≥4.5:1, medido sobre
+qualquer trecho da foto atrás (inclusive a faixa clara do céu).
+
+## F2 — Legibilidade de "Quem autoriza o dado" e vizinhos na borda do bento
+
+**Fazer:** rótulo `Quem autoriza o dado` (e qualquer rótulo irmão na mesma
+borda de transição salmão-claro) está com texto quase invisível — claro sobre
+claro. Escurecer o fundo local ou trocar a cor do texto.
+
+**Êxito:** contraste ≥4.5:1 medido no ponto exato.
+
+## Fora de escopo
+
+Fotos, movimento, temperatura, bento, showcase, testes — todos aprovados e
+congelados. Não tocar.
+
+---
+
+# (histórico) TAREFAS — Ciclo 10 (fotografia e movimento)
 
 ## E1 — Fotos no lugar (mapa do OBJETIVO)
 

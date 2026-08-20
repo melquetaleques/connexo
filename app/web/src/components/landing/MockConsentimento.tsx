@@ -20,7 +20,7 @@ export function MockConsentimento() {
       dotClass="bg-mg-indigo"
     >
       <div className="flex items-center justify-between gap-3 min-h-12 px-4 border-b border-outline bg-mg-ivory">
-        <p className="font-ui text-xs text-on-surface-variant">Documento a documento · cliente no meio</p>
+        <p className="font-ui text-xs font-semibold text-mg-ink">Documento a documento · cliente no meio</p>
         <div className="flex items-center gap-3 min-w-0">
           <StatusPill tone="ok">5 concedidos</StatusPill>
           <StatusPill tone="deny">1 negado</StatusPill>
@@ -39,7 +39,7 @@ export function MockConsentimento() {
           />
           <div className="min-w-0 flex-1">
             <p className="font-ui text-sm font-bold text-mg-ink truncate">{d.nome}</p>
-            <p className="font-ui text-xs text-on-surface-variant truncate">{d.dono}</p>
+            <p className="font-ui text-xs font-medium text-mg-ink truncate">{d.dono}</p>
           </div>
           <StatusPill tone={d.tone}>{d.estado}</StatusPill>
         </MockRow>
