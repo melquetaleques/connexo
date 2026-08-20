@@ -38,7 +38,7 @@ func (h *CatalogHandler) ListPublicAccountants(w http.ResponseWriter, req *http.
 
 	// Filtrar por availability no Go level (já que o SQL pode ficar complexo com param opcionais)
 	if availability != "" {
-		filtered := make([]*repository.Accountant, 0)
+		filtered := make([]*repository.PublicAccountantListItem, 0)
 		for _, acc := range accountants {
 			if acc.Availability == availability {
 				filtered = append(filtered, acc)
@@ -50,7 +50,7 @@ func (h *CatalogHandler) ListPublicAccountants(w http.ResponseWriter, req *http.
 	// Catálogo vazio responde [], não null — o frontend itera direto sobre a
 	// resposta.
 	if accountants == nil {
-		accountants = []*repository.Accountant{}
+		accountants = []*repository.PublicAccountantListItem{}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

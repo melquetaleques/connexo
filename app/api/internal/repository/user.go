@@ -3,12 +3,14 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 // User representa a entidade de usuário no banco de dados.
@@ -267,18 +269,54 @@ type Accountant struct {
 	Slug         string    `db:"slug" json:"slug"`
 }
 
-// PublicAccountantProfile representa o perfil completo e público de um contador.
-type PublicAccountantProfile struct {
+// PublicAccountantListItem é o payload público do catálogo: sem e-mail.
+type PublicAccountantListItem struct {
 	ID           uuid.UUID `db:"id" json:"id"`
-	Email        string    `db:"email" json:"email"`
 	Name         string    `db:"name" json:"name"`
 	Specialty    string    `db:"specialty" json:"specialty"`
 	City         string    `db:"city" json:"city"`
 	State        string    `db:"state" json:"state"`
-	Bio          string    `db:"bio" json:"bio"`
 	LogoURL      string    `db:"logo_url" json:"logo_url"`
-	PhotoURLs    []string  `db:"photo_urls" json:"photo_urls"`
 	Availability string    `db:"availability" json:"availability"`
+	Rating       float64   `db:"rating" json:"rating"`
+	Slug         string    `db:"slug" json:"slug"`
+}
+
+// photoURLList faz Scan de TEXT[] do Postgres via pq.StringArray e
+// serializa JSON sempre como lista (nunca null).
+type photoURLList []string
+
+func (p *photoURLList) Scan(src interface{}) error {
+	var arr pq.StringArray
+	if err := arr.Scan(src); err != nil {
+		return err
+	}
+	if arr == nil {
+		*p = photoURLList{}
+		return nil
+	}
+	*p = photoURLList(arr)
+	return nil
+}
+
+func (p photoURLList) MarshalJSON() ([]byte, error) {
+	if p == nil {
+		return []byte("[]"), nil
+	}
+	return json.Marshal([]string(p))
+}
+
+// PublicAccountantProfile representa o perfil completo e público de um contador.
+type PublicAccountantProfile struct {
+	ID           uuid.UUID    `db:"id" json:"id"`
+	Name         string       `db:"name" json:"name"`
+	Specialty    string       `db:"specialty" json:"specialty"`
+	City         string       `db:"city" json:"city"`
+	State        string       `db:"state" json:"state"`
+	Bio          string       `db:"bio" json:"bio"`
+	LogoURL      string       `db:"logo_url" json:"logo_url"`
+	PhotoURLs    photoURLList `db:"photo_urls" json:"photo_urls"`
+	Availability string       `db:"availability" json:"availability"`
 }
 // SubscriptionInfo representa os dados de assinatura de um advogado.
 //
@@ -336,10 +374,10 @@ func (r *UserRepository) ActivateSubscription(ctx context.Context, lawyerID uuid
 
 
 
-func (r *UserRepository) ListPublicAccountants(ctx context.Context, specialty, city, state, search string) ([]*Accountant, error) {
-	var accountants []*Accountant
+func (r *UserRepository) ListPublicAccountants(ctx context.Context, specialty, city, state, search string) ([]*PublicAccountantListItem, error) {
+	var accountants []*PublicAccountantListItem
 	query := `
-		SELECT u.id, u.email, u.name, u.role,
+		SELECT u.id, u.name,
 		       COALESCE(u.specialty, '') as specialty,
 		       COALESCE(u.city, '') as city,
 		       COALESCE(u.state, '') as state,
@@ -389,7 +427,7 @@ func (r *UserRepository) ListPublicAccountants(ctx context.Context, specialty, c
 func (r *UserRepository) GetPublicProfileBySlug(ctx context.Context, slug string) (*PublicAccountantProfile, error) {
 	var profile PublicAccountantProfile
 	query := `
-		SELECT u.id, u.email, u.name,
+		SELECT u.id, u.name,
 		       COALESCE(u.specialty, '') as specialty,
 		       COALESCE(u.city, '') as city,
 		       COALESCE(u.state, '') as state,
@@ -408,9 +446,8 @@ func (r *UserRepository) GetPublicProfileBySlug(ctx context.Context, slug string
 		return nil, err
 	}
 
-	// Se photo_urls for nil, inicializar como slice vazio
 	if profile.PhotoURLs == nil {
-		profile.PhotoURLs = []string{}
+		profile.PhotoURLs = photoURLList{}
 	}
 
 	return &profile, nil
