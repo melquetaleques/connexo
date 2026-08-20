@@ -1,280 +1,428 @@
-import { Link } from "react-router-dom";
-import { Icon, GoldButton } from "@/components/ui/connexo-primitives";
+import { useEffect, useRef, useState } from "react";
+import {
+  GlyphConsentimento,
+  GlyphLaudo,
+  GlyphPrazo,
+  GlyphProcesso,
+  GlyphVitrine,
+  IconAutorizacao,
+  IconLaudo,
+  IconAcompanhamento,
+  IconVitrine,
+  IconPrazo,
+  IconChip,
+} from "@/components/ui/connexo-icons";
+import { MockCatalogo } from "@/components/landing/MockCatalogo";
+import { MockConsentimento } from "@/components/landing/MockConsentimento";
+import { MockTimeline } from "@/components/landing/MockTimeline";
+import { MockLaudo } from "@/components/landing/MockLaudo";
+import { MockVitrine } from "@/components/landing/MockVitrine";
+import { MockAppShell } from "@/components/landing/MockAppShell";
+import { MockPainelFerramenta } from "@/components/landing/MockPainelFerramenta";
+import { RitoChapter } from "@/components/landing/RitoChapter";
+import { MagNav } from "@/components/landing/MagNav";
+import { MagHero } from "@/components/landing/MagHero";
+import { MagHeroLista } from "@/components/landing/MagHeroLista";
+import { MagConfianca } from "@/components/landing/MagConfianca";
+import { MagStrip } from "@/components/landing/MagStrip";
+import { MagTabs } from "@/components/landing/MagTabs";
+import { MagPainel } from "@/components/landing/MagPainel";
+import { MagBento } from "@/components/landing/MagBento";
+import { MagFerramentas } from "@/components/landing/MagFerramentas";
+import { MagShowcase } from "@/components/landing/MagShowcase";
+import { MagPlanos } from "@/components/landing/MagPlanos";
+import { MagFaq } from "@/components/landing/MagFaq";
+import { MagFecho } from "@/components/landing/MagFecho";
+import { MagRodape } from "@/components/landing/MagRodape";
+import { MagBotao } from "@/components/landing/MagBotao";
+import { CtrlSlider } from "@/components/landing/controls/CtrlSlider";
 
-const FAQS = [
-  {
-    q: "O que é o Connexo?",
-    a: "O Connexo é uma plataforma que conecta escritórios de advocacia a contadores especializados em perícia contábil. Advogados cadastram processos, escolhem contadores parceiros e acompanham entregas em tempo real — tudo com conformidade OAB e LGPD.",
-  },
-  {
-    q: "O Connexo é conforme as regras da OAB?",
-    a: "Sim. O Connexo foi projetado dentro das normas éticas da OAB. A separação entre honorários advocatícios e serviços contábeis é explícita: o contador recebe exclusivamente pelo serviço técnico prestado, nunca por indicação (Art. 7º do Código de Ética). Consulte nossa equipe para detalhes sobre compliance.",
-  },
-  {
-    q: "Como funciona a proteção de dados (LGPD)?",
-    a: "O Connexo possui sistema completo de consentimento LGPD: o cliente autoriza expressamente o compartilhamento de dados, cada documento tem controle granular de acesso, e todas as interações são registradas em logs de auditoria. Seus dados e os dos seus clientes estão protegidos.",
-  },
-  {
-    q: "Preciso ter conhecimento técnico em contabilidade?",
-    a: "Não. O Connexo foi feito para advogados. Você só precisa cadastrar seus processos e escolher contadores parceiros disponíveis na plataforma. Nós cuidamos da ponte técnica.",
-  },
-  {
-    q: "Como são selecionados os contadores?",
-    a: "Os contadores passam por verificação de registro profissional (CRC) e têm perfis públicos com avaliações de advogados parceiros. Você pode filtrar por especialidade, localização e disponibilidade antes de contratar.",
-  },
-  {
-    q: "Posso usar o Connexo sozinho ou preciso de um escritório?",
-    a: "O Connexo atende desde advogados autônomos a grandes escritórios. Advogados autônomos podem se cadastrar individualmente. Escritórios podem convidar membros da equipe com diferentes níveis de permissão.",
-  },
-];
+function useLandingReveal() {
+  useEffect(() => {
+    const nodes = document.querySelectorAll(".landing-reveal, .landing-sweep");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      nodes.forEach((el) => el.classList.add("is-in"));
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-in");
+            io.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
+    );
+    nodes.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+}
 
 function HeroSection() {
   return (
-    <section className="relative min-h-[90vh] flex items-center bg-primary overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-20%] right-[-10%] w-[70%] h-[70%] rounded-full bg-secondary/10 blur-[160px]" />
-        <div className="absolute bottom-[-15%] left-[-5%] w-[50%] h-[50%] rounded-full bg-secondary/5 blur-[120px]" />
-        <div className="absolute top-[30%] left-[10%] w-64 h-64 border border-secondary/10 rounded-full" />
-        <div className="absolute bottom-[20%] right-[15%] w-32 h-32 border border-secondary/10 rounded-full" />
-      </div>
-
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-16 py-24 lg:py-32">
-        <div className="max-w-3xl">
-          {/* Pill */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">
-              Plataforma para Advocacia de Elite
-            </span>
-          </div>
-
-          <h1 className="text-5xl lg:text-7xl font-black text-white leading-[1.05] tracking-tight mb-8">
-            A perícia contábil que{" "}
-            <span className="text-secondary italic">todo escritório merece.</span>
-          </h1>
-
-          <p className="text-lg lg:text-xl text-white/60 font-medium leading-relaxed max-w-2xl mb-12">
-            Conecte sua causa a contadores especializados, acompanhe cada entrega
-            em tempo real e garanta o respaldo técnico que faz a diferença no resultado.
-            Tudo em conformidade com a OAB.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <Link to="/register?role=advogado">
-              <GoldButton icon="rocket_launch" className="text-sm px-8 py-4">
-                Cadastrar Escritório
-              </GoldButton>
-            </Link>
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 px-6 py-4 text-sm font-extrabold uppercase tracking-widest text-white/50 hover:text-white transition-colors"
-            >
-              Já tenho conta
-              <Icon name="arrow_forward" className="text-lg" />
-            </Link>
-          </div>
-
-          {/* Trust signals */}
-          <div className="mt-16 flex flex-wrap items-center gap-8">
-            <div className="flex items-center gap-2">
-              <Icon name="verified" className="text-emerald-400 text-lg" />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-white/40">
-                Conformidade OAB
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Icon name="verified" className="text-emerald-400 text-lg" />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-white/40">
-                LGPD Ready
-              </span>
-            </div>
-          </div>
-        </div>
+    <section data-testid="landing-hero" className="relative overflow-hidden bg-mg-ink text-white pt-28 pb-16 min-h-[88vh]">
+      <div className="landing-field-hero pointer-events-none absolute inset-0" aria-hidden="true" />
+      <div className="relative max-w-6xl mx-auto px-5 sm:px-8 grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+        <MagHero />
+        <MagHeroLista />
       </div>
     </section>
   );
 }
 
-function ComoFuncionaSection() {
-  const steps = [
-    {
-      step: "01",
-      title: "Advogado cadastra",
-      desc: "Você cria seu escritório na plataforma, cadastra os processos e descreve a perícia necessária.",
-      icon: "how_to_reg",
-    },
-    {
-      step: "02",
-      title: "Cliente escolhe o contador",
-      desc: "Seu cliente é convidado a acessar a plataforma, consentir com o compartilhamento de dados (LGPD) e escolher entre contadores parceiros verificados.",
-      icon: "handshake",
-    },
-    {
-      step: "03",
-      title: "Contador entrega",
-      desc: "O contador acessa os documentos autorizados, realiza o trabalho e entrega o laudo técnico. Você revisa, aprova ou solicita ajustes em tempo real.",
-      icon: "assignment_turned_in",
-    },
-  ];
+function ProductSection() {
+  const [tab, setTab] = useState(0);
+  const [shown, setShown] = useState(0);
+  const [opaque, setOpaque] = useState(true);
+  const firstTab = useRef(true);
+
+  useEffect(() => {
+    if (firstTab.current) {
+      firstTab.current = false;
+      setShown(tab);
+      setOpaque(true);
+      return undefined;
+    }
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setShown(tab);
+      setOpaque(true);
+      return undefined;
+    }
+    setOpaque(false);
+    const t = window.setTimeout(() => {
+      setShown(tab);
+      setOpaque(true);
+    }, 150);
+    return () => window.clearTimeout(t);
+  }, [tab]);
 
   return (
-    <section className="py-24 lg:py-32 bg-surface-1">
-      <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <div className="text-center mb-16">
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-secondary mb-4 block">
-            Como Funciona
-          </span>
-          <h2 className="text-4xl lg:text-5xl font-black text-primary leading-tight mb-4">
-            Da causa ao laudo,{" "}
-            <span className="text-secondary italic">em 3 passos.</span>
+    <section id="produto" className="bg-mg-ivory text-mg-ink py-20">
+      <div className="max-w-6xl mx-auto px-5 sm:px-8 space-y-6">
+        <div className="text-center max-w-2xl mx-auto">
+          <h2 className="font-ui font-bold text-[2rem] tracking-tight mb-3">
+            Um só expediente
           </h2>
-          <p className="text-on-surface-variant font-medium max-w-xl mx-auto">
-            Uma plataforma pensada para simplificar a relação entre advocacia e contabilidade, mantendo total controle e transparência.
+          <p className="font-ui text-base text-on-surface-variant mb-6">
+            Catálogo, consentimento e timeline no mesmo lugar — o rito visível para os três.
           </p>
         </div>
+        <div className="flex justify-center">
+          <MagTabs tab={tab} onTab={setTab} />
+        </div>
+        <MagPainel>
+          <div
+            style={{
+              opacity: opaque ? 1 : 0,
+              transition: "opacity 180ms ease",
+            }}
+          >
+            {shown === 0 ? <MockCatalogo /> : null}
+            {shown === 1 ? <MockConsentimento /> : null}
+            {shown === 2 ? <MockTimeline /> : null}
+          </div>
+        </MagPainel>
+      </div>
+    </section>
+  );
+}
 
-        <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
-          {steps.map((s) => (
-            <div key={s.step} className="relative group">
-              <div className="bg-white rounded-3xl p-8 lg:p-10 border border-outline/60 hover:border-secondary/20 transition-all hover:shadow-xl hover:shadow-secondary/5">
-                <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mb-6 group-hover:bg-secondary transition-colors">
-                  <span className="text-xl font-black text-white">{s.step}</span>
-                </div>
-                <div className="flex items-center gap-3 mb-4">
-                  <Icon name={s.icon} className="text-2xl text-secondary" />
-                  <h3 className="text-xl font-black text-primary">{s.title}</h3>
-                </div>
-                <p className="text-sm text-on-surface-variant font-medium leading-relaxed">
-                  {s.desc}
-                </p>
-              </div>
-              {steps.indexOf(s) < steps.length - 1 && (
-                <div className="hidden md:block absolute top-1/2 -right-6 text-secondary/20">
-                  <Icon name="chevron_right" className="text-4xl" />
-                </div>
-              )}
-            </div>
-          ))}
+function ConexaoSection() {
+  return (
+    <section data-testid="mag-vitrine-grande" className="bg-mg-ink text-white py-20">
+      <div
+        data-testid="landing-conexao"
+        className="max-w-6xl mx-auto px-5 sm:px-8"
+      >
+        <h2 className="font-ui font-bold text-[2rem] tracking-tight mb-3">
+          O rito completo, no painel
+        </h2>
+        <p className="font-ui text-base text-white mb-8 max-w-2xl">
+          Advogado pede o número. Cliente autoriza o dado. Contador assina o laudo.
+          Os três no mesmo expediente, com a ferramenta aberta sobre o processo.
+        </p>
+        <div className="relative rounded-[16px] p-2 sm:p-3 bg-mg-ink">
+          <MockAppShell />
+          <div className="absolute right-4 sm:right-8 top-14 sm:top-20 w-[min(280px,74%)] sm:w-[300px] z-10">
+            <MockPainelFerramenta />
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-function FAQSection() {
+function RitoSection() {
   return (
-    <section className="py-24 lg:py-32 bg-surface-1">
-      <div className="max-w-3xl mx-auto px-6 lg:px-16">
-        <div className="text-center mb-16">
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-secondary mb-4 block">
-            FAQ
-          </span>
-          <h2 className="text-4xl lg:text-5xl font-black text-primary leading-tight mb-4">
-            Perguntas{" "}
-            <span className="text-secondary italic">Frequentes.</span>
+    <section data-testid="landing-rito" className="relative bg-mg-ivory text-mg-ink py-16">
+      <div
+        className="landing-magenta-rail pointer-events-none absolute left-5 sm:left-8 top-28 bottom-16 w-px hidden sm:block"
+        aria-hidden="true"
+      />
+      <div className="landing-stagger max-w-6xl mx-auto px-5 sm:px-8 space-y-20">
+        <div>
+          <h2 className="font-ui font-bold text-[2rem] tracking-tight mb-3">
+            O expediente da perícia
           </h2>
-          <p className="text-on-surface-variant font-medium">
-            Tudo que você precisa saber antes de começar.
+          <p className="font-ui text-base text-on-surface-variant">
+            A história não é um funil. É um rito com hora, papel e documento.
           </p>
         </div>
 
-        <div className="space-y-4">
-          {FAQS.map((faq, i) => (
-            <details
-              key={i}
-              className="group bg-white rounded-2xl border border-outline/60 overflow-hidden transition-all hover:border-secondary/20"
-            >
-              <summary className="flex items-center justify-between p-6 lg:p-8 cursor-pointer list-none select-none">
-                <span className="text-sm font-extrabold text-primary pr-4">{faq.q}</span>
-                <Icon
-                  name="expand_more"
-                  className="text-xl text-primary/40 group-open:rotate-180 transition-transform shrink-0"
-                />
-              </summary>
-              <div className="px-6 lg:px-8 pb-6 lg:pb-8">
-                <p className="text-sm text-on-surface-variant font-medium leading-relaxed">
-                  {faq.a}
-                </p>
-              </div>
-            </details>
-          ))}
-        </div>
+        <RitoChapter
+          time="08h17"
+          titleStart="O advogado abre o processo e"
+          titleEnd="descreve o escopo da perícia."
+          body="Número CNJ, vara e o que o laudo precisa responder. O cliente entra no expediente por convite, não por pasta compartilhada."
+          chips={["Cadastro de processo", "Escopo da perícia", "Número CNJ"]}
+        >
+          <MockTimeline />
+        </RitoChapter>
+
+        <RitoChapter
+          time="09h41"
+          titleStart="O cliente autoriza os documentos,"
+          titleEnd="um a um, com base na LGPD."
+          body="Cada arquivo tem consentimento próprio. Sem o sim, o perito não lê. O dado deixa de ser um anexo solto no e-mail."
+          chips={["Consentimento por documento", "Escolha do perito"]}
+          reverse
+        >
+          <MockConsentimento />
+        </RitoChapter>
+
+        <RitoChapter
+          time="14h08"
+          titleStart="O contador recebe a fila e"
+          titleEnd="assina o laudo no processo."
+          body="CRC visível, versão numerada, arquivo no mesmo expediente. O honorário do perito não se mistura com o do escritório."
+          chips={["Fila de processos", "Assinatura do laudo", "CRC verificado"]}
+        >
+          <MockLaudo />
+        </RitoChapter>
+
+        <RitoChapter
+          time="16h52"
+          titleStart="O advogado revisa a entrega e"
+          titleEnd="pede ajuste, ou usa o número na tese."
+          body="O pedido de ajuste fica no processo. A vitrine do perito continua pública para o próximo caso, com avaliação à vista."
+          chips={["Pedido de ajuste", "Tese com número"]}
+          reverse
+        >
+          <MockVitrine />
+        </RitoChapter>
       </div>
     </section>
   );
 }
 
-function Footer() {
+function PersonasSection() {
   return (
-    <footer className="bg-primary text-white py-16">
-      <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-12">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center shadow-lg shadow-secondary/20">
-              <Icon name="balance" className="text-white text-2xl" />
-            </div>
-            <span className="text-2xl font-black tracking-tighter uppercase">Connexo</span>
+    <section
+      id="landing-personas"
+      data-testid="landing-personas"
+      className="scroll-mt-24"
+    >
+      <p className="font-ui text-base text-on-surface-variant mb-12">
+        Cada um entra por uma porta. A perícia só fecha quando os três estão no
+        mesmo expediente.
+      </p>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <article
+          data-testid="persona-cliente"
+          className="landing-reveal lg:col-span-7 bg-white text-ink p-8 sm:p-10 flex flex-col rounded-[16px]"
+        >
+          <p className="font-ui text-xs text-ledger mb-2">Quem autoriza o dado</p>
+          <div className="flex items-center gap-3 mb-6">
+            <IconChip tint="mint">
+              <GlyphConsentimento />
+            </IconChip>
+            <IconAutorizacao className="hidden" />
+            <h3 className="font-ui font-bold text-xl">Cliente</h3>
           </div>
-          <div className="flex items-center gap-8">
-            <Link
-              to="/login"
-              className="text-xs font-extrabold uppercase tracking-widest text-white/40 hover:text-white transition-colors"
-            >
-              Entrar
-            </Link>
-            <Link
-              to="/register?role=advogado"
-              className="text-xs font-extrabold uppercase tracking-widest text-secondary hover:text-secondary/80 transition-colors"
-            >
-              Cadastrar
-            </Link>
-          </div>
-        </div>
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-[11px] font-medium text-white/30">
-            &copy; {new Date().getFullYear()} Connexo. Todos os direitos reservados.
+          <p data-testid="persona-cliente-dor" className="text-base mb-4">
+            Não sabe se a análise contábil do processo é confiável nem em que pé está.
           </p>
-        </div>
+          <p data-testid="persona-cliente-beneficio" className="text-base mb-6">
+            Confiabilidade na análise de um perito escolhido por você e transparência do fluxo do processo.
+          </p>
+          <ul
+            data-testid="persona-cliente-funcionalidades"
+            className="font-ui text-sm space-y-2 mb-6 list-disc pl-5"
+          >
+            <li>Escolher o contador perito</li>
+            <li>Consentimento LGPD por documento</li>
+            <li>Acompanhar o processo em tempo real</li>
+            <li>Avaliar o serviço entregue</li>
+          </ul>
+          <div className="mb-8">
+            <CtrlSlider label="Concedidos" value={71} tone="light" />
+          </div>
+          <div className="mt-auto" data-testid="persona-cliente-cta">
+            <MagBotao to="/register?role=cliente">Acompanhar meu processo</MagBotao>
+          </div>
+        </article>
+
+        <article
+          data-testid="persona-advogado"
+          className="landing-reveal lg:col-span-5 bg-mg-ink text-white p-8 sm:p-10 flex flex-col rounded-[16px]"
+        >
+          <p className="font-ui text-xs text-white mb-2">Quem sustenta a tese</p>
+          <h3 className="font-ui font-bold text-xl mb-6">Advogado</h3>
+          <p data-testid="persona-advogado-dor" className="text-base text-white/80 mb-4">
+            Precisa sustentar tese com número que não domina; a perícia é cara, lenta e imprevisível.
+          </p>
+          <p data-testid="persona-advogado-beneficio" className="text-base text-white/80 mb-6">
+            Proteção e validação das informações processuais com embasamento técnico-contábil, dinâmico e a preço negociado.
+          </p>
+          <ul
+            data-testid="persona-advogado-funcionalidades"
+            className="font-ui text-sm text-white/80 space-y-2 mb-8 list-disc pl-5"
+          >
+            <li>Catálogo de contadores verificados por CRC</li>
+            <li>Cadastro de processo e escopo da perícia</li>
+            <li>Entregas revisáveis com pedido de ajuste</li>
+            <li>Separação de honorários conforme ética OAB</li>
+          </ul>
+          <div className="mt-auto" data-testid="persona-advogado-cta">
+            <MagBotao to="/register?role=advogado">Cadastrar meu escritório</MagBotao>
+          </div>
+        </article>
+
+        <article
+          data-testid="persona-contador"
+          className="landing-reveal lg:col-span-12 bg-white text-ink rounded-[16px] border-t-2 border-mg-magenta p-8 sm:p-10 grid lg:grid-cols-12 gap-6"
+        >
+          <div className="lg:col-span-4">
+            <p className="font-ui text-xs text-ledger mb-2">Quem assina o laudo</p>
+            <div className="flex items-center gap-3 mb-4">
+              <IconChip tint="rose">
+                <GlyphVitrine />
+              </IconChip>
+              <IconVitrine className="hidden" />
+              <h3 className="font-ui font-bold text-xl text-primary">
+                Contador
+              </h3>
+            </div>
+            <p data-testid="persona-contador-dor" className="text-base text-ink mb-4">
+              Trabalho técnico invisível, sem canal de captação, dependente de indicação.
+            </p>
+            <p data-testid="persona-contador-beneficio" className="text-base text-ink mb-6">
+              Portal próprio para exibir serviços, conectar-se a advogados e clientes e ganhar visibilidade contínua.
+            </p>
+            <div data-testid="persona-contador-cta">
+              <MagBotao to="/register?role=contador">Criar meu perfil público</MagBotao>
+            </div>
+          </div>
+          <div className="lg:col-span-8 flex flex-col gap-4 min-w-0">
+            <ul
+              data-testid="persona-contador-funcionalidades"
+              className="flex flex-wrap gap-2 font-ui text-sm list-none"
+            >
+              <li className="landing-pill border border-outline bg-mg-ivory px-3 py-2">Perfil público com slug próprio</li>
+              <li className="landing-pill border border-outline bg-mg-ivory px-3 py-2">Vitrine de serviços e postagens</li>
+              <li className="landing-pill border border-outline bg-mg-ivory px-3 py-2">Disponibilidade e avaliações visíveis</li>
+              <li className="landing-pill border border-outline bg-mg-ivory px-3 py-2">Fila de processos recebidos</li>
+            </ul>
+            <MockVitrine />
+          </div>
+        </article>
       </div>
-    </footer>
+    </section>
+  );
+}
+
+function FluxoSection() {
+  return (
+    <section data-testid="landing-fluxo" className="pt-16">
+      <div className="max-w-6xl mx-auto px-5 sm:px-8">
+        <h2 className="font-ui font-bold text-[2rem] tracking-tight mb-12 text-mg-ink">
+          O que o expediente segura
+        </h2>
+        <ol className="grid md:grid-cols-3 gap-8">
+          <li className="bg-white rounded-[16px] p-6">
+            <IconChip tint="lavender">
+              <GlyphPrazo />
+            </IconChip>
+            <IconPrazo className="hidden" />
+            <h3 className="font-ui font-bold text-xl mb-3 mt-4">
+              Dado com dono
+            </h3>
+            <p className="font-ui text-sm leading-relaxed text-ink">
+              Cada arquivo tem consentimento próprio. Sem o sim, o perito não lê.
+            </p>
+          </li>
+          <li className="bg-white rounded-[16px] p-6">
+            <IconChip tint="peach">
+              <GlyphProcesso />
+            </IconChip>
+            <IconAcompanhamento className="hidden" />
+            <h3 className="font-ui font-bold text-xl mb-3 mt-4">
+              Três no mesmo rito
+            </h3>
+            <p className="font-ui text-sm leading-relaxed text-ink">
+              Cliente, advogado e perito vêem o mesmo estado, no mesmo lugar.
+            </p>
+          </li>
+          <li className="bg-white rounded-[16px] p-6">
+            <IconChip tint="sky">
+              <GlyphLaudo />
+            </IconChip>
+            <IconLaudo className="hidden" />
+            <h3 className="font-ui font-bold text-xl mb-3 mt-4">
+              Honorários separados
+            </h3>
+            <p className="font-ui text-sm leading-relaxed text-ink">
+              O perito cobra o laudo. O escritório cobra a tese. A ética da OAB cabe.
+            </p>
+          </li>
+        </ol>
+      </div>
+    </section>
   );
 }
 
 export function LandingPage() {
+  useLandingReveal();
   return (
-    <div className="font-['Plus_Jakarta_Sans'] min-h-screen">
-      {/* Top bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-primary/80 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 lg:px-16 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-secondary flex items-center justify-center">
-              <Icon name="balance" className="text-white text-sm" />
-            </div>
-            <span className="text-base font-black tracking-tighter uppercase text-white">
-              Connexo
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link
-              to="/login"
-              className="text-[10px] font-extrabold uppercase tracking-widest text-white/50 hover:text-white transition-colors px-4 py-2"
-            >
-              Entrar
-            </Link>
-            <Link to="/register?role=advogado">
-              <GoldButton className="py-2 px-5 text-[10px]">
-                Cadastrar
-              </GoldButton>
-            </Link>
-          </div>
-        </div>
-      </div>
-
+    <div className="landing-root font-ui min-h-screen overflow-x-hidden text-mg-ink">
+      <MagNav />
       <HeroSection />
-      <ComoFuncionaSection />
-      <FAQSection />
-      <Footer />
+      <MagConfianca />
+      <ProductSection />
+      <MagStrip />
+      <MagBento>
+        <PersonasSection />
+      </MagBento>
+      <MagFerramentas />
+      <MagShowcase />
+      <RitoSection />
+      <ConexaoSection />
+      <div data-testid="landing-quebra-clara" className="bg-mg-ivory text-mg-ink py-16">
+        <FluxoSection />
+      </div>
+      <MagPlanos />
+      <section id="landing-faq" data-testid="landing-faq">
+        <MagFaq />
+      </section>
+      <MagFecho>
+        <div data-testid="landing-cta-final" className="flex flex-col sm:flex-row flex-wrap gap-4 mt-10">
+          <MagBotao to="/register?role=cliente">
+            Sou cliente
+          </MagBotao>
+          <MagBotao to="/register?role=advogado">
+            Sou advogado
+          </MagBotao>
+          <MagBotao to="/register?role=contador">
+            Sou contador
+          </MagBotao>
+        </div>
+      </MagFecho>
+      <MagRodape />
     </div>
   );
 }

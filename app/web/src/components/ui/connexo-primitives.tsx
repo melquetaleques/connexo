@@ -134,7 +134,7 @@ export function GoldButton({
   title,
 }: GoldButtonProps) {
   const base = cn(
-    "inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-extrabold uppercase tracking-widest transition-all",
+    "inline-flex items-center justify-center gap-2 min-h-11 px-7 py-3 rounded-xl text-base font-bold uppercase tracking-wide leading-none transition-all",
     variant === "primary" &&
       "bg-secondary text-white hover:bg-secondary/90 shadow-lg shadow-secondary/20 active:scale-[0.97]",
     variant === "ghost" &&
@@ -145,7 +145,7 @@ export function GoldButton({
 
   return (
     <button type={type} className={base} disabled={disabled} onClick={onClick} title={title}>
-      {icon && <Icon name={icon} className="text-lg" />}
+      {icon && <Icon name={icon} className="text-lg leading-none shrink-0" />}
       {children}
     </button>
   );

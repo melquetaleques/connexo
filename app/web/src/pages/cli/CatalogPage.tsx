@@ -14,7 +14,6 @@ import api from "@/services/api";
 interface CatalogAccountant {
   id: string;
   name: string;
-  email: string;
   specialty: string;
   city: string;
   state: string;
