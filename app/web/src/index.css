@@ -195,47 +195,97 @@ button, a, input, select, textarea {
   }
 }
 
-.landing-field-hero {
+.mag-field {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: #141414;
   background-image:
+    radial-gradient(ellipse 90% 70% at 18% 88%, rgb(201 117 99 / 0.55) 0%, transparent 58%),
+    radial-gradient(ellipse 70% 50% at 82% 92%, rgb(224 128 112 / 0.42) 0%, transparent 52%),
+    conic-gradient(from 200deg at 50% 120%, rgb(58 18 24 / 0.55), rgb(201 117 99 / 0.28), transparent 42%),
+    linear-gradient(180deg, #141414 0%, #3A1218 52%, #6A3030 100%);
+}
+
+.mag-field-ivory {
+  background-color: #F0F0E8;
+  background-image:
+    radial-gradient(ellipse 80% 55% at 8% 12%, rgb(232 214 196 / 0.7) 0%, transparent 58%),
+    radial-gradient(ellipse 70% 50% at 92% 88%, rgb(214 196 184 / 0.55) 0%, transparent 52%),
+    radial-gradient(ellipse 50% 40% at 48% 44%, rgb(248 244 232 / 0.65) 0%, transparent 62%),
+    linear-gradient(180deg, #F0F0E8 0%, #E8E0D4 48%, #F0F0E8 100%);
+}
+
+.mag-field-vinho {
+  background-color: #3A1218;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 80%, rgb(201 117 99 / 0.38) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 40% at 88% 18%, rgb(224 64 112 / 0.28) 0%, transparent 50%),
+    conic-gradient(from 140deg at 60% 110%, rgb(64 16 30 / 0.4), rgb(106 48 48 / 0.3), transparent 46%),
+    linear-gradient(165deg, #2A0C12 0%, #3A1218 46%, #6A3030 100%);
+}
+
+.mag-field-teal {
+  background-color: #1C6D8C;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 80% 20%, rgb(80 144 240 / 0.4) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 10% 90%, rgb(16 56 72 / 0.45) 0%, transparent 50%),
+    conic-gradient(from 40deg at 30% 120%, rgb(28 109 140 / 0.4), rgb(12 48 64 / 0.3), transparent 48%),
+    linear-gradient(160deg, #0F3A4C 0%, #1C6D8C 52%, #2A88A8 100%);
+}
+
+.mag-field-rosa {
+  background-color: #C97563;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 80%, rgb(224 128 112 / 0.55) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 90% 10%, rgb(224 64 160 / 0.32) 0%, transparent 48%),
+    conic-gradient(from 210deg at 50% 120%, rgb(201 117 99 / 0.4), rgb(64 16 30 / 0.25), transparent 44%),
+    linear-gradient(155deg, #8B4540 0%, #C97563 48%, #E08070 100%);
+}
+
+.mag-field-ink {
+  background-color: #141414;
+  background-image:
+    radial-gradient(ellipse 70% 50% at 85% 20%, rgb(224 64 160 / 0.22) 0%, transparent 52%),
+    radial-gradient(ellipse 80% 60% at 15% 90%, rgb(28 109 140 / 0.28) 0%, transparent 55%),
+    conic-gradient(from 90deg at 70% 110%, rgb(20 20 20 / 0.5), rgb(40 24 36 / 0.35), transparent 46%),
+    linear-gradient(165deg, #141414 0%, #1A1218 50%, #141414 100%);
+}
+
+.mag-grain {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.085;
+  mix-blend-mode: overlay;
+  background-repeat: repeat;
+  background-size: 180px 180px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+.landing-field-hero {
+  background-color: #141414;
+  background-image:
+    radial-gradient(ellipse 95% 70% at 50% 100%, rgb(201 117 99 / 0.62) 0%, transparent 58%),
+    radial-gradient(ellipse 70% 48% at 88% 86%, rgb(224 128 112 / 0.48) 0%, transparent 52%),
+    conic-gradient(from 190deg at 50% 118%, rgb(58 18 24 / 0.5), rgb(201 117 99 / 0.3), transparent 40%),
     linear-gradient(
       180deg,
-      rgb(20 20 20 / 0) 0%,
-      rgb(20 20 20 / 0) 52%,
-      rgb(20 20 20 / 0.45) 78%,
-      #141414 100%
-    ),
-    linear-gradient(
-      90deg,
       #141414 0%,
-      rgb(20 20 20 / 0.55) 28%,
-      rgb(20 20 20 / 0.12) 58%,
-      rgb(20 20 20 / 0) 100%
-    ),
-    linear-gradient(
-      160deg,
-      #E08070 0%,
-      #E040A0 32%,
-      #5060E0 58%,
-      #5090F0 78%,
-      #141414 100%
+      #2A1014 28%,
+      #3A1218 52%,
+      #6A3030 78%,
+      #C97563 100%
     );
 }
 
 .landing-field-fecho {
+  background-color: #3A1218;
   background-image:
-    linear-gradient(
-      180deg,
-      rgb(20 20 20 / 0.15) 0%,
-      rgb(20 20 20 / 0.35) 62%,
-      #141414 100%
-    ),
-    linear-gradient(
-      155deg,
-      #5060E0 0%,
-      #E040A0 38%,
-      #E08070 68%,
-      #141414 100%
-    );
+    radial-gradient(ellipse 90% 65% at 50% 100%, rgb(201 117 99 / 0.58) 0%, transparent 56%),
+    radial-gradient(ellipse 60% 45% at 12% 80%, rgb(224 128 112 / 0.4) 0%, transparent 50%),
+    conic-gradient(from 200deg at 50% 120%, rgb(58 18 24 / 0.45), rgb(201 117 99 / 0.28), transparent 42%),
+    linear-gradient(180deg, #2A0C12 0%, #3A1218 42%, #6A3030 72%, #C97563 100%);
 }
 
 .ctrl-slider {

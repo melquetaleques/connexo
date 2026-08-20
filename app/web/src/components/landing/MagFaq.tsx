@@ -30,13 +30,16 @@ const FAQS = [
 
 export function MagFaq() {
   return (
-    <div className="bg-mg-ivory text-mg-ink py-20">
+    <div className="relative overflow-hidden bg-mg-ivory text-mg-ink py-20">
+      <div className="mag-field mag-field-ivory pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="mag-grain" aria-hidden="true" />
+      </div>
       <section
         data-testid="mag-faq"
-        className="max-w-6xl mx-auto px-5 sm:px-8 grid grid-cols-2 gap-4 sm:gap-12 items-start"
+        className="relative max-w-6xl mx-auto px-5 sm:px-8 grid grid-cols-2 gap-4 sm:gap-12 items-start"
       >
         <div className="min-w-0">
-          <h2 className="font-display font-semibold tracking-tight text-xl sm:text-[2rem] mb-6">
+          <h2 className="font-display font-semibold tracking-tight text-xl sm:text-[2rem] mb-6 text-mg-vinho">
             Perguntas antes de entrar
           </h2>
           <MagBotao href="#landing-personas">Escolher meu papel</MagBotao>
@@ -51,7 +54,7 @@ export function MagFaq() {
                 <span className="pr-3 min-w-0 break-words">{faq.q}</span>
                 <Icon name="expand_more" className="text-xl text-mg-ink shrink-0" />
               </summary>
-              <p className="px-4 pb-4 font-ui text-sm text-on-surface-variant leading-relaxed">{faq.a}</p>
+              <p className="px-4 pb-4 font-ui text-sm font-medium text-mg-ink leading-relaxed">{faq.a}</p>
             </details>
           ))}
         </div>

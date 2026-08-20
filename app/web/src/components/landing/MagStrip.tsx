@@ -8,8 +8,11 @@ const ITEMS = [
 
 export function MagStrip() {
   return (
-    <section data-testid="mag-strip" className="bg-mg-ivory text-mg-ink">
-      <ul className="landing-sweep max-w-6xl mx-auto px-5 sm:px-8 grid grid-cols-2 sm:grid-cols-5">
+    <section data-testid="mag-strip" className="relative overflow-hidden bg-mg-ivory text-mg-ink">
+      <div className="mag-field mag-field-ivory pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="mag-grain" aria-hidden="true" />
+      </div>
+      <ul className="landing-sweep relative max-w-6xl mx-auto px-5 sm:px-8 grid grid-cols-2 sm:grid-cols-5">
         {ITEMS.map((item, i) => (
           <li
             key={item}

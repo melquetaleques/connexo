@@ -8,15 +8,25 @@ export function MockPainelFerramenta() {
   return (
     <div
       data-testid="mock-ferramenta"
-      className="landing-glass-light backdrop-blur-xl rounded-[16px] p-4 sm:p-5 text-mg-ink"
+      className="landing-glass-light backdrop-blur-xl rounded-[16px] p-3 text-mg-ink"
     >
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-center gap-3 mb-3">
         <IconChip tint="sky">
           <GlyphLaudo />
         </IconChip>
         <p className="font-ui text-[10px] font-semibold uppercase tracking-[0.18em] text-mg-ink">
           Ferramenta do laudo
         </p>
+      </div>
+      <div className="flex flex-wrap gap-2 mb-4">
+        {["LAUDO", "PRAZO", "CRC", "RITO"].map((tag) => (
+          <span
+            key={tag}
+            className="font-ui text-[10px] font-semibold tracking-[0.1em] text-mg-ink"
+          >
+            {tag}
+          </span>
+        ))}
       </div>
       <div className="space-y-4">
         <CtrlSelect

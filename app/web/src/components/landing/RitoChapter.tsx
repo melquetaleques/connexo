@@ -33,10 +33,10 @@ export function RitoChapter({
           />
           <p className="font-ui text-xl font-bold text-mg-magenta">{time}</p>
         </div>
-        <h3 className="rito-title font-display font-semibold text-mg-ink mb-4">
+        <h3 className="rito-title font-display font-semibold text-mg-vinho mb-4">
           {titleStart} {titleEnd}
         </h3>
-        <p className="font-ui text-base text-on-surface-variant leading-relaxed mb-5">{body}</p>
+        <p className="font-ui text-base font-medium text-mg-ink leading-relaxed mb-5">{body}</p>
         <ul className="flex flex-wrap gap-2">
           {chips.map((chip) => (
             <li

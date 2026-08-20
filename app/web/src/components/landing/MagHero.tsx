@@ -3,9 +3,9 @@ import { MagBotao } from "./MagBotao";
 export function MagHero() {
   return (
     <div data-testid="mag-hero">
-      <p className="font-ui text-xs font-medium uppercase tracking-[0.18em] text-white mb-6">
-        Autos · Laudo · Prazo
-      </p>
+      <span className="landing-pill landing-glass-soft backdrop-blur-xl inline-flex items-center min-h-8 px-3 mb-6 font-ui text-xs font-semibold text-white">
+        Expediente com CRC à vista
+      </span>
       <h1 className="landing-hero-title font-display text-white mb-6">
         O laudo que a tese precisa.
         <br />

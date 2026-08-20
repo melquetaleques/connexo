@@ -1,4 +1,50 @@
-# TAREFAS — Ciclo 8 (temperatura e vida)
+# TAREFAS — Ciclo 9 (destravar o campo colapsado)
+
+## APROVADO NO CICLO 8 — NÃO refazer, NÃO regredir
+
+T2 (hero recomposto: lista texto + ▶ magenta + badge + `mag-hero-confianca`),
+T4 (bento colorido com mocks), T5 (tiles do showcase), T8 (9 testes), T9.
+Rótulos caixa alta = 4 e CTA = 91% no `mock-ferramenta`. Glass 40, ctrl 17.
+
+## C1 — Corrigir o colapso do `.mag-field` (causa raiz dos FAILs)
+
+**Fazer:** `.mag-field` declara `position: relative` e vence o utilitário
+`absolute` dos véus `mag-field ... absolute inset-0` — o juiz mediu
+`.landing-field-hero` com `height: 0`. Remover o posicionamento da regra
+`.mag-field` (mover para os usos-card) ou criar `.mag-veil` sem posicionamento
+para os véus. O gradiente quente já escrito está correto — só não pinta.
+
+**Êxito (o juiz mede):**
+1. `.landing-field-hero` com `getBoundingClientRect().height` ≥ altura do hero.
+2. Hue mediano dos pixels saturados do hero em [330,360]∪[0,25]; idem fecho.
+3. Top-3 cores da página ≤ **55%**.
+4. Proporção escura ∈ [20,35]%.
+
+## C2 — `<h2>` de seção clara em `mg-vinho`
+
+**Êxito:** cor computada de todos os `<h2>` sobre ivory com hue 330–350 e
+L < 30% (hoje: `rgb(20,20,20)`).
+
+## C3 — CTAs de marketing em ink (o indigo fica nos mocks)
+
+**Fazer:** `MagBotao` primário nas superfícies de marketing (nav "Começar",
+hero, bento, fecho) vira **preto/ink com texto branco** como o "Start creating"
+do modelo; variante de contorno continua. Indigo `#5060E0` permanece só nos
+controles dentro dos mocks.
+
+**Êxito:** background computado de cada CTA de marketing sem hue em [220,250];
+contraste do texto ≥4.5:1; os mocks continuam com seus controles indigo.
+
+## C4 — Auditoria final (o juiz roda, o executor garante)
+
+Contraste por pixel ≥4.5:1 (3:1 se ≥24px) em todos os textos; M3 (abas), M4
+(comparador), M5 (carrossel) por interação; reduced-motion sem elemento
+invisível; overflow 0 em 375/768/1280; zero erro de console; build 0; tsc ≤3;
+`node --test` ≥9 verdes; go ok.
+
+---
+
+# (histórico) TAREFAS — Ciclo 8 (temperatura e vida)
 
 ## BASELINE (medido pelo juiz em 2026-08-20, antes do ciclo)
 

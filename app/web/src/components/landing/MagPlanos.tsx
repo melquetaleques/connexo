@@ -62,8 +62,11 @@ const FEATURES = [
 
 export function MagPlanos() {
   return (
-    <section id="planos" data-testid="mag-planos" className="bg-mg-ink text-white py-20">
-      <div className="max-w-6xl mx-auto px-5 sm:px-8">
+    <section id="planos" data-testid="mag-planos" className="relative overflow-hidden bg-mg-ink text-white py-20">
+      <div className="mag-field mag-field-ink pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="mag-grain" aria-hidden="true" />
+      </div>
+      <div className="relative max-w-6xl mx-auto px-5 sm:px-8">
         <h2 className="font-display font-semibold tracking-tight text-[2rem] mb-8">
           Dois caminhos, o mesmo rito
         </h2>
@@ -87,7 +90,7 @@ export function MagPlanos() {
             <h3 className="font-display font-semibold text-xl tracking-tight mb-3">
               Assinar o laudo à vista
             </h3>
-            <p className="font-ui text-sm text-on-surface-variant mb-6">
+            <p className="font-ui text-sm font-medium text-mg-ink mb-6">
               Abre a vitrine, recebe a fila com CRC visível e entrega a versão no mesmo processo.
             </p>
             <div className="mt-auto">

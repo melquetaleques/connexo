@@ -83,10 +83,13 @@ export function MagFerramentas() {
   };
 
   return (
-    <section className="bg-mg-ivory text-mg-ink py-20">
-      <div className="max-w-6xl mx-auto px-5 sm:px-8">
+    <section className="relative overflow-hidden bg-mg-ivory text-mg-ink py-20">
+      <div className="mag-field mag-field-ivory pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="mag-grain" aria-hidden="true" />
+      </div>
+      <div className="relative max-w-6xl mx-auto px-5 sm:px-8">
         <div className="flex items-end justify-between gap-3 mb-6">
-          <h2 className="font-display font-semibold tracking-tight text-[2rem]">
+          <h2 className="font-display font-semibold tracking-tight text-[2rem] text-mg-vinho">
             Ferramentas do expediente
           </h2>
           <div className="flex gap-2 shrink-0">
@@ -132,11 +135,11 @@ export function MagFerramentas() {
           {TOOLS.map((t) => (
             <li
               key={t.title}
-              className="w-[220px] shrink-0 snap-start rounded-[16px] bg-white border border-outline p-5 flex flex-col gap-3"
+              className="w-[220px] shrink-0 snap-start rounded-[16px] bg-white/80 backdrop-blur-xl border border-outline p-5 flex flex-col gap-3"
             >
               {t.icon}
-              <p className="font-ui text-sm font-semibold tracking-tight">{t.title}</p>
-              <p className="font-ui text-xs text-on-surface-variant">{t.line}</p>
+              <p className="font-ui text-sm font-semibold tracking-tight text-mg-ink">{t.title}</p>
+              <p className="font-ui text-xs font-medium text-mg-ink">{t.line}</p>
             </li>
           ))}
         </ul>

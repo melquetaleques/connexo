@@ -17,7 +17,7 @@ export function MagNav() {
         className="landing-pill landing-glass-ink backdrop-blur-xl w-full max-w-5xl h-14 flex items-center justify-between gap-3 px-3 sm:px-5 text-white"
       >
         <Link to="/" className="inline-flex items-center gap-2 min-h-11 shrink-0 text-white">
-          <span className="w-8 h-8 rounded-full bg-mg-indigo text-white flex items-center justify-center">
+          <span className="w-8 h-8 rounded-full bg-mg-magenta text-white flex items-center justify-center">
             <Icon name="balance" />
           </span>
           <span className="hidden sm:inline font-ui font-bold text-sm tracking-tight">Connexo</span>

@@ -40,6 +40,7 @@ export default {
         "mg-magenta": "#E040A0",
         "mg-blue": "#5090F0",
         "mg-warm": "#E08070",
+        "mg-vinho": "#40101E",
       },
       fontFamily: {
         sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],

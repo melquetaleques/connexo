@@ -1,26 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
 const CAPS = [
-  {
-    title: "Catálogo com CRC",
-    line: "Perito verificado, especialidade e janela.",
-  },
-  {
-    title: "Consentimento LGPD",
-    line: "Documento a documento, com o dono no meio.",
-  },
-  {
-    title: "Timeline do rito",
-    line: "Pedido, autorização, laudo e revisão à vista.",
-  },
-  {
-    title: "Laudo versionado",
-    line: "Arquivo no processo, ajuste protocolado.",
-  },
-  {
-    title: "Vitrine pública",
-    line: "Slug próprio, serviços e avaliações.",
-  },
+  { title: "Catálogo com CRC" },
+  { title: "Consentimento LGPD" },
+  { title: "Timeline do rito" },
+  { title: "Laudo versionado" },
+  { title: "Vitrine pública" },
 ];
 
 export function MagHeroLista() {
@@ -67,14 +52,14 @@ export function MagHeroLista() {
               pause();
               setActive(i);
             }}
-            className="landing-glass-ink backdrop-blur-xl flex items-center gap-3 rounded-[16px] px-4 py-3 text-white"
+            className="flex items-center gap-3 py-1.5 text-white bg-transparent font-ui font-normal tracking-tight text-[1.65rem] leading-tight"
             style={{
-              transition: "box-shadow 450ms ease",
-              boxShadow: isActive ? "inset 0 0 0 1px rgb(80 96 224 / 0.7)" : "none",
+              opacity: isActive ? 1 : 0.45,
+              transition: "opacity 450ms ease",
             }}
           >
             <span
-              className="w-3 shrink-0 font-ui text-xs text-mg-magenta"
+              className="w-4 shrink-0 font-ui text-lg text-mg-magenta"
               aria-hidden="true"
               style={{
                 opacity: isActive ? 1 : 0,
@@ -83,10 +68,7 @@ export function MagHeroLista() {
             >
               ▶
             </span>
-            <div className="min-w-0 flex-1">
-              <p className="font-ui text-sm font-semibold tracking-tight text-white">{item.title}</p>
-              <p className="font-ui text-xs mt-0.5 text-white">{item.line}</p>
-            </div>
+            <p className="min-w-0 text-white">{item.title}</p>
           </li>
         );
       })}
