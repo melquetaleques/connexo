@@ -1,4 +1,46 @@
-# TAREFAS — Ciclo 10 (dois números e mais nada)
+# TAREFAS — Ciclo 10 (fotografia e movimento)
+
+## E1 — Fotos no lugar (mapa do OBJETIVO)
+
+**Êxito:** o juiz confere no DOM: `img`/`background-image` com
+`/landing/hero-campo.jpg` no hero; `painel-retrato.jpg` no `mag-painel`; os 4
+`tile-*.jpg` no showcase; `bento-advogado.jpg` e `bento-contador.jpg` nos
+bentos; `fecho-campo.jpg` no fecho. ≥8 das 10 fotos em uso. Texto sobre foto
+sempre com véu (contraste ≥4.5:1 por pixel).
+
+## E2 — Movimento M7–M10
+
+**Êxito por interação/inspeção:**
+1. M7: hero/fecho/painel com animação CSS de scale (o juiz lê `animation` no
+   computed style e vê transform mudar entre dois instantes).
+2. M8: hover num tile muda `transform` da foto (scale >1.02).
+3. M9: scroll de 300px desloca a camada do campo do hero (transform translate).
+4. M10: marquee dos selos com `animation` contínua.
+5. Com `reduced-motion`: as quatro param (animation none/paused), nada some.
+
+## E3 — Proporção escura ∈ [20,35]% (pendente do c9)
+
+**Êxito:** 58 faixas, limiar 0.25, entre 20 e 35% — com hue quente preservado.
+
+## E4 — Contraste: zerar a lista do VEREDITO-9
+
+**Êxito:** re-medição (2×, k-means, clipados fora): nenhum texto legível
+< 4.5:1 (3:1 se ≥24px/ícone). Lista nominal no `cycle-9/VEREDITO.md`.
+
+## E5 — Teste novo
+
+`landing-fotos.test.mjs`: as 10 fotos existem em `public/landing/`; os TSX
+referenciam ≥8; `CREDITS.md` presente; nenhuma URL `http` externa de imagem
+nos TSX da landing. **Êxito:** `node --test` ≥11 verdes.
+
+## Congelado (não tocar, não regredir)
+
+Temperatura (hero/fecho quentes), h2 vinho, CTAs ink, bento 4 cores, ordem das
+seções, testids, M1/M3/M5, glass ≥21, ctrl ≥14, 10 testes existentes.
+
+---
+
+# (histórico) TAREFAS — Ciclo 10 anterior (abortado a pedido do usuário)
 
 ## APROVADO ATÉ O CICLO 9 — NÃO refazer, NÃO regredir
 
