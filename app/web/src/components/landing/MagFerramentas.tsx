@@ -84,12 +84,12 @@ export function MagFerramentas() {
 
   return (
     <section className="relative overflow-hidden bg-mg-ivory text-mg-ink py-20">
-      <div className="mag-field mag-field-ivory pointer-events-none absolute inset-0" aria-hidden="true">
+      <div className="mag-field mag-veil mag-field-ivory" aria-hidden="true">
         <div className="mag-grain" aria-hidden="true" />
       </div>
       <div className="relative max-w-6xl mx-auto px-5 sm:px-8">
         <div className="flex items-end justify-between gap-3 mb-6">
-          <h2 className="font-display font-semibold tracking-tight text-[2rem] text-mg-vinho">
+          <h2 className="mag-title-vinho font-display font-semibold tracking-tight text-[2rem] text-mg-vinho">
             Ferramentas do expediente
           </h2>
           <div className="flex gap-2 shrink-0">

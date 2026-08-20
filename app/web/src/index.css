@@ -196,9 +196,6 @@ button, a, input, select, textarea {
 }
 
 .mag-field {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
   background-color: #141414;
   background-image:
     radial-gradient(ellipse 90% 70% at 18% 88%, rgb(201 117 99 / 0.55) 0%, transparent 58%),
@@ -207,13 +204,39 @@ button, a, input, select, textarea {
     linear-gradient(180deg, #141414 0%, #3A1218 52%, #6A3030 100%);
 }
 
+.mag-veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.mag-title-vinho {
+  color: #40101E;
+}
+
+.mag-botao-solid {
+  background-color: #141414;
+  color: #ffffff;
+  border: 1px solid rgb(255 255 255 / 0.22);
+}
+
+.mag-botao-solid:hover {
+  background-color: #000000;
+}
+
+.landing-root .bg-mg-ivory h2 {
+  color: #40101E;
+}
+
 .mag-field-ivory {
   background-color: #F0F0E8;
   background-image:
-    radial-gradient(ellipse 80% 55% at 8% 12%, rgb(232 214 196 / 0.7) 0%, transparent 58%),
-    radial-gradient(ellipse 70% 50% at 92% 88%, rgb(214 196 184 / 0.55) 0%, transparent 52%),
-    radial-gradient(ellipse 50% 40% at 48% 44%, rgb(248 244 232 / 0.65) 0%, transparent 62%),
-    linear-gradient(180deg, #F0F0E8 0%, #E8E0D4 48%, #F0F0E8 100%);
+    radial-gradient(ellipse 80% 55% at 8% 12%, rgb(201 117 99 / 0.32) 0%, transparent 58%),
+    radial-gradient(ellipse 70% 50% at 92% 88%, rgb(196 160 140 / 0.4) 0%, transparent 52%),
+    radial-gradient(ellipse 50% 40% at 48% 44%, rgb(248 244 232 / 0.7) 0%, transparent 62%),
+    linear-gradient(180deg, #F0F0E8 0%, #E4D4C4 48%, #EDE6D8 100%);
 }
 
 .mag-field-vinho {

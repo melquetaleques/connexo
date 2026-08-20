@@ -78,7 +78,7 @@ function HeroSection() {
       data-testid="landing-hero"
       className="relative overflow-hidden bg-mg-ink text-white pt-28 pb-8 min-h-[92vh] flex flex-col"
     >
-      <div className="mag-field landing-field-hero pointer-events-none absolute inset-0" aria-hidden="true">
+      <div className="mag-field mag-veil landing-field-hero" aria-hidden="true">
         <div className="mag-grain" aria-hidden="true" />
       </div>
       <div className="relative flex-1 max-w-6xl mx-auto px-5 sm:px-8 grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
@@ -125,12 +125,12 @@ function ProductSection() {
 
   return (
     <section id="produto" className="relative overflow-hidden bg-mg-ivory text-mg-ink py-20">
-      <div className="mag-field mag-field-ivory pointer-events-none absolute inset-0" aria-hidden="true">
+      <div className="mag-field mag-veil mag-field-ivory" aria-hidden="true">
         <div className="mag-grain" aria-hidden="true" />
       </div>
       <div className="relative max-w-6xl mx-auto px-5 sm:px-8 space-y-6">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="font-ui font-bold text-[2rem] tracking-tight mb-3 text-mg-vinho">
+          <h2 className="mag-title-vinho font-ui font-bold text-[2rem] tracking-tight mb-3 text-mg-vinho">
             Um só expediente
           </h2>
           <p className="font-ui text-base font-medium text-mg-ink mb-6">
@@ -159,8 +159,8 @@ function ProductSection() {
 
 function ConexaoSection() {
   return (
-    <section data-testid="mag-vitrine-grande" className="relative overflow-hidden bg-mg-ink text-white py-20">
-      <div className="mag-field mag-field-ink pointer-events-none absolute inset-0" aria-hidden="true">
+    <section data-testid="mag-vitrine-grande" className="relative overflow-hidden bg-mg-ink text-white py-24">
+      <div className="mag-field mag-veil mag-field-ink" aria-hidden="true">
         <div className="mag-grain" aria-hidden="true" />
       </div>
       <div
@@ -174,7 +174,7 @@ function ConexaoSection() {
           Advogado pede o número. Cliente autoriza o dado. Contador assina o laudo.
           Os três no mesmo expediente, com a ferramenta aberta sobre o processo.
         </p>
-        <div className="mag-field mag-field-vinho relative rounded-[16px] p-2 sm:p-3">
+        <div className="mag-field mag-field-vinho relative overflow-hidden isolate rounded-[16px] p-2 sm:p-3">
           <div className="mag-grain" aria-hidden="true" />
           <div className="relative">
             <MockAppShell />
@@ -191,7 +191,7 @@ function ConexaoSection() {
 function RitoSection() {
   return (
     <section data-testid="landing-rito" className="relative overflow-hidden bg-mg-ivory text-mg-ink py-16">
-      <div className="mag-field mag-field-ivory pointer-events-none absolute inset-0" aria-hidden="true">
+      <div className="mag-field mag-veil mag-field-ivory" aria-hidden="true">
         <div className="mag-grain" aria-hidden="true" />
       </div>
       <div
@@ -200,7 +200,7 @@ function RitoSection() {
       />
       <div className="landing-stagger relative max-w-6xl mx-auto px-5 sm:px-8 space-y-20">
         <div>
-          <h2 className="font-ui font-bold text-[2rem] tracking-tight mb-3 text-mg-vinho">
+          <h2 className="mag-title-vinho font-ui font-bold text-[2rem] tracking-tight mb-3 text-mg-vinho">
             O expediente da perícia
           </h2>
           <p className="font-ui text-base font-medium text-mg-ink">
@@ -269,7 +269,7 @@ function PersonasSection() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <article
           data-testid="bento-claro"
-          className="landing-reveal mag-field mag-field-ivory lg:col-span-7 text-ink p-8 sm:p-10 flex flex-col rounded-[16px]"
+          className="landing-reveal mag-field mag-field-ivory relative overflow-hidden isolate lg:col-span-7 text-ink p-8 sm:p-10 flex flex-col rounded-[16px]"
         >
           <div className="mag-grain" aria-hidden="true" />
           <div className="relative flex flex-col flex-1" data-testid="persona-cliente">
@@ -310,7 +310,7 @@ function PersonasSection() {
 
         <article
           data-testid="bento-vinho"
-          className="landing-reveal mag-field mag-field-vinho lg:col-span-5 text-white p-8 sm:p-10 flex flex-col rounded-[16px]"
+          className="landing-reveal mag-field mag-field-vinho relative overflow-hidden isolate lg:col-span-5 text-white p-8 sm:p-10 flex flex-col rounded-[16px]"
         >
           <div className="mag-grain" aria-hidden="true" />
           <div className="relative flex flex-col flex-1" data-testid="persona-advogado">
@@ -342,7 +342,7 @@ function PersonasSection() {
 
         <article
           data-testid="bento-ink"
-          className="landing-reveal mag-field mag-field-ink lg:col-span-12 text-white p-8 sm:p-10 rounded-[16px]"
+          className="landing-reveal mag-field mag-field-ink relative overflow-hidden isolate lg:col-span-12 text-white p-8 sm:p-10 rounded-[16px]"
         >
           <div className="mag-grain" aria-hidden="true" />
           <div className="relative">
@@ -362,7 +362,7 @@ function PersonasSection() {
 
         <article
           data-testid="bento-teal"
-          className="landing-reveal mag-field mag-field-teal lg:col-span-12 text-white rounded-[16px] p-8 sm:p-10 grid lg:grid-cols-12 gap-6"
+          className="landing-reveal mag-field mag-field-teal relative overflow-hidden isolate lg:col-span-12 text-white rounded-[16px] p-8 sm:p-10 grid lg:grid-cols-12 gap-6"
         >
           <div className="mag-grain" aria-hidden="true" />
           <div className="relative lg:col-span-4" data-testid="persona-contador">
@@ -413,7 +413,7 @@ function FluxoSection() {
   return (
     <section data-testid="landing-fluxo" className="pt-16">
       <div className="max-w-6xl mx-auto px-5 sm:px-8">
-        <h2 className="font-ui font-bold text-[2rem] tracking-tight mb-12 text-mg-vinho">
+        <h2 className="mag-title-vinho font-ui font-bold text-[2rem] tracking-tight mb-12 text-mg-vinho">
           O que o expediente segura
         </h2>
         <ol className="grid md:grid-cols-3 gap-8">
@@ -475,7 +475,7 @@ export function LandingPage() {
       <RitoSection />
       <ConexaoSection />
       <div data-testid="landing-quebra-clara" className="relative overflow-hidden bg-mg-ivory text-mg-ink py-16">
-        <div className="mag-field mag-field-ivory pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="mag-field mag-veil mag-field-ivory" aria-hidden="true">
           <div className="mag-grain" aria-hidden="true" />
         </div>
         <div className="relative">

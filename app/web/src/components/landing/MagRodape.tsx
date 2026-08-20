@@ -41,7 +41,7 @@ const COLS = [
 
 export function MagRodape() {
   return (
-    <footer data-testid="mag-rodape" className="bg-mg-ink text-white py-16 border-t border-white/10">
+    <footer data-testid="mag-rodape" className="bg-mg-ink text-white py-20 border-t border-white/10">
       <div className="max-w-6xl mx-auto px-5 sm:px-8">
         <nav className="grid grid-cols-4 gap-3 sm:gap-8 mb-12">
           {COLS.map((col) => (

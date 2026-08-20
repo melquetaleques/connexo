@@ -62,8 +62,8 @@ const FEATURES = [
 
 export function MagPlanos() {
   return (
-    <section id="planos" data-testid="mag-planos" className="relative overflow-hidden bg-mg-ink text-white py-20">
-      <div className="mag-field mag-field-ink pointer-events-none absolute inset-0" aria-hidden="true">
+    <section id="planos" data-testid="mag-planos" className="relative overflow-hidden bg-mg-ink text-white py-24">
+      <div className="mag-field mag-veil mag-field-ink" aria-hidden="true">
         <div className="mag-grain" aria-hidden="true" />
       </div>
       <div className="relative max-w-6xl mx-auto px-5 sm:px-8">

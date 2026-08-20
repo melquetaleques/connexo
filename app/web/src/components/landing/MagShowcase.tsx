@@ -9,15 +9,15 @@ function TilePill({ label }: { label: string }) {
 export function MagShowcase() {
   return (
     <section data-testid="mag-showcase" className="relative overflow-hidden bg-mg-ivory text-mg-ink py-20">
-      <div className="mag-field mag-field-ivory pointer-events-none absolute inset-0" aria-hidden="true">
+      <div className="mag-field mag-veil mag-field-ivory" aria-hidden="true">
         <div className="mag-grain" aria-hidden="true" />
       </div>
       <div className="relative max-w-6xl mx-auto px-5 sm:px-8">
-        <h2 className="font-display font-semibold tracking-tight text-[2rem] mb-8 text-mg-vinho">
+        <h2 className="mag-title-vinho font-display font-semibold tracking-tight text-[2rem] mb-8 text-mg-vinho">
           O produto, em tela
         </h2>
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <li className="mag-field mag-field-vinho relative min-h-[28rem] sm:row-span-2 rounded-[16px] overflow-hidden">
+          <li className="mag-field mag-field-vinho relative isolate min-h-[28rem] sm:row-span-2 rounded-[16px] overflow-hidden">
             <div className="mag-grain" aria-hidden="true" />
             <div className="relative space-y-2 pt-5 px-4">
               {["Helena Vasconcelos", "Rafael Monteiro", "Lúcia Andrade", "Marina Costa"].map((n) => (
@@ -35,7 +35,7 @@ export function MagShowcase() {
             </div>
             <TilePill label="Catálogo" />
           </li>
-          <li className="mag-field mag-field-teal relative min-h-[13.5rem] rounded-[16px] overflow-hidden">
+          <li className="mag-field mag-field-teal relative isolate min-h-[13.5rem] rounded-[16px] overflow-hidden">
             <div className="mag-grain" aria-hidden="true" />
             <div className="relative space-y-2 pt-5 px-4">
               {[
@@ -51,7 +51,7 @@ export function MagShowcase() {
             </div>
             <TilePill label="Consentimento" />
           </li>
-          <li className="mag-field mag-field-rosa relative min-h-[13.5rem] rounded-[16px] overflow-hidden">
+          <li className="mag-field mag-field-rosa relative isolate min-h-[13.5rem] rounded-[16px] overflow-hidden">
             <div className="mag-grain" aria-hidden="true" />
             <div className="relative pt-6 px-6">
               <div className="rounded-[16px] border border-white/20 bg-mg-ink/50 p-4">
@@ -62,7 +62,7 @@ export function MagShowcase() {
             </div>
             <TilePill label="Laudo" />
           </li>
-          <li className="mag-field mag-field-ink relative min-h-[16rem] sm:col-span-2 rounded-[16px] overflow-hidden">
+          <li className="mag-field mag-field-ink relative isolate min-h-[16rem] sm:col-span-2 rounded-[16px] overflow-hidden">
             <div className="mag-grain" aria-hidden="true" />
             <div className="relative space-y-2 pt-5 px-4 sm:px-6">
               {["08h17 · Abertura do processo", "09h41 · Consentimento LGPD", "14h08 · Laudo v.1"].map((n) => (

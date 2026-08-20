@@ -22,7 +22,7 @@ export function MagBotao({
 }: MagBotaoProps) {
   const skin =
     variant === "solid"
-      ? "bg-mg-indigo text-white hover:bg-mg-indigo/90"
+      ? "mag-botao-solid bg-mg-ink text-white hover:bg-black"
       : "border border-current bg-transparent hover:bg-white/10";
   const cls = `landing-pill inline-flex items-center justify-center gap-2 min-h-11 px-6 font-ui text-sm font-semibold tracking-tight ${skin} ${className}`;
 

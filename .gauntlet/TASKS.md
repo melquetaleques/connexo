@@ -1,4 +1,36 @@
-# TAREFAS — Ciclo 9 (destravar o campo colapsado)
+# TAREFAS — Ciclo 10 (dois números e mais nada)
+
+## APROVADO ATÉ O CICLO 9 — NÃO refazer, NÃO regredir
+
+Temperatura (hero 354.8°, fecho 357.4°), top-3 22.7%, h2 vinho `#40101E`,
+CTAs de marketing ink, bento colorido com mocks, tiles do showcase, hero
+recomposto, 10 testes, glass 40, ctrl 17, M1/M3/M5 verificados por interação.
+
+## D1 — Proporção escura: 12.1% → [20, 35]%
+
+**Fazer:** página clara demais. No modelo o hero é majoritariamente sombrio (a
+fotografia é escura; o quente é rescaldo). Puxar as paradas escuras do
+`landing-field-hero` para baixo — ink/bordô dominando até ~65% da altura,
+salmão só como glow no pé; fecho idem; se precisar, aprofundar
+`mag-vitrine-grande` e planos. **Sem** perder o hue quente (o juiz recheca
+mediana em [330,360]∪[0,25]) e **sem** top-3 > 55%.
+
+**Êxito:** 58 faixas de luminância, limiar 0.25 → escuro entre **20% e 35%**.
+
+## D2 — Contraste: zerar a lista do VEREDITO-9
+
+**Fazer:** subir para ≥4.5:1 por pixel: os 4 timestamps do rito (`08h17`,
+`09h41`, `14h08`, `16h52`), `ABRIR VITRINE`, `Documento a documento…`,
+`CRC 1SP-314567`, `4.7`/`4.9`, `Especialidade`, `Só concedidos`,
+`Camila · OAB`, `Fila de processos recebidos`. Peso/opacidade/tom — não
+esconder nem encolher: o juiz confere presença e visibilidade dos elementos.
+
+**Êxito:** re-medição por pixel (2×, k-means, clipados fora) sem nenhum texto
+legível < 4.5:1 (3:1 se ≥24px ou ícone).
+
+---
+
+# (histórico) TAREFAS — Ciclo 9 (destravar o campo colapsado)
 
 ## APROVADO NO CICLO 8 — NÃO refazer, NÃO regredir
 
