@@ -3,9 +3,9 @@ import { MagBotao } from "./MagBotao";
 
 const LINKS = [
   { href: "#produto", label: "Expediente" },
-  { href: "#landing-personas", label: "Peritos" },
+  { href: "#produto", label: "Peritos" },
   { href: "#landing-faq", label: "Recursos" },
-  { href: "#landing-personas", label: "Escritórios" },
+  { href: "#produto", label: "Escritórios" },
   { href: "#planos", label: "Planos" },
 ];
 
@@ -73,6 +73,7 @@ export function MagNav() {
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           <Link
             to="/login"
+            className="backdrop-blur-xl"
             style={{
               display: "flex",
               alignItems: "center",

@@ -54,7 +54,7 @@ export function MagFaq() {
           >
             Respostas às perguntas mais comuns
           </h2>
-          <MagBotao href="#landing-personas" variant="ghost">
+          <MagBotao href="#produto" variant="ghost">
             Falar com o suporte
           </MagBotao>
         </div>

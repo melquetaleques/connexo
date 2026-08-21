@@ -159,7 +159,12 @@ export function AccountantPublicProfile() {
             {/* Info */}
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-3 mb-3">
-                <h1 className="text-3xl font-semibold text-ink tracking-tight font-theme-display">{profile.name}</h1>
+                <h1
+                  className="font-theme-display"
+                  style={{ margin: 0, font: "800 40px / 1.08 Figtree, sans-serif", letterSpacing: "-0.03em", color: "rgb(59, 13, 22)" }}
+                >
+                  {profile.name}
+                </h1>
                 <Pill tone={availConfig.tone as any}>
                   <div className={`w-1.5 h-1.5 rounded-full ${availConfig.color} inline-block mr-1.5`} />
                   {availConfig.label}

@@ -40,7 +40,7 @@ test("landing usa a paleta do modelo e nao usa mais o ouro", () => {
   assert.ok(uses.length >= 6, `MagBotao usado ${uses.length}x (min 6)`);
 
   assert.ok(all.includes('data-testid="mag-confianca"'), "faltando mag-confianca");
-  assert.ok(all.includes('data-testid="mag-vitrine-grande"'), "faltando mag-vitrine-grande");
+  assert.ok(all.includes('data-testid="mag-showcase"'), "faltando mag-showcase");
 
   for (const token of [
     "mg-ivory",

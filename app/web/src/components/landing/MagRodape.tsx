@@ -11,7 +11,7 @@ const COLS: { title: string; links: FooterLink[] }[] = [
       { href: "#produto", label: "Editor de laudo" },
       { href: "#produto", label: "Prazos", badge: "Novo" },
       { href: "#produto", label: "Assinatura digital" },
-      { href: "#landing-personas", label: "Vitrine" },
+      { href: "#produto", label: "Vitrine" },
       { href: "#planos", label: "API" },
     ],
   },
@@ -31,7 +31,7 @@ const COLS: { title: string; links: FooterLink[] }[] = [
     title: "Empresa",
     links: [
       { href: "#planos", label: "Planos" },
-      { href: "#landing-personas", label: "Sobre nós" },
+      { href: "#produto", label: "Sobre nós" },
       { href: "#produto", label: "Casos" },
       { href: "#landing-faq", label: "Carreiras" },
       { href: "#landing-faq", label: "Blog" },

@@ -194,7 +194,7 @@ export function PostsPage() {
                           type="button"
                           onClick={() => handleSelectTag(cat)}
                           disabled={loadingSubmit}
-                          className={`px-4 py-2 text-xs font-bold rounded-full border transition-all ${
+                          className={`px-4 py-2 text-xs font-bold rounded-[8px] border transition-all ${
                             isSelected
                               ? "bg-secondary/10 border-secondary/40 text-secondary"
                               : "border-outline bg-surface text-primary/60 hover:text-primary hover:border-primary/40"

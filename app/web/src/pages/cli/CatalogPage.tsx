@@ -85,8 +85,8 @@ export function CatalogPage() {
     <PageContainer>
       <div className="flex flex-col gap-8">
         <PageHeader
-          kicker="Catálogo de Contadores"
-          title="Encontre o Perito Ideal"
+          kicker="Catálogo de peritos"
+          title="Encontre o perito contábil do seu caso"
           subtitle="Profissionais especializados em perícia contábil para seu processo."
         />
 

@@ -19,7 +19,6 @@ test("landing reproduz o vocabulario de componentes do modelo", () => {
     "mag-strip",
     "mag-tabs",
     "mag-painel",
-    "mag-bento",
     "mag-ferramentas",
     "mag-showcase",
     "mag-planos",
@@ -59,32 +58,19 @@ test("landing reproduz o vocabulario de componentes do modelo", () => {
   assert.doesNotMatch(landingSrc, /<img\b/i, "<img em components/landing");
   assert.doesNotMatch(landingSrc, /https?:\/\//i, "URL externa em components/landing");
 
-  const personaIds = [
+  const keepIds = [
     "landing-hero",
-    "landing-conexao",
-    "landing-personas",
-    "persona-cliente",
-    "persona-cliente-dor",
-    "persona-cliente-beneficio",
-    "persona-cliente-funcionalidades",
-    "persona-cliente-cta",
-    "persona-advogado",
-    "persona-advogado-dor",
-    "persona-advogado-beneficio",
-    "persona-advogado-funcionalidades",
-    "persona-advogado-cta",
-    "persona-contador",
-    "persona-contador-dor",
-    "persona-contador-beneficio",
-    "persona-contador-funcionalidades",
-    "persona-contador-cta",
-    "landing-fluxo",
     "landing-faq",
+    "mag-ferramentas",
+    "mag-showcase",
   ];
-  assert.equal(personaIds.length, 20);
-  for (const id of personaIds) {
-    assert.ok(landingPage.includes(`data-testid="${id}"`), `faltando data-testid="${id}"`);
+  for (const id of keepIds) {
+    assert.ok(all.includes(`data-testid="${id}"`), `faltando data-testid="${id}"`);
   }
+
+  assert.match(all, /advogado|Advogado/, "landing sem o papel advogado");
+  assert.match(all, /perito|Perito|contador|Contador/, "landing sem o papel perito");
+  assert.match(all, /cliente|Cliente/, "landing sem o papel cliente");
 });
 
 test("landing porta o hero, as abas e a trilha do mockup", () => {

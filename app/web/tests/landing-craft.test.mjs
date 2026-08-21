@@ -79,50 +79,17 @@ test("landing respeita tipografia, contraste e escala do ciclo 2", () => {
     );
   }
 
-  const icons = [
-    "IconAutorizacao",
-    "IconLaudo",
-    "IconAcompanhamento",
-    "IconVitrine",
-    "IconPrazo",
-  ];
-  for (const name of icons) {
-    assert.match(src, new RegExp(`\\b${name}\\b`), `faltando ${name}`);
-    assert.match(src, new RegExp(`<${name}\\b`), `faltando uso <${name}`);
-  }
-
-  assert.ok(src.includes('data-testid="landing-cta-final"'), "faltando landing-cta-final");
-  const cta = innerByTestId(src, "landing-cta-final");
-  for (const ator of ["cliente", "advogado", "contador"]) {
-    assert.ok(
-      cta.includes(`/register?role=${ator}`),
-      `landing-cta-final sem /register?role=${ator}`,
-    );
-  }
+  const fecho = readFileSync(
+    new URL("../src/components/landing/MagFecho.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.ok(fecho.includes('data-testid="landing-cta-final"'), "faltando landing-cta-final");
+  assert.match(fecho, /to="\/register"/, "landing-cta-final sem /register");
 
   const testids = [
     "landing-hero",
-    "landing-conexao",
-    "landing-personas",
-    "persona-cliente",
-    "persona-cliente-dor",
-    "persona-cliente-beneficio",
-    "persona-cliente-funcionalidades",
-    "persona-cliente-cta",
-    "persona-advogado",
-    "persona-advogado-dor",
-    "persona-advogado-beneficio",
-    "persona-advogado-funcionalidades",
-    "persona-advogado-cta",
-    "persona-contador",
-    "persona-contador-dor",
-    "persona-contador-beneficio",
-    "persona-contador-funcionalidades",
-    "persona-contador-cta",
-    "landing-fluxo",
     "landing-faq",
   ];
-  assert.equal(testids.length, 20);
   for (const id of testids) {
     assert.ok(src.includes(`data-testid="${id}"`), `faltando data-testid="${id}"`);
   }

@@ -1,11 +1,76 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-const TRAIL = [
-  { label: "Consentimento", hint: "Link único, IP e data registrados.", active: true },
-  { label: "Escopo de documentos" },
-  { label: "Prazo de retenção" },
-  { label: "Trilha de auditoria" },
-  { label: "Revogação pelo cliente" },
+type TrailItem = { label: string; hint?: string; active?: boolean };
+type Panel = { title: [string, string]; lead: string; icon: string; trail: TrailItem[] };
+
+/**
+ * O export do tema (`01-landing-dom-body.html`) só contém o estado da aba LGPD —
+ * é o índice 4, reproduzido literalmente. As outras quatro abas seguem a mesma
+ * estrutura e tom, escritas para que a troca de aba mude o painel de verdade.
+ * A ordem espelha PILLS em MagTabs: Vínculo, Prazos, Laudo, Vitrine, LGPD.
+ */
+const PANELS: Panel[] = [
+  {
+    title: ["O vínculo que a perícia exige.", "Autorizado antes de começar."],
+    lead: "Convite, escopo e finalidade acordados entre escritório, perito e cliente — antes do primeiro documento sair do lugar.",
+    icon: "handshake",
+    trail: [
+      { label: "Convite enviado", hint: "Escopo, prazo e finalidade definidos.", active: true },
+      { label: "Aceite do perito" },
+      { label: "Autorização do cliente" },
+      { label: "Escopo confirmado" },
+      { label: "Vínculo ativo" },
+    ],
+  },
+  {
+    title: ["Cada prazo do rito.", "Contado em dias úteis."],
+    lead: "Nomeação, quesitos, entrega e manifestação com alerta em D-5 e recontagem a cada suspensão do processo.",
+    icon: "schedule",
+    trail: [
+      { label: "Nomeação publicada", hint: "Contagem inicia no primeiro dia útil.", active: true },
+      { label: "Quesitos do autor" },
+      { label: "Entrega do laudo" },
+      { label: "Manifestação das partes" },
+      { label: "Trânsito em julgado" },
+    ],
+  },
+  {
+    title: ["O laudo versionado.", "Do rascunho à entrega assinada."],
+    lead: "Quesitos respondidos, anexos organizados e versões comparáveis — o perito trabalha, o escritório acompanha.",
+    icon: "draw",
+    trail: [
+      { label: "Estrutura do laudo", hint: "Modelo aprovado como ponto de partida.", active: true },
+      { label: "Quesitos respondidos" },
+      { label: "Anexos e memória de cálculo" },
+      { label: "Revisão do escritório" },
+      { label: "Assinatura ICP-Brasil" },
+    ],
+  },
+  {
+    title: ["A vitrine do perito.", "Credencial à vista do cliente."],
+    lead: "Perfil público com CRC verificado, especialidade, comarca e avaliações — quem contrata vê antes de convidar.",
+    icon: "storefront",
+    trail: [
+      { label: "Perfil publicado", hint: "CRC verificado e especialidade à mostra.", active: true },
+      { label: "Especialidade e comarca" },
+      { label: "Disponibilidade" },
+      { label: "Avaliações recebidas" },
+      { label: "Convite direto" },
+    ],
+  },
+  {
+    // Literal do mockup.
+    title: ["A trilha do consentimento.", "Registrada do início ao fim."],
+    lead: "Finalidade, escopo de documentos, prazo de retenção e base legal em cada vínculo entre escritório, perito e cliente.",
+    icon: "draw",
+    trail: [
+      { label: "Consentimento", hint: "Link único, IP e data registrados.", active: true },
+      { label: "Escopo de documentos" },
+      { label: "Prazo de retenção" },
+      { label: "Trilha de auditoria" },
+      { label: "Revogação pelo cliente" },
+    ],
+  },
 ];
 
 const SCOPE = [
@@ -20,6 +85,7 @@ type MagPainelProps = {
 };
 
 export function MagPainel({ children, activeIndex = 0 }: MagPainelProps) {
+  const panel = PANELS[activeIndex] ?? PANELS[PANELS.length - 1];
   const [reduce, setReduce] = useState(false);
   const [opaque, setOpaque] = useState(true);
   const first = useRef(true);
@@ -53,7 +119,7 @@ export function MagPainel({ children, activeIndex = 0 }: MagPainelProps) {
       }}
       className="max-lg:!grid-cols-1"
     >
-      <div>
+      <div style={{ opacity: opaque ? 1 : 0.4, transition: reduce ? "none" : "opacity 180ms ease" }}>
         <h3
           style={{
             margin: "0 0 14px",
@@ -62,9 +128,9 @@ export function MagPainel({ children, activeIndex = 0 }: MagPainelProps) {
             color: "rgb(255, 255, 255)",
           }}
         >
-          A trilha do consentimento.
+          {panel.title[0]}
           <br />
-          Registrada do início ao fim.
+          {panel.title[1]}
         </h3>
         <p
           style={{
@@ -73,7 +139,7 @@ export function MagPainel({ children, activeIndex = 0 }: MagPainelProps) {
             color: "rgba(255, 255, 255, 0.62)",
           }}
         >
-          Finalidade, escopo de documentos, prazo de retenção e base legal em cada vínculo entre escritório, perito e cliente.
+          {panel.lead}
         </p>
         <a
           href="#landing-faq"
@@ -90,7 +156,7 @@ export function MagPainel({ children, activeIndex = 0 }: MagPainelProps) {
           Mais informações →
         </a>
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-          {TRAIL.map((item) =>
+          {panel.trail.map((item) =>
             item.active ? (
               <div key={item.label} style={{ padding: "14px 0 16px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 7 }}>
@@ -99,7 +165,7 @@ export function MagPainel({ children, activeIndex = 0 }: MagPainelProps) {
                     style={{ fontSize: 17, color: "rgb(255, 255, 255)" }}
                     aria-hidden="true"
                   >
-                    draw
+                    {panel.icon}
                   </span>
                   <span style={{ font: '700 15px / 1 "Hanken Grotesk", sans-serif', color: "rgb(255, 255, 255)" }}>
                     {item.label}
@@ -147,6 +213,7 @@ export function MagPainel({ children, activeIndex = 0 }: MagPainelProps) {
 
       <div style={{ position: "relative", minHeight: 520 }}>
         <div
+          className="backdrop-blur-xl"
           style={{
             position: "absolute",
             left: 0,
@@ -209,6 +276,7 @@ export function MagPainel({ children, activeIndex = 0 }: MagPainelProps) {
         </div>
 
         <div
+          className="backdrop-blur-xl"
           style={{
             position: "absolute",
             right: 0,
@@ -299,6 +367,7 @@ export function MagPainel({ children, activeIndex = 0 }: MagPainelProps) {
         </div>
 
         <div
+          className="backdrop-blur-xl"
           style={{
             position: "absolute",
             right: 0,
@@ -324,7 +393,7 @@ export function MagPainel({ children, activeIndex = 0 }: MagPainelProps) {
         </div>
 
         <div
-          className="landing-capsule"
+          className="landing-capsule backdrop-blur-xl"
           style={{
             position: "absolute",
             left: 0,

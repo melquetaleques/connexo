@@ -42,12 +42,12 @@ test("ciclo 9: campo pinta, titulos vinho, CTA de marketing em ink", () => {
   assert.match(css, /\.mag-title-vinho\s*\{[^}]*#40101E/, "mag-title-vinho sem #40101E");
   const ivoryH2 = [
     "Um só lugar para todo o rito",
-    "O expediente da perícia",
-    "O que o expediente segura",
-    "Três papéis, o mesmo processo",
     "Escolha um módulo, comece o rito",
     "Da nomeação ao trânsito em julgado",
     "Respostas às perguntas mais comuns",
+    "Comece simples.",
+    "Integrado a tudo que o rito exige",
+    "Feito no Connexo",
   ];
   for (const title of ivoryH2) {
     const idx = tsx.indexOf(title);

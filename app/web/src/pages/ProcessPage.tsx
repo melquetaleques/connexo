@@ -271,7 +271,7 @@ export function ProcessPage() {
               </div>
               <button
                 onClick={() => setIsRequestModalOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-[8px] hover:bg-white/10 transition-colors"
               >
                 <Icon name="close" />
               </button>

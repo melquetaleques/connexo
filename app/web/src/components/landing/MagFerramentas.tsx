@@ -9,8 +9,16 @@ import {
   IconChip,
 } from "@/components/ui/connexo-icons";
 import { MagBotao } from "./MagBotao";
+import { MockAppShell } from "./MockAppShell";
+import { MockCatalogo } from "./MockCatalogo";
+import { MockCrop } from "./MockShell";
+import { MockLaudo } from "./MockLaudo";
+import { MockTimeline } from "./MockTimeline";
 
 const FILTERS = ["Destaques", "Vínculo", "Laudo", "Prazos", "Vitrine"];
+
+/** Cada módulo aparece em "Destaques" e nas trilhas a que pertence. */
+type Trilha = "Vínculo" | "Laudo" | "Prazos" | "Vitrine";
 
 const TOOLS = [
   {
@@ -20,6 +28,7 @@ const TOOLS = [
       </IconChip>
     ),
     title: "Cadastro de perito",
+    trilhas: ["Vínculo"] as Trilha[],
     line: "Valide CRC e especialidade…",
   },
   {
@@ -29,6 +38,7 @@ const TOOLS = [
       </IconChip>
     ),
     title: "Convite de vínculo",
+    trilhas: ["Vínculo"] as Trilha[],
     line: "Escopo, prazo e finalidade",
   },
   {
@@ -38,6 +48,7 @@ const TOOLS = [
       </IconChip>
     ),
     title: "Consentimento LGPD",
+    trilhas: ["Vínculo"] as Trilha[],
     line: "Base legal e revogação",
   },
   {
@@ -47,6 +58,7 @@ const TOOLS = [
       </IconChip>
     ),
     title: "Editor de laudo",
+    trilhas: ["Laudo"] as Trilha[],
     line: "Quesitos, anexos e versões…",
   },
   {
@@ -56,6 +68,7 @@ const TOOLS = [
       </IconChip>
     ),
     title: "Controle de prazos",
+    trilhas: ["Prazos"] as Trilha[],
     line: "Dias úteis e alerta em D-5",
   },
   {
@@ -65,6 +78,7 @@ const TOOLS = [
       </IconChip>
     ),
     title: "Assinatura digital",
+    trilhas: ["Laudo"] as Trilha[],
     line: "ICP-Brasil e carimbo de tempo",
   },
   {
@@ -74,6 +88,7 @@ const TOOLS = [
       </IconChip>
     ),
     title: "Vitrine pública",
+    trilhas: ["Vitrine"] as Trilha[],
     line: "Perfil do perito e avaliações",
   },
 ];
@@ -81,6 +96,9 @@ const TOOLS = [
 export function MagFerramentas() {
   const scroller = useRef<HTMLUListElement>(null);
   const [filter, setFilter] = useState(0);
+
+  const visible =
+    filter === 0 ? TOOLS : TOOLS.filter((t) => t.trilhas.includes(FILTERS[filter] as Trilha));
 
   const go = (dir: number) => {
     const el = scroller.current;
@@ -203,12 +221,12 @@ export function MagFerramentas() {
                 ))}
               </div>
               <div
-                className="relative overflow-hidden mag-field mag-field-ivory"
+                className="relative overflow-hidden"
                 style={{ borderRadius: "12px 12px 0 0", height: 220, boxShadow: "rgba(28, 27, 26, 0.3) 0px -2px 20px -10px" }}
               >
-                <div className="mag-photo-frame" aria-hidden="true">
-                  <div className="mag-photo" style={{ backgroundImage: "url(/landing/painel-retrato.jpg)" }} />
-                </div>
+                <MockCrop height={220} scale={0.48}>
+                  <MockAppShell />
+                </MockCrop>
               </div>
             </div>
           </div>
@@ -257,7 +275,26 @@ export function MagFerramentas() {
                   boxShadow: "rgba(0, 0, 0, 0.6) 0px 20px 40px -14px",
                 }}
               >
-                <div className="mag-photo" style={{ backgroundImage: "url(/landing/tile-vitrine.jpg)" }} />
+                <MockCrop height={140} scale={0.42}>
+                  <MockTimeline />
+                </MockCrop>
+              </div>
+              <div
+                className="overflow-hidden"
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  bottom: 6,
+                  width: "46%",
+                  borderRadius: 10,
+                  height: 110,
+                  border: "1px solid rgba(255, 255, 255, 0.14)",
+                  boxShadow: "rgba(0, 0, 0, 0.7) 0px 20px 40px -14px",
+                }}
+              >
+                <MockCrop height={110} scale={0.38}>
+                  <MockCatalogo />
+                </MockCrop>
               </div>
               <div
                 style={{
@@ -324,10 +361,14 @@ export function MagFerramentas() {
             </p>
             <div className="relative mt-auto grid grid-cols-2 gap-3">
               <div className="overflow-hidden" style={{ borderRadius: 12, height: 120 }}>
-                <div className="mag-photo" style={{ backgroundImage: "url(/landing/tile-advocacia.jpg)" }} />
+                <MockCrop height={120} scale={0.28}>
+                  <MockAppShell />
+                </MockCrop>
               </div>
               <div className="overflow-hidden" style={{ borderRadius: 12, height: 120 }}>
-                <div className="mag-photo" style={{ backgroundImage: "url(/landing/tile-laudo.jpg)" }} />
+                <MockCrop height={120} scale={0.32}>
+                  <MockLaudo />
+                </MockCrop>
               </div>
             </div>
           </div>
@@ -356,19 +397,26 @@ export function MagFerramentas() {
             <p style={{ margin: 0, font: '400 15px / 1.6 "Hanken Grotesk", sans-serif', color: "rgba(255, 255, 255, 0.68)" }}>
               Salve a estrutura de um laudo aprovado como modelo. O próximo perito parte dele.
             </p>
-            <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "center", height: 130 }}>
-              <span
-                className="landing-capsule"
-                style={{
-                  padding: "14px 30px",
-                  border: "2px solid rgb(255, 77, 141)",
-                  font: "600 26px / 1 Figtree, sans-serif",
-                  letterSpacing: "-0.01em",
-                  color: "rgb(255, 255, 255)",
-                }}
-              >
-                USAR MODELO
-              </span>
+            <div style={{ marginTop: "auto", position: "relative", height: 130 }}>
+              <div className="absolute inset-0 overflow-hidden opacity-50 pointer-events-none">
+                <MockCrop height={130} scale={0.3}>
+                  <MockLaudo />
+                </MockCrop>
+              </div>
+              <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", height: 130 }}>
+                <span
+                  className="landing-capsule"
+                  style={{
+                    padding: "14px 30px",
+                    border: "2px solid rgb(255, 77, 141)",
+                    font: "600 26px / 1 Figtree, sans-serif",
+                    letterSpacing: "-0.01em",
+                    color: "rgb(255, 255, 255)",
+                  }}
+                >
+                  USAR MODELO
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -458,10 +506,17 @@ export function MagFerramentas() {
         <ul
           data-testid="mag-ferramentas"
           ref={scroller}
-          style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(180px, 1fr))", gap: 14 }}
+          style={{
+            display: "grid",
+            gridAutoFlow: "column",
+            gridAutoColumns: "minmax(180px, 1fr)",
+            gap: 14,
+            scrollBehavior: "smooth",
+            scrollSnapType: "x proximity",
+          }}
           className="overflow-x-auto"
         >
-          {TOOLS.map((t) => (
+          {visible.map((t) => (
             <li
               key={t.title}
               style={{
@@ -469,6 +524,7 @@ export function MagFerramentas() {
                 borderRadius: 14,
                 padding: 18,
                 minWidth: 180,
+                scrollSnapAlign: "start",
               }}
             >
               <span style={{ display: "block", marginBottom: 38 }}>{t.icon}</span>

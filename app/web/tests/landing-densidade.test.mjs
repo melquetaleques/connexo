@@ -8,7 +8,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 const landingPage = readFileSync(join(root, "../src/pages/LandingPage.tsx"), "utf8");
 const landingDir = join(root, "../src/components/landing");
 
-test("landing tem mockups de produto e trilho narrativo", () => {
+test("landing tem mockups de produto nas secoes do modelo", () => {
   const mocks = [
     "MockCatalogo",
     "MockConsentimento",
@@ -25,21 +25,18 @@ test("landing tem mockups de produto e trilho narrativo", () => {
     assert.match(landingPage, new RegExp(`<${name}\\b`), `faltando uso <${name}`);
   }
 
-  assert.ok(
-    landingPage.includes('data-testid="landing-rito"'),
-    'faltando data-testid="landing-rito"',
-  );
-  assert.ok(
-    landingPage.includes('data-testid="landing-quebra-clara"'),
-    'faltando data-testid="landing-quebra-clara"',
-  );
-
-  const times = landingPage.match(/\b\d{2}h\d{2}\b/g) || [];
-  assert.ok(times.length >= 4, `horários NNhNN: ${times.length} (mín 4)`);
-
   const files = readdirSync(landingDir).filter((f) => /\.(tsx|ts|jsx|js)$/.test(f));
   assert.ok(files.length > 0, "src/components/landing/ vazio");
   const all = files.map((f) => readFileSync(join(landingDir, f), "utf8")).join("\n");
+  const ferramentas = readFileSync(join(landingDir, "MagFerramentas.tsx"), "utf8");
+  const showcase = readFileSync(join(landingDir, "MagShowcase.tsx"), "utf8");
+
+  assert.match(ferramentas, /<MockAppShell\b|<MockTimeline\b|<MockLaudo\b/, "Comece simples sem mock de produto");
+  assert.match(showcase, /<MockAppShell\b|<MockTimeline\b|<MockCatalogo\b/, "Da nomeacao sem mock de produto");
+
+  const times = all.match(/\b\d{2}h\d{2}\b/g) || [];
+  assert.ok(times.length >= 4, `horários NNhNN: ${times.length} (mín 4)`);
+
   assert.doesNotMatch(all, /lorem/i, "lorem nos mocks");
   assert.doesNotMatch(all, /Item 1/, "Item 1 nos mocks");
   assert.doesNotMatch(all, /Exemplo 1/, "Exemplo 1 nos mocks");

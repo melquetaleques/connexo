@@ -40,7 +40,7 @@ test("landing usa a temperatura e as superficies do modelo", () => {
   assert.ok(grainUses.length >= 6, `mag-grain usado ${grainUses.length}x nos TSX (min 6)`);
 
   assert.ok(tsx.includes('data-testid="mag-hero-confianca"'), "faltando mag-hero-confianca");
-  for (const id of ["bento-claro", "bento-ink", "bento-vinho", "bento-teal"]) {
+  for (const id of ["mag-ferramentas", "mag-showcase", "mag-planos", "mag-strip"]) {
     assert.ok(tsx.includes(`data-testid="${id}"`), `faltando data-testid="${id}"`);
   }
 

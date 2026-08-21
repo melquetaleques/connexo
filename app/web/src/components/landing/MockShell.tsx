@@ -1,4 +1,30 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
+
+export function MockCrop({
+  children,
+  height,
+  scale = 0.55,
+  shift,
+}: {
+  children: ReactNode;
+  height: number | string;
+  scale?: number;
+  shift?: string;
+}) {
+  const width = `${Math.round(100 / scale)}%`;
+  const style: CSSProperties = {
+    transform: `scale(${scale})`,
+    transformOrigin: "top left",
+    width,
+    pointerEvents: "none",
+  };
+  if (shift) style.transform = `scale(${scale}) ${shift}`;
+  return (
+    <div style={{ height, overflow: "hidden", position: "relative" }}>
+      <div style={style}>{children}</div>
+    </div>
+  );
+}
 
 type MockShellProps = {
   testId: string;

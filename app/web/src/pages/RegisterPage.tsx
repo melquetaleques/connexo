@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type CSSProperties, type ReactNode } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { GoldButton, Icon, Field, SelectField } from "@/components/ui/connexo-primitives";
 import { useAuth, type Role } from "@/hooks/useAuth";
 import { apiErrorMessage } from "@/lib/utils";
 
@@ -21,6 +20,41 @@ function roleDashboard(role: string): string {
   }
 }
 
+const inputStyle: CSSProperties = {
+  width: "100%",
+  boxSizing: "border-box",
+  height: 48,
+  padding: "0 15px",
+  border: "1px solid rgb(221, 216, 210)",
+  borderRadius: 8,
+  background: "rgb(248, 247, 245)",
+  font: '400 15px / 1 "Hanken Grotesk", sans-serif',
+  color: "rgb(28, 27, 26)",
+  outline: "none",
+};
+
+const labelStyle: CSSProperties = {
+  display: "block",
+  font: '600 14px / 1 "Hanken Grotesk", sans-serif',
+  color: "rgb(59, 13, 22)",
+  marginBottom: 9,
+};
+
+function FieldBlock({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div>
+      <label style={labelStyle}>{label}</label>
+      {children}
+    </div>
+  );
+}
+
 export function RegisterPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -36,6 +70,9 @@ export function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [razaoSocial, setRazaoSocial] = useState("");
+  const [cnpj, setCnpj] = useState("");
+  const [registro, setRegistro] = useState("");
 
   const totalSteps = 2;
 
@@ -89,198 +126,364 @@ export function RegisterPage() {
     }
   };
 
+  const stepLabel = step === 1 ? "Perfil" : "Credenciais";
+  const title =
+    step === 1
+      ? role === "advogado"
+        ? "Escritório jurídico"
+        : role === "contador"
+          ? "Escritório de perícia"
+          : "Acesso do cliente"
+      : role === "contador"
+        ? "Conta do perito"
+        : role === "cliente"
+          ? "Sua conta"
+          : "Administrador";
+  const subtitle =
+    step === 1
+      ? role === "advogado"
+        ? "Inicie o registro do seu escritório de advocacia."
+        : role === "contador"
+          ? "Inicie o registro do seu escritório de perícia contábil."
+          : "Crie sua conta para acompanhar processos e enviar documentos."
+      : role === "contador"
+        ? "Defina suas credenciais de acesso para começar a receber propostas de vínculo."
+        : role === "cliente"
+          ? "Defina as credenciais para acompanhar seus processos."
+          : "Defina as credenciais do gestor principal da plataforma.";
+
   return (
-    <div className="min-h-screen flex items-center justify-center relative bg-surface-1 font-theme-body py-12 px-4">
-      <div className="fixed inset-0 z-0 overflow-hidden select-none pointer-events-none opacity-[0.04]">
-        <span className="absolute -top-10 -left-10 text-[10rem] font-semibold text-primary leading-none font-theme-display">CONNEXO</span>
-      </div>
-
-      <main className="relative z-10 w-full max-w-[1100px] grid grid-cols-1 md:grid-cols-5 bg-white rounded-[32px] shadow-[0_50px_100px_-30px_rgba(64,16,30,0.18)] overflow-hidden border border-outline cx-reveal">
-
-        <div className="hidden md:flex md:col-span-2 flex-col justify-between p-10 bg-primary text-white">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-              <Icon name="balance" className="text-white text-xl" />
-            </div>
-            <span className="text-xl font-semibold tracking-tight uppercase font-theme-display">Connexo</span>
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-secondary mb-3">Cadastro</p>
-            <h2 className="text-3xl font-semibold leading-tight font-theme-display">O rito pericial no mesmo expediente.</h2>
-            <p className="mt-4 text-sm text-white/60">Advogado, perito e cliente no mesmo fluxo — sem planilha paralela.</p>
-          </div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">LGPD · CRC · OAB</p>
+    <div
+      className="min-h-screen font-theme-body"
+      style={{ background: "rgb(243, 241, 237)", padding: "80px 40px" }}
+    >
+      <div style={{ maxWidth: 1220, margin: "0 auto" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
+          <span style={{ font: "700 17px / 1 Figtree, sans-serif", letterSpacing: "-0.02em", color: "rgb(59, 13, 22)" }}>
+            Cadastro · etapa {step} de {totalSteps}
+          </span>
         </div>
-
-        <div className="md:col-span-3 px-8 md:px-12 pt-10">
-          <div className="flex items-center justify-between mb-8 md:hidden">
-            <span className="text-lg font-semibold uppercase font-theme-display text-primary">Connexo</span>
-            <Link to="/login" className="text-[11px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary transition-colors flex items-center gap-2">
-              <Icon name="arrow_back" className="text-base" />
-              Voltar ao Login
+        <div
+          style={{
+            maxWidth: 820,
+            margin: "0 auto",
+            background: "rgb(255, 255, 255)",
+            borderRadius: 24,
+            overflow: "hidden",
+            boxShadow: "rgba(59, 13, 22, 0.35) 0px 30px 70px -46px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "24px 36px",
+              borderBottom: "1px solid rgb(237, 234, 229)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+              <span
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  background: "rgb(28, 27, 26)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  font: "900 13px / 1 Figtree, sans-serif",
+                  color: "rgb(255, 255, 255)",
+                }}
+              >
+                C
+              </span>
+              <span style={{ font: "700 20px / 1 Figtree, sans-serif", letterSpacing: "-0.02em", color: "rgb(59, 13, 22)" }}>
+                Connexo
+              </span>
+            </div>
+            <Link to="/login" style={{ font: '600 14px / 1 "Hanken Grotesk", sans-serif', color: "rgb(124, 114, 109)" }}>
+              ← Voltar ao login
             </Link>
           </div>
-          <div className="hidden md:flex justify-end mb-6">
-            <Link to="/login" className="text-[11px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary transition-colors flex items-center gap-2">
-              <Icon name="arrow_back" className="text-base" />
-              Voltar ao Login
-            </Link>
-          </div>
 
-          <div className="mb-12">
-            <div className="flex justify-between items-end mb-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-secondary">
+          <div style={{ padding: 36 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+              <span style={{ font: '600 14px / 1 "Hanken Grotesk", sans-serif', color: "rgb(193, 30, 99)" }}>
                 Etapa {step} de {totalSteps}
-              </p>
-              <p className="text-xs font-bold text-primary/30 uppercase tracking-widest">
-                {step === 1 ? "Perfil" : "Credenciais"}
-              </p>
+              </span>
+              <span style={{ font: '400 14px / 1 "Hanken Grotesk", sans-serif', color: "rgb(154, 144, 136)" }}>
+                {stepLabel}
+              </span>
             </div>
-            <div className="flex gap-3">
-              {[1, 2].map((s) => (
-                <div
-                  key={s}
-                  className={`h-1.5 flex-1 rounded-full transition-all duration-500 motion-reduce:transition-none ${s <= step ? "bg-secondary" : "bg-surface-2"}`}
-                />
-              ))}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 36 }}>
+              <div style={{ height: 4, borderRadius: 99, background: "rgb(255, 77, 141)" }} />
+              <div
+                style={{
+                  height: 4,
+                  borderRadius: 99,
+                  background: step >= 2 ? "rgb(255, 77, 141)" : "rgb(237, 234, 229)",
+                }}
+              />
             </div>
-          </div>
 
-          {/* Conteúdo das Etapas */}
-          <div className="min-h-[380px]">
-            {step === 1 && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-                <h2 className="text-4xl font-black text-primary tracking-tight mb-3">
-                  {role === "advogado"
-                    ? "Escritório Jurídico"
-                    : role === "contador"
-                      ? "Escritório de Perícia"
-                      : "Acesso do Cliente"}
-                </h2>
-                <p className="text-primary/50 font-medium mb-10">
-                  {role === "advogado"
-                    ? "Inicie o registro do seu escritório de advocacia."
-                    : role === "contador"
-                      ? "Inicie o registro do seu escritório de perícia contábil."
-                      : "Crie sua conta para acompanhar processos e enviar documentos."}
+            {success ? (
+              <div style={{ textAlign: "center", padding: "24px 0 12px" }}>
+                <h3
+                  style={{
+                    margin: "0 0 10px",
+                    font: "800 32px / 1.14 Figtree, sans-serif",
+                    letterSpacing: "-0.03em",
+                    color: "rgb(59, 13, 22)",
+                  }}
+                >
+                  Cadastro concluido!
+                </h3>
+                <p style={{ margin: 0, font: '400 16px / 1.55 "Hanken Grotesk", sans-serif', color: "rgb(92, 74, 78)" }}>
+                  Conta criada com sucesso. Redirecionando para o painel...
                 </p>
+              </div>
+            ) : (
+              <>
+                <h3
+                  style={{
+                    margin: "0 0 10px",
+                    font: "800 32px / 1.14 Figtree, sans-serif",
+                    letterSpacing: "-0.03em",
+                    color: "rgb(59, 13, 22)",
+                  }}
+                >
+                  {title}
+                </h3>
+                <p
+                  style={{
+                    margin: "0 0 32px",
+                    font: '400 16px / 1.55 "Hanken Grotesk", sans-serif',
+                    color: "rgb(92, 74, 78)",
+                  }}
+                >
+                  {subtitle}
+                </p>
+
                 {error && (
-                  <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl text-sm font-bold text-rose-600">
+                  <div
+                    style={{
+                      marginBottom: 22,
+                      padding: "12px 14px",
+                      borderRadius: 8,
+                      background: "rgb(253, 238, 244)",
+                      font: '600 14px / 1.4 "Hanken Grotesk", sans-serif',
+                      color: "rgb(193, 30, 99)",
+                    }}
+                  >
                     {error}
                   </div>
                 )}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <SelectField 
-                    label="Perfil Profissional" 
-                    value={role} 
-                    onChange={(e) => setRole(parseRole(e.target.value))}
-                    options={[
-                      { label: "Advogado (Contratante)", value: "advogado" },
-                      { label: "Contador (Perito)", value: "contador" },
-                      { label: "Cliente (Parte)", value: "cliente" },
-                    ]}
-                  />
-                  {role === "cliente" ? (
-                    <Field
-                      label="Telefone"
-                      placeholder="(11) 99999-9999"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                    />
-                  ) : (
-                    <>
-                      <Field label="Razão Social" placeholder="Ex: Pereira & Advogados Associados" />
-                      <Field label="CNPJ" placeholder="00.000.000/0001-00" />
-                      <Field label={role === "advogado" ? "Registro OAB" : "Registro CRC"} placeholder="Ex: 123456/SP" />
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
 
-            {step === 2 && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-                {success ? (
-                  <div className="text-center py-12">
-                    <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
-                      <Icon name="check_circle" className="text-4xl text-emerald-600" />
-                    </div>
-                    <h2 className="text-3xl font-black text-primary tracking-tight mb-3">Cadastro concluido!</h2>
-                    <p className="text-primary/50 font-medium mb-4">
-                      Conta criada com sucesso. Redirecionando para o painel...
-                    </p>
+                {step === 1 ? (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "22px 24px",
+                      marginBottom: 30,
+                    }}
+                    className="max-sm:!grid-cols-1"
+                  >
+                    <FieldBlock label="Perfil profissional">
+                      <select
+                        value={role}
+                        onChange={(e) => setRole(parseRole(e.target.value))}
+                        style={inputStyle}
+                      >
+                        <option value="advogado">Advogado (Contratante)</option>
+                        <option value="contador">Contador (Perito)</option>
+                        <option value="cliente">Cliente (Parte)</option>
+                      </select>
+                    </FieldBlock>
+                    {role === "cliente" ? (
+                      <FieldBlock label="Telefone">
+                        <input
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="(11) 99999-9999"
+                          style={inputStyle}
+                        />
+                      </FieldBlock>
+                    ) : (
+                      <>
+                        <FieldBlock label="Razão social">
+                          <input
+                            value={razaoSocial}
+                            onChange={(e) => setRazaoSocial(e.target.value)}
+                            placeholder="Ex: Pereira & Advogados Associados"
+                            style={inputStyle}
+                          />
+                        </FieldBlock>
+                        <FieldBlock label="CNPJ">
+                          <input
+                            value={cnpj}
+                            onChange={(e) => setCnpj(e.target.value)}
+                            placeholder="00.000.000/0001-00"
+                            style={inputStyle}
+                          />
+                        </FieldBlock>
+                        <FieldBlock label={role === "advogado" ? "Registro OAB" : "Registro CRC"}>
+                          <input
+                            value={registro}
+                            onChange={(e) => setRegistro(e.target.value)}
+                            placeholder="Ex: 123456/SP"
+                            style={inputStyle}
+                          />
+                        </FieldBlock>
+                      </>
+                    )}
                   </div>
                 ) : (
-                  <>
-                    <h2 className="text-4xl font-black text-primary tracking-tight mb-3">
-                      {role === "contador" ? "Conta do Perito" : role === "cliente" ? "Sua conta" : "Administrador"}
-                    </h2>
-                    <p className="text-primary/50 font-medium mb-10">
-                      {role === "contador"
-                        ? "Defina suas credenciais de acesso para comecar a receber propostas."
-                        : role === "cliente"
-                          ? "Defina as credenciais para acompanhar seus processos."
-                          : "Defina as credenciais do gestor principal da plataforma."}
-                    </p>
-                    {error && (
-                      <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl text-sm font-bold text-rose-600">
-                        {error}
-                      </div>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Field label="Nome Completo" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome completo" />
-                      <Field label="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="seu@email.com" />
-                      <Field label="Senha" value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Minimo 8 caracteres" />
-                      <Field label="Confirmar Senha" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type="password" placeholder="Repita a senha" />
-                    </div>
-                  </>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "22px 24px",
+                      marginBottom: 30,
+                    }}
+                    className="max-sm:!grid-cols-1"
+                  >
+                    <FieldBlock label="Nome completo">
+                      <input
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Seu nome completo"
+                        style={inputStyle}
+                      />
+                    </FieldBlock>
+                    <FieldBlock label="E-mail">
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="seu@email.com"
+                        style={inputStyle}
+                      />
+                    </FieldBlock>
+                    <FieldBlock label="Senha">
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Minimo 8 caracteres"
+                        style={inputStyle}
+                      />
+                    </FieldBlock>
+                    <FieldBlock label="Confirmar senha">
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Repita a senha"
+                        style={inputStyle}
+                      />
+                    </FieldBlock>
+                  </div>
                 )}
-              </div>
+
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "16px 18px",
+                    borderRadius: 12,
+                    background: "rgb(253, 238, 244)",
+                    marginBottom: 30,
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    style={{
+                      width: 19,
+                      height: 19,
+                      borderRadius: 5,
+                      accentColor: "rgb(255, 77, 141)",
+                      flex: "0 0 auto",
+                    }}
+                  />
+                  <span style={{ font: '400 15px / 1.5 "Hanken Grotesk", sans-serif', color: "rgb(92, 53, 64)" }}>
+                    Li e aceito os{" "}
+                    <span style={{ color: "rgb(193, 30, 99)", fontWeight: 600 }}>termos de uso</span> e a{" "}
+                    <span style={{ color: "rgb(193, 30, 99)", fontWeight: 600 }}>política de privacidade (LGPD)</span>.
+                  </span>
+                </label>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 16,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => (step === 1 ? navigate("/login") : setStep(step - 1))}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      padding: 0,
+                      font: '600 15px / 1 "Hanken Grotesk", sans-serif',
+                      color: "rgb(124, 114, 109)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {step === 1 ? "← Voltar ao login" : "← Etapa anterior"}
+                  </button>
+                  {step < totalSteps ? (
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      style={{
+                        height: 48,
+                        padding: "0 26px",
+                        border: "none",
+                        borderRadius: 8,
+                        background: "rgb(28, 27, 26)",
+                        color: "rgb(255, 255, 255)",
+                        font: '700 15px / 1 "Hanken Grotesk", sans-serif',
+                        cursor: "pointer",
+                      }}
+                    >
+                      Próxima etapa →
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleFinish}
+                      disabled={loading}
+                      style={{
+                        height: 48,
+                        padding: "0 26px",
+                        border: "none",
+                        borderRadius: 8,
+                        background: "rgb(28, 27, 26)",
+                        color: "rgb(255, 255, 255)",
+                        font: '700 15px / 1 "Hanken Grotesk", sans-serif',
+                        cursor: loading ? "wait" : "pointer",
+                        opacity: loading ? 0.8 : 1,
+                      }}
+                    >
+                      {loading ? "Processando..." : "Finalizar cadastro →"}
+                    </button>
+                  )}
+                </div>
+              </>
             )}
-
-
           </div>
-          
-          <div className="flex items-center gap-4 group cursor-pointer mb-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
-            <div className="relative">
-              <input 
-                type="checkbox" 
-                checked={acceptedTerms}
-                onChange={(e) => setAcceptedTerms(e.target.checked)}
-                className="peer appearance-none w-6 h-6 border-2 border-outline rounded-lg checked:bg-secondary checked:border-secondary transition-all cursor-pointer"
-              />
-              <Icon name="check" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none text-xs" />
-            </div>
-            <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest leading-relaxed">
-              Li e aceito os <span className="text-secondary border-b border-secondary/30">Termos de Uso</span> e a <span className="text-secondary border-b border-secondary/30">Política de Privacidade (LGPD)</span>.
-            </p>
-          </div>
-
-          {/* Navegação do Rodapé */}
-          {!success && (
-            <div className="flex items-center justify-between mt-12 pb-12">
-              <button
-                onClick={() => (step === 1 ? navigate("/login") : setStep(step - 1))}
-                className="px-8 py-3 text-xs font-black uppercase tracking-widest text-primary/40 hover:text-primary transition-all flex items-center gap-2"
-              >
-                <Icon name="west" />
-                {step === 1 ? "Voltar ao Login" : "Etapa Anterior"}
-              </button>
-
-              {step < totalSteps ? (
-                <GoldButton onClick={handleNext} icon="east" className="px-10 py-5">
-                  Proxima Etapa
-                </GoldButton>
-              ) : (
-                <GoldButton onClick={handleFinish} icon={loading ? "autorenew" : "check"} className="px-12 py-5" disabled={loading}>
-                  {loading ? "Processando..." : "Finalizar Cadastro"}
-                </GoldButton>
-              )}
-            </div>
-          )}
         </div>
-      </main>
-
+      </div>
     </div>
   );
 }

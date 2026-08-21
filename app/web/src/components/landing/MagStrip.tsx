@@ -33,7 +33,7 @@ export function MagStrip() {
           padding: "0 40px",
         }}
       >
-        Tribunais, conselhos e assinatura digital — para você nunca ter que escolher entre a norma e o fluxo de trabalho.
+        Feito para se conectar com
       </p>
       <ul
         style={{

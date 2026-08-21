@@ -114,7 +114,7 @@ export function ClientsPage() {
                   <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Cadastro de pessoa física ou jurídica</p>
                 </div>
               </div>
-              <button onClick={() => setIsAddModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
+              <button onClick={() => setIsAddModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-[8px] hover:bg-white/10 transition-colors">
                 <Icon name="close" />
               </button>
             </div>
@@ -203,13 +203,13 @@ export function ClientsPage() {
       {/* Filtros e Visualização */}
       <Card padded={false} className="mb-8 overflow-hidden">
         <div className="bg-surface-2/30 px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-outline/60">
-          <div className="flex items-center gap-1 bg-white p-1 rounded-full border border-outline/60 shadow-sm">
+          <div className="flex items-center gap-1 bg-white p-1 rounded-[8px] border border-outline/60 shadow-sm">
             {tabs.map((t) => (
               <button
                 key={t.k}
                 onClick={() => setFilter(t.k)}
                 className={cn(
-                  "px-5 py-2 text-[11px] font-bold uppercase tracking-wider rounded-full transition-all",
+                  "px-5 py-2 text-[11px] font-bold uppercase tracking-wider rounded-[8px] transition-all",
                   filter === t.k 
                     ? "bg-primary text-white shadow-md shadow-primary/20" 
                     : "text-primary/40 hover:text-primary hover:bg-surface-2"
@@ -221,16 +221,16 @@ export function ClientsPage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex bg-white rounded-full p-1 border border-outline/60 shadow-sm">
+            <div className="flex bg-white rounded-[8px] p-1 border border-outline/60 shadow-sm">
               <button
                 onClick={() => setView("lista")}
-                className={cn("p-2 rounded-full transition-all", view === "lista" ? "bg-primary text-white shadow-md" : "text-primary/40")}
+                className={cn("p-2 rounded-[8px] transition-all", view === "lista" ? "bg-primary text-white shadow-md" : "text-primary/40")}
               >
                 <Icon name="view_list" className="text-base" />
               </button>
               <button
                 onClick={() => setView("grade")}
-                className={cn("p-2 rounded-full transition-all", view === "grade" ? "bg-primary text-white shadow-md" : "text-primary/40")}
+                className={cn("p-2 rounded-[8px] transition-all", view === "grade" ? "bg-primary text-white shadow-md" : "text-primary/40")}
               >
                 <Icon name="grid_view" className="text-base" />
               </button>

@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 
 const CAPS = [
-  { title: "Cadastrar o perito", indent: false },
-  { title: "Vincular com base legal", indent: false },
-  { title: "Controlar prazos", indent: false },
-  { title: "Redigir o laudo", indent: false },
-  { title: "Responder quesitos", indent: true },
-  { title: "Assinar e entregar", indent: true },
-  { title: "Publicar a vitrine", indent: true, dim: true },
+  { title: "Cadastrar o perito" },
+  { title: "Vincular com base legal" },
+  { title: "Controlar prazos" },
+  { title: "Redigir o laudo" },
+  { title: "Responder quesitos" },
+  { title: "Assinar e entregar" },
+  { title: "Publicar a vitrine", dim: true },
 ];
+
+const MARKER_GUTTER = 33;
 
 export function MagHeroLista() {
   const [active, setActive] = useState(0);
@@ -47,6 +49,11 @@ export function MagHeroLista() {
       {CAPS.map((item, i) => {
         const isActive = i === active;
         const idleColor = item.dim ? "rgba(255, 255, 255, 0.14)" : "rgba(255, 255, 255, 0.24)";
+        // 01-landing-dom-body.html: o ▶ fica fixo na calha (x = borda da lista) e o
+        // recuo de 33px acompanha o item ativo — os anteriores ficam rentes, o ativo
+        // e os seguintes recuam. Medido no modelo: marcador 733, texto rente 733,
+        // texto recuado 766.
+        const indented = i >= active;
         return (
           <li
             key={item.title}
@@ -57,30 +64,35 @@ export function MagHeroLista() {
               setActive(i);
             }}
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: isActive ? 14 : 0,
+              position: "relative",
+              display: "block",
               font: "800 30px / 1.35 Figtree, sans-serif",
               letterSpacing: "-0.02em",
               color: isActive ? "rgb(255, 255, 255)" : idleColor,
-              paddingLeft: !isActive && item.indent ? 33 : 0,
+              paddingLeft: indented ? MARKER_GUTTER : 0,
               background: "transparent",
-              transition: "opacity 450ms ease, color 450ms ease, padding-left 450ms ease",
+              transition: "color 450ms ease, opacity 450ms ease, padding-left 450ms ease",
             }}
           >
             <span
               aria-hidden="true"
               style={{
+                position: "absolute",
+                left: 0,
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: MARKER_GUTTER,
                 color: "rgb(255, 77, 141)",
                 fontSize: 19,
-                width: isActive ? "auto" : 0,
-                overflow: "hidden",
+                lineHeight: 1,
                 opacity: isActive ? 1 : 0,
+                pointerEvents: "none",
+                transition: "opacity 450ms ease",
               }}
             >
               ▶
             </span>
-            <p className="min-w-0" style={{ margin: 0 }}>
+            <p className="min-w-0" data-hero-item-text="" style={{ margin: 0 }}>
               {item.title}
             </p>
           </li>

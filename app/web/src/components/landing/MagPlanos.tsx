@@ -54,6 +54,7 @@ export function MagPlanos() {
       className="mag-field mag-field-ink relative overflow-hidden text-white"
       style={{ marginTop: 120, background: "rgb(28, 27, 26)", padding: "120px 40px" }}
     >
+      <div className="mag-grain" aria-hidden="true" />
       <div style={{ maxWidth: 1220, margin: "0 auto" }}>
         <h2
           className="font-display"

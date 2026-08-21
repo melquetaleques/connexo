@@ -15,29 +15,21 @@ export function StatCard({
   className?: string;
 }) {
   return (
-    <Card
-      className={cn(
-        "p-8 border-b-4 cx-reveal transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0",
-        highlight ? "border-b-secondary" : "border-b-primary/10",
-        className
-      )}
-    >
-      {icon && (
-        <div className="flex items-center justify-between mb-4">
+    <Card className={cn("p-6 cx-reveal", className)}>
+      <div className="flex items-center justify-between mb-6">
+        <p className="font-theme-body text-[15px] leading-none text-[#7c726d]">{label}</p>
+        {icon && (
           <div
             className={cn(
-              "w-[34px] h-[34px] rounded-[9px] flex items-center justify-center",
-              highlight ? "bg-secondary/10 text-secondary" : "bg-surface-2 text-primary/40"
+              "w-[34px] h-[34px] rounded-[9px] flex items-center justify-center shrink-0",
+              highlight ? "bg-[#fdeef4] text-[#c11e63]" : "bg-[#edf0fd] text-[#4c63c7]"
             )}
           >
-            <Icon name={icon} className="text-2xl" />
+            <Icon name={icon} className="text-base" />
           </div>
-        </div>
-      )}
-      <p className="text-3xl font-semibold text-ink mb-1 tracking-tight font-theme-display">{value}</p>
-      <p className="text-[10px] font-bold text-on-surface-variant/50 uppercase tracking-[0.15em] font-theme-body">
-        {label}
-      </p>
+        )}
+      </div>
+      <p className="text-[34px] font-extrabold leading-none tracking-tight text-[#1c1b1a] font-theme-display">{value}</p>
     </Card>
   );
 }

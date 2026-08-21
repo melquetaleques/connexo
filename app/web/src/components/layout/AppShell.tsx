@@ -41,9 +41,9 @@ const NAV: Record<Role, NavItem[]> = {
 };
 
 const ROLE_LABELS: Record<Role, string> = {
-  advogado: "Painel do Advogado",
-  contador: "Portal do Contador",
-  cliente: "Área do Cliente",
+  advogado: "Advocacia",
+  contador: "Perícia contábil",
+  cliente: "Área do cliente",
   admin: "Administrador",
 };
 
@@ -83,25 +83,27 @@ export function AppShell({ role = "advogado" }: AppShellProps) {
                 cn(
                   "flex items-center gap-3 rounded-[10px] px-[14px] py-3 text-sm font-semibold transition-all duration-300 ease-out group relative overflow-hidden motion-reduce:transition-none",
                   isActive
-                    ? "bg-white/12 text-white shadow-inner ring-1 ring-white/15"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
+                    ? "bg-white text-[#1c1b1a]"
+                    : "text-white/70 hover:text-white hover:bg-white/5"
                 )
               }
             >
               <Icon name={item.icon} fill={location.pathname === item.to} className="text-xl shrink-0" />
               <span>{item.label}</span>
-              {location.pathname === item.to && (
-                <div className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-secondary" />
-              )}
             </NavLink>
           ))}
         </nav>
 
         <div className="px-4 pb-3">
-          <div className="rounded-[12px] p-4 border border-white/10 bg-white/5">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 mb-1">Plano</p>
-            <p className="text-sm font-semibold font-theme-display">Profissional</p>
-            <p className="text-[10px] text-white/40 mt-1">Vitrine e prazos no mesmo expediente.</p>
+          <div className="rounded-[12px] p-4 bg-[#2a2827]">
+            <p className="text-[13px] font-semibold text-white mb-1">Plano Escritório</p>
+            <p className="text-[13px] text-white/50 mb-3">Renova em 15 de junho</p>
+            <NavLink
+              to={role === "advogado" ? "/adv/assinatura" : role === "contador" ? "/acc/perfil" : "/cli/dashboard"}
+              className="flex items-center justify-center h-[34px] rounded-[7px] bg-white text-[13px] font-bold text-[#1c1b1a]"
+            >
+              Gerenciar
+            </NavLink>
           </div>
         </div>
 
@@ -136,8 +138,8 @@ export function AppShell({ role = "advogado" }: AppShellProps) {
               <Icon name="search" className="text-primary/40" />
               <input
                 type="text"
-                placeholder="Pesquisar..."
-                className="bg-transparent border-none p-0 text-xs font-medium text-ink placeholder:text-primary/30 focus:ring-0 w-32 font-theme-body"
+                placeholder="Buscar processo ou cliente"
+                className="bg-transparent border-none p-0 text-xs font-medium text-ink placeholder:text-primary/30 focus:ring-0 w-48 font-theme-body"
               />
             </div>
 

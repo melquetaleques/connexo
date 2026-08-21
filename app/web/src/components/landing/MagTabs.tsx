@@ -16,20 +16,41 @@ type MagTabsProps = {
 export function MagTabs({ tab, onTab }: MagTabsProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const baseW = useRef(1);
-  const [ind, setInd] = useState({ x: 0, s: 1 });
+  const [ind, setInd] = useState({ x: 0, w: 0 });
   const reduceRef = useRef(false);
 
   useLayoutEffect(() => {
     reduceRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const measure = () => {
+      const wrap = wrapRef.current;
+      const btn = btnRefs.current[tab];
+      if (!wrap || !btn) return;
+      setInd({
+        x: btn.offsetLeft,
+        w: btn.offsetWidth || 0,
+      });
+    };
+
+    measure();
+
     const wrap = wrapRef.current;
-    const btn = btnRefs.current[tab];
-    if (!wrap || !btn) return;
-    if (baseW.current <= 1) baseW.current = btn.offsetWidth || 1;
-    setInd({
-      x: btn.offsetLeft,
-      s: (btn.offsetWidth || 1) / baseW.current,
+    const ro = new ResizeObserver(measure);
+    if (wrap) ro.observe(wrap);
+    btnRefs.current.forEach((btn) => {
+      if (btn) ro.observe(btn);
     });
+
+    window.addEventListener("resize", measure);
+    const fonts = document.fonts;
+    if (fonts?.ready) {
+      void fonts.ready.then(measure);
+    }
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
   }, [tab]);
 
   return (
@@ -50,13 +71,11 @@ export function MagTabs({ tab, onTab }: MagTabsProps) {
         className="landing-capsule absolute pointer-events-none"
         style={{
           top: 6,
-          left: 0,
+          left: ind.x,
           height: 38,
           background: "rgb(28, 27, 26)",
-          width: baseW.current,
-          transform: `translateX(${ind.x}px) scaleX(${ind.s})`,
-          transformOrigin: "left center",
-          transition: reduceRef.current ? "none" : "transform 320ms ease",
+          width: ind.w,
+          transition: reduceRef.current ? "none" : "left 320ms ease, width 320ms ease",
         }}
       />
       {PILLS.map((item, i) => {

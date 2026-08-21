@@ -1,11 +1,6 @@
-import type { ReactNode } from "react";
 import { MagBotao } from "./MagBotao";
 
-type MagFechoProps = {
-  children?: ReactNode;
-};
-
-export function MagFecho({ children }: MagFechoProps) {
+export function MagFecho() {
   return (
     <section
       data-testid="mag-fecho"
@@ -19,12 +14,6 @@ export function MagFecho({ children }: MagFechoProps) {
         background: "linear-gradient(105deg, rgb(75, 42, 87), rgb(142, 74, 74) 46%, rgb(217, 138, 94))",
       }}
     >
-      <div className="mag-photo-frame" aria-hidden="true">
-        <div
-          className="mag-photo mag-ken-burns mag-ken-burns-rev"
-          style={{ backgroundImage: "url(/landing/fecho-campo.jpg)" }}
-        />
-      </div>
       <div className="mag-field mag-veil landing-field-fecho" aria-hidden="true">
         <div className="mag-grain" aria-hidden="true" />
       </div>
@@ -61,7 +50,7 @@ export function MagFecho({ children }: MagFechoProps) {
           transform: "rotate(9deg)",
         }}
       />
-      <div className="relative text-center">
+      <div className="relative text-center" data-testid="landing-cta-final">
         <h2
           className="landing-fecho-title font-display"
           style={{
@@ -76,7 +65,6 @@ export function MagFecho({ children }: MagFechoProps) {
           Entre no expediente
         </h2>
         <MagBotao to="/register">Criar conta →</MagBotao>
-        {children}
       </div>
     </section>
   );

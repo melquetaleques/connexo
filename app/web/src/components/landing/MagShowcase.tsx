@@ -1,38 +1,66 @@
+import type { ReactNode } from "react";
 import { MagBotao } from "./MagBotao";
+import { MockAppShell } from "./MockAppShell";
+import { MockCatalogo } from "./MockCatalogo";
+import { MockPainelFerramenta } from "./MockPainelFerramenta";
+import { MockTimeline } from "./MockTimeline";
 
-const CASES = [
+const CASES: {
+  mock: ReactNode;
+  fieldBg: string;
+  veil: string;
+  tag: string;
+  title: string;
+  text: string;
+}[] = [
   {
-    src: "/landing/tile-advocacia.jpg",
-    field: "mag-field-vinho",
-    veil: "mag-photo-veil-vinho",
+    mock: <MockAppShell />,
+    fieldBg: "rgb(42, 33, 28)",
+    veil: "linear-gradient(rgba(42, 33, 28, 0.35) 0%, rgba(42, 33, 28, 0.1) 34%, rgba(20, 14, 11, 0.96) 78%)",
     tag: "Painel do advogado",
     title: "Revisão de contrato",
     text: "Encargos abusivos em cédula bancária. Da inicial ao parecer.",
-    tall: true,
   },
   {
-    src: "/landing/tile-laudo.jpg",
-    field: "mag-field-teal",
-    veil: "mag-photo-veil-teal",
+    mock: <MockPainelFerramenta />,
+    fieldBg: "rgb(4, 33, 31)",
+    veil: "linear-gradient(rgba(4, 33, 31, 0.34) 0%, rgba(4, 33, 31, 0.08) 34%, rgba(3, 20, 19, 0.96) 78%)",
     tag: "Painel do perito",
     title: "Apuração de haveres",
     text: "Dissolução parcial com balanço de determinação.",
-    tall: true,
   },
   {
-    src: "/landing/tile-consentimento.jpg",
-    field: "mag-field-ink",
-    veil: "mag-photo-veil-ink",
+    mock: <MockCatalogo />,
+    fieldBg: "rgb(27, 29, 32)",
+    veil: "linear-gradient(rgba(27, 29, 32, 0.34) 0%, rgba(27, 29, 32, 0.08) 34%, rgba(15, 16, 18, 0.96) 78%)",
     tag: "Cadastro de cliente",
     title: "Liquidação de sentença",
     text: "Índices oficiais, memória de cálculo e planilhas.",
-    tall: true,
   },
-] as const;
+];
+
+function ShowcaseMock({ children, width = "220%", shift = "translate(-6%, 4%)" }: { children: ReactNode; width?: string; shift?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: "absolute",
+        left: 0,
+        top: 0,
+        width,
+        transform: shift,
+        pointerEvents: "none",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 export function MagShowcase() {
   return (
     <section data-testid="mag-showcase" className="mag-field mag-field-ivory relative overflow-hidden text-mg-ink" style={{ padding: "120px 40px 0" }}>
+      <div className="mag-grain" aria-hidden="true" />
       <div style={{ maxWidth: 1220, margin: "0 auto" }}>
         <div
           style={{
@@ -74,14 +102,11 @@ export function MagShowcase() {
           {CASES.map((tile) => (
             <li
               key={tile.title}
-              className={`mag-field ${tile.field} mag-photo-hover-card relative isolate overflow-hidden`}
-              style={{ borderRadius: 16, height: 530, display: "flex", alignItems: "flex-end" }}
+              className="relative isolate overflow-hidden"
+              style={{ borderRadius: 16, height: 530, display: "flex", alignItems: "flex-end", background: tile.fieldBg }}
             >
-              <div className="mag-photo-frame" aria-hidden="true">
-                <div className="mag-photo mag-photo-hover" style={{ backgroundImage: `url(${tile.src})` }} />
-                <div className={`mag-photo-veil ${tile.veil}`} />
-                <div className="mag-grain" />
-              </div>
+              <ShowcaseMock>{tile.mock}</ShowcaseMock>
+              <div style={{ position: "absolute", inset: 0, background: tile.veil }} />
               <span
                 className="relative"
                 style={{
@@ -115,14 +140,19 @@ export function MagShowcase() {
             </li>
           ))}
           <li
-            className="mag-field mag-field-ink mag-photo-hover-card relative isolate overflow-hidden col-span-3 max-md:!col-span-1"
-            style={{ borderRadius: 16, height: 420, display: "flex", alignItems: "flex-end" }}
+            className="relative isolate overflow-hidden col-span-3 max-md:!col-span-1"
+            style={{ borderRadius: 16, height: 420, display: "flex", alignItems: "flex-end", background: "rgb(21, 26, 30)" }}
           >
-            <div className="mag-photo-frame" aria-hidden="true">
-              <div className="mag-photo mag-photo-hover" style={{ backgroundImage: "url(/landing/tile-vitrine.jpg)" }} />
-              <div className="mag-photo-veil mag-photo-veil-ink" />
-              <div className="mag-grain" />
-            </div>
+            <ShowcaseMock width="100%" shift="translateY(-6%)">
+              <MockTimeline />
+            </ShowcaseMock>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "linear-gradient(100deg, rgba(21, 26, 30, 0.94) 0%, rgba(21, 26, 30, 0.6) 46%, rgba(21, 26, 30, 0.2))",
+              }}
+            />
             <div className="relative" style={{ padding: 28 }}>
               <div
                 style={{
@@ -175,17 +205,22 @@ export function MagShowcase() {
                 Perícias reais conduzidas por escritórios parceiros.
               </p>
             </div>
-            <MagBotao href="#landing-personas">Ver perícias →</MagBotao>
+            <MagBotao href="#produto">Ver perícias →</MagBotao>
           </div>
           <div
-            className="mag-field mag-field-ink mag-photo-hover-card relative isolate overflow-hidden"
-            style={{ borderRadius: 18, height: 660, display: "flex", alignItems: "flex-end" }}
+            className="relative isolate overflow-hidden"
+            style={{ borderRadius: 18, height: 660, display: "flex", alignItems: "flex-end", background: "rgb(8, 13, 17)" }}
           >
-            <div className="mag-photo-frame" aria-hidden="true">
-              <div className="mag-photo mag-photo-hover" style={{ backgroundImage: "url(/landing/tile-suave.jpg)" }} />
-              <div className="mag-photo-veil mag-photo-veil-ink" />
-              <div className="mag-grain" />
-            </div>
+            <ShowcaseMock width="100%" shift="translateY(-2%)">
+              <MockAppShell />
+            </ShowcaseMock>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "linear-gradient(96deg, rgba(8, 13, 17, 0.95) 0%, rgba(8, 13, 17, 0.72) 44%, rgba(8, 13, 17, 0.24))",
+              }}
+            />
             <div className="relative" style={{ padding: 34, maxWidth: 520 }}>
               <div
                 style={{
@@ -233,6 +268,11 @@ export function MagShowcase() {
                 <span style={{ fontSize: 10 }}>▶</span> Ver o resumo
               </a>
             </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 9, padding: "26px 0 0" }}>
+            <span style={{ width: 7, height: 7, borderRadius: 99, background: "rgb(207, 201, 194)" }} />
+            <span style={{ width: 26, height: 7, borderRadius: 99, background: "rgb(140, 131, 124)" }} />
+            <span style={{ width: 7, height: 7, borderRadius: 99, background: "rgb(207, 201, 194)" }} />
           </div>
         </div>
       </div>
