@@ -4,12 +4,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { BindProcessModal } from "@/components/marketplace/BindProcessModal";
 import { useToast } from "@/contexts/ToastContext";
 import {
-  Card,
   GhostButton,
   GoldButton,
   Icon,
   PageContainer,
-  Pill,
 } from "@/components/ui/connexo-primitives";
 import { getPublicProfile, getReviews } from "@/services/accountant";
 import type { PublicAccountantProfile } from "@/types";
@@ -31,6 +29,9 @@ const AVAILABILITY_CONFIG: Record<string, { label: string; color: string; tone: 
   indisponivel: { label: "Indisponível", color: "bg-gray-400", tone: "muted" },
 };
 
+/** Tintas dos cards de publicação, como as três faixas do mockup 09. */
+const TINTAS = ["rgb(74, 15, 27)", "rgb(18, 60, 90)", "rgb(16, 82, 66)"];
+
 export function AccountantPublicProfile() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -45,6 +46,9 @@ export function AccountantPublicProfile() {
   const [reviews, setReviews] = useState<ReviewWithClient[]>([]);
   const [reviewsTotal, setReviewsTotal] = useState(0);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  // logo_url pode existir mas apontar para um arquivo que não carrega —
+  // sem isso o hero mostra o ícone de imagem quebrada.
+  const [logoErro, setLogoErro] = useState(false);
 
   useEffect(() => {
     if (!slug) {
@@ -134,306 +138,693 @@ export function AccountantPublicProfile() {
 
   const availConfig = AVAILABILITY_CONFIG[profile.availability] || AVAILABILITY_CONFIG.disponivel;
 
+  const especialidades = (profile.specialty || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const nomeParts = profile.name.trim().split(" ");
+  const nomeInicio = nomeParts.length > 1 ? nomeParts.slice(0, -1).join(" ") : profile.name;
+  const nomeFim = nomeParts.length > 1 ? nomeParts[nomeParts.length - 1] : "";
+  const iniciais = nomeParts
+    .slice(0, 2)
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
+
+  const media = reviews.length > 0 ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length : 0;
+  const mediaLabel = media.toFixed(1).replace(".", ",");
+  const destaque = reviews.find((r) => r.comment) || null;
+  const demais = destaque ? reviews.filter((r) => r.id !== destaque.id) : reviews;
+  const capaHero = profile.photo_urls?.[0];
+
+  const contratar = () => {
+    if (!user) {
+      navigate(`/login?next=/contadores/${slug}`);
+      return;
+    }
+    if (user.role !== "cliente") {
+      addToast("Apenas clientes podem solicitar o vínculo com um perito.", "info");
+      return;
+    }
+    setBindOpen(true);
+  };
+
+  const linhaResumo = [
+    especialidades.slice(0, 2).join(" · "),
+    profile.city && profile.state ? `${profile.city}, ${profile.state}` : null,
+    reviewsTotal > 0 ? `${reviewsTotal} avaliações` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <PageContainer>
-      <div className="max-w-5xl mx-auto flex flex-col gap-8">
-        {/* ======== Section 1: Header ======== */}
-        <Card className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
-
-          {/* Background accent bar */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-secondary to-secondary/40" />
-
-          <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
-            {/* Logo */}
-            <div className="w-28 h-28 rounded-2xl bg-surface-2 border-2 border-outline/40 flex items-center justify-center overflow-hidden shrink-0 shadow-lg">
-              {profile.logo_url ? (
-                <img src={profile.logo_url} alt={`${profile.name} logo`} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary/20 to-primary/20">
-                  <Icon name="account_balance" className="text-4xl text-secondary/40" />
-                </div>
-              )}
-            </div>
-
-            {/* Info */}
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-3 mb-3">
-                <h1
-                  className="font-theme-display"
-                  style={{ margin: 0, font: "800 40px / 1.08 Figtree, sans-serif", letterSpacing: "-0.03em", color: "rgb(59, 13, 22)" }}
-                >
-                  {profile.name}
-                </h1>
-                <Pill tone={availConfig.tone as any}>
-                  <div className={`w-1.5 h-1.5 rounded-full ${availConfig.color} inline-block mr-1.5`} />
-                  {availConfig.label}
-                </Pill>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-primary/60">
-                {profile.city && profile.state && (
-                  <span className="flex items-center gap-1.5">
-                    <Icon name="location_on" className="text-base text-secondary" />
-                    {profile.city}, {profile.state}
-                  </span>
-                )}
-                {profile.specialty && (
-                  <span className="flex items-center gap-1.5">
-                    <Icon name="star" className="text-base text-amber-500" />
-                    {profile.specialty}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* CTA */}
-            <div className="shrink-0 w-full md:w-auto">
-              <GoldButton
-                icon="handshake"
-                className="w-full md:w-auto hover:scale-[1.02] transition-transform duration-300 motion-reduce:hover:scale-100"
-                onClick={() => {
-                  if (!user) {
-                    navigate(`/login?next=/contadores/${slug}`);
-                    return;
-                  }
-                  if (user.role !== "cliente") {
-                    addToast("Apenas clientes podem solicitar o vínculo com um perito.", "info");
-                    return;
-                  }
-                  setBindOpen(true);
+    <div className="font-theme-body" style={{ background: "rgb(240, 240, 232)", minHeight: "100vh" }}>
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "28px 24px 80px" }}>
+        <div className="overflow-hidden" style={{ borderRadius: 24, background: "rgb(255, 255, 255)" }}>
+          {/* Barra do escritório */}
+          <div
+            style={{
+              background: "rgb(59, 13, 22)",
+              padding: "14px 26px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 20,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+              <span
+                className="landing-capsule"
+                style={{
+                  width: 34,
+                  height: 34,
+                  background: "rgba(255, 255, 255, 0.14)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  font: '700 13px / 1 "Hanken Grotesk", sans-serif',
+                  color: "rgb(255, 255, 255)",
                 }}
               >
-                Contratar
-              </GoldButton>
-            </div>
-          </div>
-        </Card>
-
-        {/* ======== Fotos Gallery ======== */}
-        {profile.photo_urls && profile.photo_urls.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {profile.photo_urls.map((url, idx) => (
-              <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-surface-2 border border-outline/30 shadow-sm">
-                <img src={url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-500 hover:scale-105 motion-reduce:hover:scale-100" />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ======== Section 2: Bio ======== */}
-        {profile.bio && (
-          <Card>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
-                <Icon name="description" className="text-secondary" />
-              </div>
+                {iniciais}
+              </span>
               <div>
-                <p className="text-[10px] font-bold text-secondary uppercase tracking-[0.3em]">Sobre</p>
-                <h3 className="text-lg font-black text-primary tracking-tight">Biografia</h3>
+                <div style={{ font: "700 15px / 1.2 Figtree, sans-serif", color: "rgb(255, 255, 255)" }}>
+                  {profile.name}
+                </div>
+                <div style={{ font: '400 12px / 1.2 "Hanken Grotesk", sans-serif', color: "rgba(255, 255, 255, 0.55)" }}>
+                  {especialidades[0] || "Perícia contábil judicial"}
+                </div>
               </div>
             </div>
-            <p className="text-sm font-medium text-primary/80 leading-relaxed whitespace-pre-line">
-              {profile.bio}
-            </p>
-          </Card>
-        )}
-
-        {/* ======== Section 3: Especialidades ======== */}
-        {profile.specialty && (
-          <Card>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
-                <Icon name="local_offer" className="text-secondary" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-secondary uppercase tracking-[0.3em]">Áreas de Atuação</p>
-                <h3 className="text-lg font-black text-primary tracking-tight">Especialidades</h3>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {profile.specialty.split(",").map((spec, idx) => (
-                <Pill key={idx} tone="gold" className="px-4 py-1.5 text-xs font-bold">
-                  {spec.trim()}
-                </Pill>
+            <nav className="max-md:hidden" style={{ display: "flex", gap: 24 }}>
+              {[
+                { href: "#perfil-servicos", label: "Serviços" },
+                { href: "#perfil-reputacao", label: "Reputação" },
+                { href: "#perfil-insights", label: "Insights" },
+              ].map((l) => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  style={{
+                    font: '600 14px / 1 "Hanken Grotesk", sans-serif',
+                    color: "rgba(255, 255, 255, 0.82)",
+                    textDecoration: "none",
+                  }}
+                >
+                  {l.label}
+                </a>
               ))}
-            </div>
-          </Card>
-        )}
+            </nav>
+            <Link
+              to="/login"
+              className="landing-pill"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                height: 38,
+                padding: "0 18px",
+                background: "rgb(255, 255, 255)",
+                font: '700 14px / 1 "Hanken Grotesk", sans-serif',
+                color: "rgb(59, 13, 22)",
+                textDecoration: "none",
+              }}
+            >
+              Área do cliente
+            </Link>
+          </div>
 
-        {/* ======== Section 4: Serviços ======== */}
-        <Card>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
-              <Icon name="business_center" className="text-secondary" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-secondary uppercase tracking-[0.3em]">Ofertas</p>
-              <h3 className="text-lg font-black text-primary tracking-tight">Serviços</h3>
+          {/* Hero */}
+          <div className="relative overflow-hidden" style={{ background: "rgb(78, 24, 38)", padding: "64px 26px 120px" }}>
+            {capaHero && (
+              <div
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  backgroundImage: `url(${capaHero})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center 40%",
+                  opacity: 0.32,
+                }}
+              />
+            )}
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "linear-gradient(rgba(48, 12, 22, 0.55), rgba(48, 12, 22, 0.35) 42%, rgba(38, 9, 17, 0.92))",
+              }}
+            />
+            <div className="relative" style={{ maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
+              <div
+                className="landing-pill"
+                style={{
+                  width: 62,
+                  height: 62,
+                  margin: "0 auto 22px",
+                  overflow: "hidden",
+                  background: "rgba(255, 255, 255, 0.16)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {profile.logo_url && !logoErro ? (
+                  <img
+                    src={profile.logo_url}
+                    alt=""
+                    onError={() => setLogoErro(true)}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <span style={{ font: "800 20px / 1 Figtree, sans-serif", color: "rgb(255, 255, 255)" }}>{iniciais}</span>
+                )}
+              </div>
+              <h1
+                style={{
+                  margin: "0 0 16px",
+                  font: "800 48px / 1.06 Figtree, sans-serif",
+                  letterSpacing: "-0.03em",
+                  color: "rgb(255, 255, 255)",
+                }}
+              >
+                {nomeInicio}
+                {nomeFim ? <span style={{ color: "rgb(255, 154, 190)" }}> {nomeFim}</span> : null}
+              </h1>
+              <p
+                style={{
+                  margin: "0 0 26px",
+                  font: '400 17px / 1.55 "Hanken Grotesk", sans-serif',
+                  color: "rgba(255, 255, 255, 0.86)",
+                }}
+              >
+                {linhaResumo}
+              </p>
+              <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={contratar}
+                  className="landing-pill"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 9,
+                    height: 46,
+                    padding: "0 24px",
+                    background: "rgb(255, 255, 255)",
+                    font: '700 15px / 1 "Hanken Grotesk", sans-serif',
+                    color: "rgb(59, 13, 22)",
+                  }}
+                >
+                  <Icon name="handshake" className="text-lg" />
+                  Contratar
+                </button>
+                <a
+                  href="#perfil-servicos"
+                  className="landing-pill"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    height: 46,
+                    padding: "0 24px",
+                    background: "rgba(255, 255, 255, 0.16)",
+                    border: "1px solid rgba(255, 255, 255, 0.22)",
+                    font: '700 15px / 1 "Hanken Grotesk", sans-serif',
+                    color: "rgb(255, 255, 255)",
+                    textDecoration: "none",
+                  }}
+                >
+                  Ver serviços
+                </a>
+              </div>
             </div>
           </div>
 
-          {/* Mock services for display */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-5 rounded-xl border border-outline/30 bg-surface-2 hover:border-secondary/40 transition-all group cursor-pointer">
-              <div className="flex items-start justify-between mb-3">
-                <h4 className="text-sm font-bold text-primary">Perícia Contábil Judicial</h4>
-                <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
-                  <Icon name="receipt_long" className="text-secondary text-sm" />
+          {/* Cartões sobrepostos */}
+          <div style={{ padding: "0 26px", marginTop: -76, position: "relative", zIndex: 2 }}>
+            <div className="grid gap-4 max-lg:!grid-cols-1" style={{ gridTemplateColumns: "1.25fr 1fr" }}>
+              <div
+                style={{
+                  background: "rgb(255, 255, 255)",
+                  borderRadius: 16,
+                  padding: 26,
+                  boxShadow: "rgba(28, 27, 26, 0.10) 0 20px 44px -22px",
+                }}
+              >
+                <div
+                  style={{
+                    font: '600 10px / 1 "Hanken Grotesk", sans-serif',
+                    letterSpacing: "0.16em",
+                    textTransform: "uppercase",
+                    color: "rgb(154, 90, 43)",
+                    marginBottom: 14,
+                  }}
+                >
+                  Perito
                 </div>
-              </div>
-              <p className="text-xs font-medium text-primary/60 mb-4 line-clamp-2">
-                Análise detalhada de documentos contábeis para instrução processual.
-              </p>
-              <div className="flex items-center justify-between border-t border-outline/20 pt-3">
-                <span className="text-sm font-bold text-primary">R$ 1.800</span>
-                <span className="text-[10px] font-bold text-primary/40 uppercase tracking-wider">30 dias</span>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-xl border border-outline/30 bg-surface-2 hover:border-secondary/40 transition-all group cursor-pointer">
-              <div className="flex items-start justify-between mb-3">
-                <h4 className="text-sm font-bold text-primary">Parecer Técnico-Contábil</h4>
-                <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
-                  <Icon name="description" className="text-secondary text-sm" />
+                <div style={{ font: "700 21px / 1.25 Figtree, sans-serif", color: "rgb(59, 13, 22)", marginBottom: 16 }}>
+                  {profile.name}
                 </div>
-              </div>
-              <p className="text-xs font-medium text-primary/60 mb-4 line-clamp-2">
-                Elaboração de parecer técnico com fundamentação contábil para suporte jurídico.
-              </p>
-              <div className="flex items-center justify-between border-t border-outline/20 pt-3">
-                <span className="text-sm font-bold text-primary">R$ 2.500</span>
-                <span className="text-[10px] font-bold text-primary/40 uppercase tracking-wider">20 dias</span>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* ======== Section 5: Posts ======== */}
-        {posts.length > 0 && (
-          <Card>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
-                <Icon name="article" className="text-secondary" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-secondary uppercase tracking-[0.3em]">Publicações</p>
-                <h3 className="text-lg font-black text-primary tracking-tight">Artigos & Conteúdo</h3>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {posts.map((post) => (
-                <div key={post.id} className="rounded-xl border border-outline/30 bg-surface-2 overflow-hidden hover:border-secondary/30 transition-all group">
-                  {post.cover_url && (
-                    <div className="h-44 overflow-hidden">
-                      <img src={post.cover_url} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    </div>
-                  )}
-                  <div className="p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Pill tone="gold" className="text-[10px] px-2.5 py-0.5">{post.tag}</Pill>
-                      <span className="text-[10px] font-bold text-primary/30 uppercase tracking-wider">
-                        {new Date(post.published_at).toLocaleDateString("pt-BR")}
+                <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+                  {profile.city && profile.state && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <Icon name="location_on" className="text-base" style={{ color: "rgb(193, 30, 99)" }} />
+                      <span style={{ font: '400 14px / 1.4 "Hanken Grotesk", sans-serif', color: "rgb(92, 74, 78)" }}>
+                        {profile.city}, {profile.state}
                       </span>
                     </div>
-                    <h4 className="text-base font-bold text-primary mb-2 line-clamp-2">{post.title}</h4>
-                    <p className="text-xs font-medium text-primary/60 line-clamp-3">{post.excerpt}</p>
+                  )}
+                  {profile.email && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <Icon name="mail" className="text-base" style={{ color: "rgb(193, 30, 99)" }} />
+                      <span style={{ font: '400 14px / 1.4 "Hanken Grotesk", sans-serif', color: "rgb(92, 74, 78)" }}>
+                        {profile.email}
+                      </span>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <Icon name="schedule" className="text-base" style={{ color: "rgb(193, 30, 99)" }} />
+                    <span style={{ font: '400 14px / 1.4 "Hanken Grotesk", sans-serif', color: "rgb(92, 74, 78)" }}>
+                      {availConfig.label}
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
-          </Card>
-        )}
+              </div>
 
-        {/* ======== Section 6: Avaliações ======== */}
-        <Card>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
-              <Icon name="star" className="text-secondary" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-secondary uppercase tracking-[0.3em]">Feedback</p>
-              <h3 className="text-lg font-black text-primary tracking-tight">Avaliações</h3>
+              <div
+                style={{
+                  background: "rgb(255, 255, 255)",
+                  borderRadius: 16,
+                  padding: 26,
+                  boxShadow: "rgba(28, 27, 26, 0.10) 0 20px 44px -22px",
+                }}
+              >
+                <div
+                  style={{
+                    font: '600 10px / 1 "Hanken Grotesk", sans-serif',
+                    letterSpacing: "0.16em",
+                    textTransform: "uppercase",
+                    color: "rgb(154, 90, 43)",
+                    marginBottom: 14,
+                  }}
+                >
+                  Reputação
+                </div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 6 }}>
+                  {media > 0 && (
+                    <span style={{ font: "800 34px / 1 Figtree, sans-serif", color: "rgb(59, 13, 22)" }}>
+                      {mediaLabel}
+                    </span>
+                  )}
+                  <span style={{ font: '400 14px / 1 "Hanken Grotesk", sans-serif', color: "rgb(140, 127, 130)" }}>
+                    {reviewsTotal > 0 ? `de ${reviewsTotal} avaliações` : "Sem avaliações ainda"}
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: 2, marginBottom: 20 }}>
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Icon
+                      key={s}
+                      name={s <= Math.round(media) ? "star" : "star_outline"}
+                      className="text-lg"
+                      style={{ color: s <= Math.round(media) ? "rgb(193, 30, 99)" : "rgb(214, 208, 205)" }}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={contratar}
+                  className="landing-pill"
+                  style={{
+                    width: "100%",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 9,
+                    height: 46,
+                    background: "rgb(28, 27, 26)",
+                    font: '700 15px / 1 "Hanken Grotesk", sans-serif',
+                    color: "rgb(255, 255, 255)",
+                  }}
+                >
+                  <Icon name="handshake" className="text-lg" />
+                  Solicitar vínculo
+                </button>
+              </div>
             </div>
           </div>
 
-          {reviewsLoading ? (
-            <div className="flex items-center justify-center py-10">
-              <div className="h-8 w-8 animate-spin rounded-full border-3 border-secondary/20 border-t-secondary" />
-            </div>
-          ) : reviews.length === 0 ? (
-            <div className="rounded-xl border-2 border-dashed border-outline/30 bg-surface-2 p-10 text-center">
-              <Icon name="rate_review" className="text-5xl text-primary/10 mb-4" />
-              <h4 className="text-sm font-bold text-primary/30 uppercase tracking-widest mb-2">
-                Nenhuma Avaliação
-              </h4>
-              <p className="text-xs font-medium text-primary/20 max-w-md mx-auto">
-                Este contador ainda não recebeu avaliações de seus clientes.
+          {/* Serviços */}
+          <div id="perfil-servicos" style={{ padding: "72px 26px 0" }}>
+            <h2
+              style={{
+                margin: "0 0 12px",
+                font: "800 34px / 1.14 Figtree, sans-serif",
+                letterSpacing: "-0.03em",
+                color: "rgb(59, 13, 22)",
+              }}
+            >
+              Perícia contábil <span style={{ color: "rgb(193, 30, 99)" }}>sob medida</span>
+            </h2>
+            {profile.bio && (
+              <p
+                style={{
+                  margin: "0 0 34px",
+                  font: '400 16px / 1.6 "Hanken Grotesk", sans-serif',
+                  color: "rgb(92, 74, 78)",
+                  maxWidth: "68ch",
+                  whiteSpace: "pre-line",
+                }}
+              >
+                {profile.bio}
               </p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {reviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="rounded-xl border border-outline/30 bg-surface-2 p-6 space-y-3"
-                >
-                  {/* Header: client name + stars */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-primary">
-                      {review.client_name || "Cliente"}
+            )}
+            {especialidades.length > 0 && (
+              <div
+                className="grid gap-4 max-lg:!grid-cols-2 max-sm:!grid-cols-1"
+                style={{ gridTemplateColumns: `repeat(${Math.min(especialidades.length, 4)}, minmax(0, 1fr))` }}
+              >
+                {especialidades.map((esp) => (
+                  <div
+                    key={esp}
+                    style={{
+                      background: "rgb(255, 255, 255)",
+                      border: "1px solid rgb(234, 231, 226)",
+                      borderRadius: 16,
+                      padding: 22,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: 9,
+                        background: "rgb(253, 238, 244)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginBottom: 16,
+                      }}
+                    >
+                      <Icon name="receipt_long" className="text-lg" style={{ color: "rgb(193, 30, 99)" }} />
                     </span>
-                    <div className="flex items-center gap-0.5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Icon
-                          key={star}
-                          name={star <= review.rating ? "star" : "star_outline"}
-                          className={
-                            star <= review.rating
-                              ? "text-amber-500 text-base"
-                              : "text-primary/20 text-base"
-                          }
-                        />
-                      ))}
+                    <div style={{ font: "700 16px / 1.3 Figtree, sans-serif", color: "rgb(28, 27, 26)", marginBottom: 6 }}>
+                      {esp}
+                    </div>
+                    <div style={{ font: '400 13px / 1.5 "Hanken Grotesk", sans-serif', color: "rgb(124, 114, 109)" }}>
+                      Atuação como perito nomeado ou assistente técnico.
                     </div>
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-                  {/* Comment */}
-                  {review.comment && (
-                    <p className="text-sm font-medium text-primary/80 leading-relaxed">
-                      {review.comment}
-                    </p>
-                  )}
+          {/* Reputação */}
+          <div id="perfil-reputacao" style={{ padding: "72px 26px 0" }}>
+            <div
+              className="landing-pill"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 9,
+                padding: "8px 16px",
+                background: "rgb(255, 255, 255)",
+                border: "1px solid rgb(234, 231, 226)",
+                marginBottom: 18,
+              }}
+            >
+              <Icon name="star" className="text-base" style={{ color: "rgb(193, 30, 99)" }} />
+              <span style={{ font: '600 13px / 1 "Hanken Grotesk", sans-serif', color: "rgb(59, 13, 22)" }}>
+                {media > 0 ? `Avaliação ${mediaLabel} / 5,0 · ${reviewsTotal} avaliações` : "Ainda sem avaliações"}
+              </span>
+            </div>
 
-                  {/* Date */}
-                  <p className="text-[10px] font-bold text-primary/30 uppercase tracking-wider">
-                    {new Date(review.submitted_at).toLocaleDateString("pt-BR")}
+            <div className="grid gap-8 max-lg:!grid-cols-1" style={{ gridTemplateColumns: "1fr 1.1fr", alignItems: "start" }}>
+              <h2
+                style={{
+                  margin: 0,
+                  font: "800 34px / 1.14 Figtree, sans-serif",
+                  letterSpacing: "-0.03em",
+                  color: "rgb(59, 13, 22)",
+                }}
+              >
+                Confiança construída laudo após laudo
+              </h2>
+              {destaque && (
+                <div
+                  style={{
+                    background: "rgb(255, 255, 255)",
+                    border: "1px solid rgb(234, 231, 226)",
+                    borderRadius: 16,
+                    padding: 26,
+                  }}
+                >
+                  <p style={{ margin: "0 0 16px", font: '400 16px / 1.6 "Hanken Grotesk", sans-serif', color: "rgb(59, 13, 22)" }}>
+                    {`“${destaque.comment}”`}
                   </p>
-
-                  {/* Accountant reply */}
-                  {review.reply_text && (
-                    <div className="ml-6 pl-4 border-l-2 border-secondary/40 space-y-1">
-                      <p className="text-[10px] font-bold text-secondary uppercase tracking-wider">
-                        Resposta do Contador
-                      </p>
-                      <p className="text-sm font-medium text-primary/70">
-                        {review.reply_text}
-                      </p>
-                    </div>
-                  )}
+                  <div style={{ font: '600 14px / 1.3 "Hanken Grotesk", sans-serif', color: "rgb(28, 27, 26)" }}>
+                    {destaque.client_name || "Cliente"}
+                  </div>
+                  <div style={{ font: '400 13px / 1.3 "Hanken Grotesk", sans-serif', color: "rgb(140, 127, 130)" }}>
+                    {new Date(destaque.submitted_at).toLocaleDateString("pt-BR")}
+                  </div>
                 </div>
-              ))}
-
-              {/* Show total count */}
-              {reviewsTotal > reviews.length && (
-                <p className="text-center text-xs font-bold text-primary/40 uppercase tracking-widest">
-                  Mostrando {reviews.length} de {reviewsTotal} avaliações
-                </p>
               )}
             </div>
+
+            {reviewsLoading ? (
+              <div className="flex items-center justify-center" style={{ padding: "40px 0" }}>
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-secondary/20 border-t-secondary" />
+              </div>
+            ) : reviews.length === 0 ? (
+              <div
+                style={{
+                  marginTop: 26,
+                  border: "1px dashed rgb(228, 226, 222)",
+                  borderRadius: 16,
+                  padding: 40,
+                  textAlign: "center",
+                  font: '400 14px / 1.5 "Hanken Grotesk", sans-serif',
+                  color: "rgb(140, 127, 130)",
+                }}
+              >
+                Este perito ainda não recebeu avaliações de clientes.
+              </div>
+            ) : (
+              <>
+                <div
+                  className="grid gap-4 max-lg:!grid-cols-1"
+                  style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))", marginTop: 26 }}
+                >
+                  {demais.slice(0, 3).map((review) => (
+                    <div
+                      key={review.id}
+                      style={{
+                        background: "rgb(255, 255, 255)",
+                        border: "1px solid rgb(234, 231, 226)",
+                        borderRadius: 16,
+                        padding: 22,
+                      }}
+                    >
+                      <div style={{ display: "flex", gap: 2, marginBottom: 12 }}>
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Icon
+                            key={s}
+                            name={s <= review.rating ? "star" : "star_outline"}
+                            className="text-sm"
+                            style={{ color: s <= review.rating ? "rgb(193, 30, 99)" : "rgb(214, 208, 205)" }}
+                          />
+                        ))}
+                      </div>
+                      {review.comment && (
+                        <p style={{ margin: "0 0 14px", font: '400 14px / 1.55 "Hanken Grotesk", sans-serif', color: "rgb(59, 13, 22)" }}>
+                          {review.comment}
+                        </p>
+                      )}
+                      <div style={{ font: '600 13px / 1.3 "Hanken Grotesk", sans-serif', color: "rgb(28, 27, 26)" }}>
+                        {review.client_name || "Cliente"}
+                      </div>
+                      {review.reply_text && (
+                        <div style={{ marginTop: 14, paddingLeft: 12, borderLeft: "2px solid rgb(253, 238, 244)" }}>
+                          <div
+                            style={{
+                              font: '600 10px / 1 "Hanken Grotesk", sans-serif',
+                              letterSpacing: "0.14em",
+                              textTransform: "uppercase",
+                              color: "rgb(193, 30, 99)",
+                              marginBottom: 6,
+                            }}
+                          >
+                            Resposta do perito
+                          </div>
+                          <p style={{ margin: 0, font: '400 13px / 1.5 "Hanken Grotesk", sans-serif', color: "rgb(92, 74, 78)" }}>
+                            {review.reply_text}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {reviewsTotal > reviews.length && (
+                  <p
+                    style={{
+                      marginTop: 18,
+                      textAlign: "center",
+                      font: '600 13px / 1 "Hanken Grotesk", sans-serif',
+                      color: "rgb(140, 127, 130)",
+                    }}
+                  >
+                    Mostrando {reviews.length} de {reviewsTotal} avaliações
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Publicações */}
+          {posts.length > 0 && (
+            <div id="perfil-insights" style={{ padding: "72px 26px 0" }}>
+              <h2
+                style={{
+                  margin: "0 0 10px",
+                  font: "800 34px / 1.14 Figtree, sans-serif",
+                  letterSpacing: "-0.03em",
+                  color: "rgb(59, 13, 22)",
+                }}
+              >
+                Páginas internas
+              </h2>
+              <p style={{ margin: "0 0 30px", font: '400 15px / 1.55 "Hanken Grotesk", sans-serif', color: "rgb(92, 74, 78)" }}>
+                Conteúdo técnico publicado pelo perito, dentro do Provimento 205/2021.
+              </p>
+              <div className="grid gap-4 max-lg:!grid-cols-1" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+                {posts.slice(0, 6).map((post, i) => (
+                  <article
+                    key={post.id}
+                    className="overflow-hidden"
+                    style={{ borderRadius: 16, background: "rgb(255, 255, 255)", border: "1px solid rgb(234, 231, 226)" }}
+                  >
+                    <div
+                      className="relative overflow-hidden"
+                      style={{
+                        height: 150,
+                        background: TINTAS[i % TINTAS.length],
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {post.cover_url ? (
+                        <img
+                          src={post.cover_url}
+                          alt=""
+                          style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.55 }}
+                        />
+                      ) : (
+                        <Icon name="article" className="text-4xl" style={{ color: "rgba(255, 255, 255, 0.35)" }} />
+                      )}
+                    </div>
+                    <div style={{ padding: 20 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                        <span
+                          style={{
+                            font: '700 10px / 1 "Hanken Grotesk", sans-serif',
+                            letterSpacing: "0.12em",
+                            textTransform: "uppercase",
+                            color: "rgb(193, 30, 99)",
+                          }}
+                        >
+                          {post.tag}
+                        </span>
+                        <span style={{ font: '400 11px / 1 "Hanken Grotesk", sans-serif', color: "rgb(163, 154, 147)" }}>
+                          {new Date(post.published_at).toLocaleDateString("pt-BR")}
+                        </span>
+                      </div>
+                      <h3 style={{ margin: "0 0 8px", font: "700 16px / 1.3 Figtree, sans-serif", color: "rgb(28, 27, 26)" }}>
+                        {post.title}
+                      </h3>
+                      <p style={{ margin: 0, font: '400 13px / 1.5 "Hanken Grotesk", sans-serif', color: "rgb(124, 114, 109)" }}>
+                        {post.excerpt}
+                      </p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
           )}
-        </Card>
+
+          {/* Galeria */}
+          {profile.photo_urls && profile.photo_urls.length > 0 && (
+            <div style={{ padding: "72px 26px 0" }}>
+              <div
+                className="grid gap-4 max-lg:!grid-cols-2"
+                style={{ gridTemplateColumns: `repeat(${Math.min(profile.photo_urls.length, 4)}, minmax(0, 1fr))` }}
+              >
+                {profile.photo_urls.slice(0, 8).map((url, idx) => (
+                  <div key={idx} className="overflow-hidden" style={{ borderRadius: 16, aspectRatio: "4 / 3" }}>
+                    <img
+                      src={url}
+                      alt=""
+                      className="transition-transform duration-500 hover:scale-105 motion-reduce:hover:scale-100"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Fecho */}
+          <div style={{ padding: "72px 26px 26px" }}>
+            <div
+              className="relative overflow-hidden"
+              style={{ borderRadius: 20, background: "rgb(28, 27, 26)", padding: "48px 40px", textAlign: "center" }}
+            >
+              <h2
+                style={{
+                  margin: "0 0 12px",
+                  font: "800 30px / 1.16 Figtree, sans-serif",
+                  letterSpacing: "-0.02em",
+                  color: "rgb(255, 255, 255)",
+                }}
+              >
+                Comece o rito com {profile.name}
+              </h2>
+              <p
+                style={{
+                  margin: "0 0 26px",
+                  font: '400 15px / 1.55 "Hanken Grotesk", sans-serif',
+                  color: "rgba(255, 255, 255, 0.66)",
+                }}
+              >
+                Vínculo autorizado, escopo definido e laudo versionado no mesmo expediente.
+              </p>
+              <button
+                type="button"
+                onClick={contratar}
+                className="landing-pill"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 9,
+                  height: 46,
+                  padding: "0 26px",
+                  background: "rgb(255, 255, 255)",
+                  font: '700 15px / 1 "Hanken Grotesk", sans-serif',
+                  color: "rgb(28, 27, 26)",
+                }}
+              >
+                <Icon name="handshake" className="text-lg" />
+                Contratar
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {bindOpen && profile && (
@@ -447,6 +838,6 @@ export function AccountantPublicProfile() {
           }}
         />
       )}
-    </PageContainer>
+    </div>
   );
 }
