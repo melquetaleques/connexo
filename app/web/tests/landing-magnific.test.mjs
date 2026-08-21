@@ -86,3 +86,48 @@ test("landing reproduz o vocabulario de componentes do modelo", () => {
     assert.ok(landingPage.includes(`data-testid="${id}"`), `faltando data-testid="${id}"`);
   }
 });
+
+test("landing porta o hero, as abas e a trilha do mockup", () => {
+  const heroLista = readFileSync(join(landingDir, "MagHeroLista.tsx"), "utf8");
+  const confianca = readFileSync(join(landingDir, "MagConfianca.tsx"), "utf8");
+  const tabs = readFileSync(join(landingDir, "MagTabs.tsx"), "utf8");
+  const painel = readFileSync(join(landingDir, "MagPainel.tsx"), "utf8");
+  const css = readFileSync(join(root, "../src/index.css"), "utf8");
+  const nav = readFileSync(join(landingDir, "MagNav.tsx"), "utf8");
+
+  const ritoItems = [
+    "Cadastrar o perito",
+    "Vincular com base legal",
+    "Controlar prazos",
+    "Redigir o laudo",
+    "Responder quesitos",
+    "Assinar e entregar",
+    "Publicar a vitrine",
+  ];
+  for (const item of ritoItems) {
+    assert.ok(heroLista.includes(item), `lista do hero sem "${item}"`);
+  }
+  assert.equal(ritoItems.length, 7);
+
+  assert.match(confianca, /Usado por 47 escritórios de advocacia e contabilidade/);
+  for (const nome of ["Machado", "Pereira & Costa", "Duarte", "Ribeiro Perícias", "Vale Norte", "Aurora"]) {
+    assert.ok(confianca.includes(nome), `trust strip sem "${nome}"`);
+  }
+
+  for (const tab of ["Vínculo", "Prazos", "Laudo", "Vitrine", "LGPD"]) {
+    assert.ok(tabs.includes(`"${tab}"`) || tabs.includes(`label: "${tab}"`) || tabs.includes(`{ label: "${tab}"`), `aba ausente: ${tab}`);
+  }
+
+  for (const campo of ["Escopo de documentos", "Prazo de retenção", "Trilha de auditoria", "Revogação pelo cliente"]) {
+    assert.ok(painel.includes(campo), `trilha LGPD sem "${campo}"`);
+  }
+
+  assert.match(landingPage, /minHeight:\s*760/);
+  assert.doesNotMatch(landingPage, /min-h-\[92vh\]/);
+  assert.match(css, /\.landing-pill\s*\{[^}]*border-radius:\s*8px/);
+
+  for (const label of ["Expediente", "Peritos", "Recursos", "Escritórios", "Planos", "Buscar processo", "Entrar", "Criar conta"]) {
+    assert.ok(nav.includes(label), `nav sem "${label}"`);
+  }
+  assert.doesNotMatch(nav, /\bfixed\b/, "MagNav ainda é barra fixa");
+});

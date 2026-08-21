@@ -2,24 +2,60 @@ import { MagBotao } from "./MagBotao";
 
 export function MagHero() {
   return (
-    <div data-testid="mag-hero">
-      <span className="landing-pill landing-glass-soft backdrop-blur-xl inline-flex items-center min-h-8 px-3 mb-6 font-ui text-xs font-semibold text-white">
-        Expediente com CRC à vista
-      </span>
-      <h1 className="landing-hero-title font-display text-white mb-6">
-        O laudo que a tese precisa.
-        <br />
-        O cliente no meio.
+    <div data-testid="mag-hero" style={{ paddingLeft: 60 }} className="max-lg:!pl-0">
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 12,
+          height: 42,
+          padding: "0 18px",
+          borderRadius: 8,
+          background: "rgba(255, 255, 255, 0.13)",
+          border: "1px solid rgba(255, 255, 255, 0.16)",
+          marginBottom: 26,
+        }}
+      >
+        <span style={{ font: '700 14px / 1 "Hanken Grotesk", sans-serif', color: "rgb(255, 255, 255)" }}>
+          Perícia contábil judicial
+        </span>
+        <span style={{ font: '500 14px / 1 "Hanken Grotesk", sans-serif', color: "rgba(255, 255, 255, 0.6)" }}>
+          CPC art. 465
+        </span>
+        <span style={{ font: '700 14px / 1 "Hanken Grotesk", sans-serif', color: "rgb(255, 77, 141)" }}>
+          →
+        </span>
+      </div>
+      <h1
+        className="font-display"
+        style={{
+          margin: "0 0 22px",
+          fontWeight: 800,
+          fontSize: 58,
+          lineHeight: 1.09,
+          letterSpacing: "-0.03em",
+          color: "rgb(255, 255, 255)",
+          maxWidth: "15ch",
+        }}
+      >
+        O laudo que a tese precisa. O cliente no meio.
       </h1>
-      <p className="font-ui text-base text-white mb-8 max-w-xl">
-        Advogado pede o número, cliente autoriza o dado, contador assina o laudo.
+      <p
+        style={{
+          margin: "0 0 30px",
+          font: '400 17px / 1.55 "Hanken Grotesk", sans-serif',
+          color: "rgba(255, 255, 255, 0.86)",
+          maxWidth: "52ch",
+        }}
+      >
+        Todo o rito da prova pericial em um só lugar. Vínculo autorizado, prazos, laudo versionado e entrega assinada — para advocacia, perícia e cliente.
       </p>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <MagBotao href="#landing-personas" variant="light">
-          Escolher meu papel
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <MagBotao to="/login" variant="light">
+          Acessar o expediente
         </MagBotao>
-        <MagBotao to="/login" variant="ghost" className="text-white">
-          Já tenho conta
+        <MagBotao href="#produto" variant="solid">
+          <span style={{ fontSize: 11 }}>▶</span> Por que Connexo?
         </MagBotao>
       </div>
     </div>

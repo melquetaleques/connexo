@@ -26,7 +26,7 @@ export function StatCard({
         <div className="flex items-center justify-between mb-4">
           <div
             className={cn(
-              "w-12 h-12 rounded-2xl flex items-center justify-center",
+              "w-[34px] h-[34px] rounded-[9px] flex items-center justify-center",
               highlight ? "bg-secondary/10 text-secondary" : "bg-surface-2 text-primary/40"
             )}
           >

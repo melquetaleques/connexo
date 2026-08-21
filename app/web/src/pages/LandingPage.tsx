@@ -100,7 +100,11 @@ function HeroSection() {
   return (
     <section
       data-testid="landing-hero"
-      className="relative overflow-hidden bg-mg-ink text-white pt-28 pb-8 min-h-[92vh] flex flex-col"
+      className="relative overflow-hidden text-white flex flex-col"
+      style={{
+        background: "rgb(78, 24, 38)",
+        minHeight: 760,
+      }}
     >
       <div
         data-hero-parallax
@@ -113,18 +117,37 @@ function HeroSection() {
           className="mag-photo-img mag-ken-burns"
         />
       </div>
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(rgba(48, 12, 22, 0.62), rgba(48, 12, 22, 0.32) 42%, rgba(38, 9, 17, 0.9)), radial-gradient(70% 60% at 14% 30%, rgba(52, 10, 22, 0.72), transparent 68%)",
+        }}
+      />
       <div className="mag-field mag-veil landing-field-hero" aria-hidden="true">
         <div className="mag-grain" aria-hidden="true" />
       </div>
-      <div className="relative flex-1 max-w-6xl mx-auto px-5 sm:px-8 grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
-        <MagHero />
-        <MagHeroLista />
+      <MagNav />
+      <div
+        className="relative flex-1"
+        style={{ padding: "0 40px", display: "flex", alignItems: "center" }}
+      >
+        <div
+          className="grid lg:grid-cols-2 items-center w-full"
+          style={{
+            maxWidth: 1600,
+            margin: "0 auto",
+            gap: 40,
+            padding: "70px 0 40px",
+          }}
+        >
+          <MagHero />
+          <MagHeroLista />
+        </div>
       </div>
       <div className="relative">
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-mg-ink/75 to-transparent"
-          aria-hidden="true"
-        />
         <MagConfianca />
       </div>
     </section>
@@ -132,7 +155,7 @@ function HeroSection() {
 }
 
 function ProductSection() {
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState(4);
   const [shown, setShown] = useState(0);
   const [opaque, setOpaque] = useState(true);
   const [paused, setPaused] = useState(false);
@@ -163,20 +186,20 @@ function ProductSection() {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduce || paused) return undefined;
     const id = window.setTimeout(() => {
-      setTab((t) => (t + 1) % 3);
+      setTab((t) => (t + 1) % 5);
     }, 4500);
     return () => window.clearTimeout(id);
   }, [tab, paused]);
 
   return (
-    <section id="produto" className="relative overflow-hidden bg-mg-ivory text-mg-ink py-20">
-      <div className="relative max-w-6xl mx-auto px-5 sm:px-8 space-y-6">
-        <div className="text-center max-w-2xl mx-auto">
+    <section id="produto" className="relative overflow-hidden bg-mg-ivory text-mg-ink" style={{ padding: "120px 40px 0" }}>
+      <div className="relative" style={{ maxWidth: 1220, margin: "0 auto" }}>
+        <div className="text-center">
           <h2 className="mag-title-vinho font-display font-bold text-[2.75rem] leading-[1.05] tracking-tight mb-4 text-mg-vinho">
-            Um só expediente
+            Um só lugar para todo o rito
           </h2>
-          <p className="font-ui text-base text-mg-ink/55 mb-6">
-            Catálogo, consentimento e timeline no mesmo lugar — o rito visível para os três.
+          <p className="font-ui text-base text-mg-ink mb-6">
+            Escolha o ponto de partida. Cada papel, cada prazo, cada documento.
           </p>
         </div>
         <div className="flex justify-center">
@@ -191,8 +214,10 @@ function ProductSection() {
               }}
             >
               {shown === 0 ? <MockCatalogo /> : null}
-              {shown === 1 ? <MockConsentimento /> : null}
-              {shown === 2 ? <MockTimeline /> : null}
+              {shown === 1 ? <MockTimeline /> : null}
+              {shown === 2 ? <MockLaudo /> : null}
+              {shown === 3 ? <MockVitrine /> : null}
+              {shown === 4 ? <MockConsentimento /> : null}
             </div>
           </MagPainel>
         </div>
@@ -527,7 +552,6 @@ export function LandingPage() {
   useHeroParallax();
   return (
     <div className="landing-root font-ui min-h-screen overflow-x-hidden text-mg-ink">
-      <MagNav />
       <HeroSection />
       <ProductSection />
       <MagStrip />

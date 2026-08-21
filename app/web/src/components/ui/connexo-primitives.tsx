@@ -98,7 +98,7 @@ export function Card({ children, className, padding, padded, onClick }: CardProp
     <div
       onClick={onClick}
       className={cn(
-        "bg-white/80 rounded-2xl border border-outline shadow-[0_8px_28px_rgba(64,16,30,0.05)] backdrop-blur-sm",
+        "bg-white/80 rounded-[16px] border border-outline shadow-[0_8px_28px_rgba(64,16,30,0.05)] backdrop-blur-sm",
         CARD_PADDING[pad] ?? CARD_PADDING.md,
         onClick &&
           "cursor-pointer transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(64,16,30,0.10)] hover:border-secondary/30 active:scale-[0.99] motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100",
@@ -135,7 +135,7 @@ export function GoldButton({
   title,
 }: GoldButtonProps) {
   const base = cn(
-    "inline-flex items-center justify-center gap-2 min-h-11 px-7 py-3 rounded-xl text-base font-semibold uppercase tracking-wide leading-none transition-all duration-300 ease-out font-theme-body motion-reduce:transition-none motion-reduce:active:scale-100",
+    "inline-flex items-center justify-center gap-2 min-h-11 px-7 py-3 rounded-[8px] text-base font-semibold uppercase tracking-wide leading-none transition-all duration-300 ease-out font-theme-body motion-reduce:transition-none motion-reduce:active:scale-100",
     variant === "primary" &&
       "bg-primary text-white hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 active:scale-[0.97]",
     variant === "ghost" &&
@@ -175,7 +175,7 @@ export function GhostButton({
     <button
       type={type}
       className={cn(
-        "inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold uppercase tracking-widest transition-all duration-300 ease-out border border-outline text-primary hover:border-secondary/50 hover:text-secondary hover:bg-secondary/5 bg-white font-theme-body active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100",
+        "inline-flex items-center justify-center gap-2 px-6 py-3 rounded-[8px] text-sm font-semibold uppercase tracking-widest transition-all duration-300 ease-out border border-outline text-primary hover:border-secondary/50 hover:text-secondary hover:bg-secondary/5 bg-white font-theme-body active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100",
         tone === "danger" && "border-rose-300 text-rose-700 hover:bg-rose-50",
         disabled && "opacity-50 pointer-events-none",
         className

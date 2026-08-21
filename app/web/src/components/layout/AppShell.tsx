@@ -61,11 +61,11 @@ export function AppShell({ role = "advogado" }: AppShellProps) {
 
   return (
     <div className="min-h-screen flex bg-surface-1 font-theme-body">
-      <aside className="w-72 shrink-0 bg-primary text-white flex flex-col relative z-20 shadow-2xl">
+      <aside className="w-[264px] shrink-0 bg-primary text-white flex flex-col relative z-20 shadow-2xl">
         <div className="p-8 pb-10">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center shadow-lg shadow-secondary/20">
-              <Icon name="balance" className="text-white text-base" />
+            <div className="w-[26px] h-[26px] rounded-[7px] bg-white text-primary flex items-center justify-center font-theme-display font-black text-[12px] leading-none">
+              C
             </div>
             <span className="text-xl font-semibold tracking-tight uppercase font-theme-display">Connexo</span>
           </div>
@@ -81,7 +81,7 @@ export function AppShell({ role = "advogado" }: AppShellProps) {
               to={item.to}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 rounded-full px-4 py-3 text-sm font-semibold transition-all duration-300 ease-out group relative overflow-hidden motion-reduce:transition-none",
+                  "flex items-center gap-3 rounded-[10px] px-[14px] py-3 text-sm font-semibold transition-all duration-300 ease-out group relative overflow-hidden motion-reduce:transition-none",
                   isActive
                     ? "bg-white/12 text-white shadow-inner ring-1 ring-white/15"
                     : "text-white/60 hover:text-white hover:bg-white/5"
@@ -98,7 +98,7 @@ export function AppShell({ role = "advogado" }: AppShellProps) {
         </nav>
 
         <div className="px-4 pb-3">
-          <div className="rounded-2xl p-4 border border-white/10 bg-white/5">
+          <div className="rounded-[12px] p-4 border border-white/10 bg-white/5">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 mb-1">Plano</p>
             <p className="text-sm font-semibold font-theme-display">Profissional</p>
             <p className="text-[10px] text-white/40 mt-1">Vitrine e prazos no mesmo expediente.</p>
@@ -106,7 +106,7 @@ export function AppShell({ role = "advogado" }: AppShellProps) {
         </div>
 
         <div className="p-4 mt-auto">
-          <div className="bg-white/5 rounded-2xl p-4 flex items-center gap-3 border border-white/10 transition-colors duration-300 hover:bg-white/8 motion-reduce:transition-none">
+          <div className="bg-white/5 rounded-[12px] p-4 flex items-center gap-3 border border-white/10 transition-colors duration-300 hover:bg-white/8 motion-reduce:transition-none">
             <Avatar initials={initials} size="md" tone="gold" />
             <div className="min-w-0">
               <p className="text-sm font-semibold truncate font-theme-display">{displayName}</p>
@@ -116,7 +116,7 @@ export function AppShell({ role = "advogado" }: AppShellProps) {
 
           <button
             onClick={logout}
-            className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white/40 hover:text-secondary transition-colors duration-300 rounded-full hover:bg-white/5 motion-reduce:transition-none"
+            className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white/40 hover:text-secondary transition-colors duration-300 rounded-[8px] hover:bg-white/5 motion-reduce:transition-none"
           >
             <Icon name="logout" className="text-lg" />
             Sair
@@ -132,7 +132,7 @@ export function AppShell({ role = "advogado" }: AppShellProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-surface-2 border border-outline">
+            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-[8px] bg-surface-2 border border-outline">
               <Icon name="search" className="text-primary/40" />
               <input
                 type="text"
@@ -141,7 +141,7 @@ export function AppShell({ role = "advogado" }: AppShellProps) {
               />
             </div>
 
-            <button className="relative w-10 h-10 flex items-center justify-center rounded-full bg-white border border-outline hover:border-secondary transition-all duration-300 group motion-reduce:transition-none">
+            <button className="relative w-10 h-10 flex items-center justify-center rounded-[8px] bg-white border border-outline hover:border-secondary transition-all duration-300 group motion-reduce:transition-none">
               <Icon name="notifications" className="text-primary/60 group-hover:text-secondary transition-colors" />
               <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-secondary border-2 border-white" />
             </button>

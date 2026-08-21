@@ -1,60 +1,90 @@
-import { Icon } from "@/components/ui/connexo-primitives";
 import { MagBotao } from "./MagBotao";
 
 const FAQS = [
   {
-    q: "O que o Connexo faz, na prática?",
-    a: "Liga três papéis que hoje se falam por e-mail e pasta compartilhada: o advogado pede a perícia, o cliente autoriza cada documento, o contador entrega o laudo. O processo inteiro fica visível para os três.",
+    q: "Quem pode atuar como perito na plataforma?",
+    a: "Contadores com CRC ativo. O cadastro valida registro e especialidade antes de liberar o recebimento de convites de vínculo.",
   },
   {
-    q: "Sou cliente. Meus dados vão para o perito sem eu ver?",
-    a: "Não. Cada documento tem consentimento LGPD próprio. Você escolhe o contador, autoriza o que ele pode ler e acompanha o andamento. Sem autorização, o laudo não começa.",
+    q: "O cliente precisa criar conta para autorizar?",
+    a: "Não. O consentimento é assinado por link único, com registro de IP, data e finalidade — e pode ser revogado pelo mesmo link.",
   },
   {
-    q: "O Connexo respeita a ética da OAB?",
-    a: "Sim. Honorários advocatícios e honorários do perito ficam separados. O contador recebe pelo trabalho técnico, nunca por indicação (Art. 7º do Código de Ética).",
+    q: "Como funciona a base legal de cada vínculo?",
+    a: "Cada vínculo registra finalidade, escopo de documentos, prazo de retenção e a base legal aplicável ao tratamento.",
   },
   {
-    q: "Preciso entender contabilidade para usar?",
-    a: "Não. O advogado descreve o escopo da perícia. O contador responde com o laudo. Você revisa, pede ajuste e usa o número na tese — sem virar perito.",
+    q: "A vitrine respeita o Provimento 205/2021 do CFOAB?",
+    a: "Sim. Campos informativos, sem mercantilização, promessa de resultado ou captação — com revisão antes da publicação.",
   },
   {
-    q: "Como o contador entra no catálogo?",
-    a: "Com CRC verificado, perfil público com slug próprio, vitrine de serviços e postagens, disponibilidade e avaliações. O cliente escolhe a partir disso, não de uma indicação opaca.",
-  },
-  {
-    q: "Posso usar sozinho ou preciso de um escritório?",
-    a: "Advogados autônomos cadastram o próprio processo. Escritórios convidam a equipe. Clientes entram por convite do processo. Contadores abrem o perfil público e passam a receber fila.",
+    q: "Consigo exportar o laudo e os anexos?",
+    a: "Sim, em PDF assinado com carimbo de tempo, acompanhado do índice de anexos e da memória de cálculo.",
   },
 ];
 
 export function MagFaq() {
   return (
-    <div className="relative overflow-hidden bg-mg-ivory text-mg-ink py-20">
+    <div className="relative overflow-hidden bg-mg-ivory text-mg-ink" style={{ padding: "130px 40px 150px" }}>
       <div className="mag-field mag-veil mag-field-ivory" aria-hidden="true">
         <div className="mag-grain" aria-hidden="true" />
       </div>
       <section
         data-testid="mag-faq"
-        className="relative max-w-6xl mx-auto px-5 sm:px-8 grid grid-cols-2 gap-4 sm:gap-12 items-start"
+        className="relative"
+        style={{
+          maxWidth: 1220,
+          margin: "0 auto",
+          display: "grid",
+          gridTemplateColumns: "minmax(0px, 0.5fr) minmax(0px, 1fr)",
+          gap: 60,
+          alignItems: "start",
+        }}
       >
         <div className="min-w-0">
-          <h2 className="mag-title-vinho font-display font-semibold tracking-tight text-xl sm:text-[2.75rem] mb-6 text-mg-vinho">
-            Perguntas antes de entrar
+          <h2
+            className="mag-title-vinho font-display text-mg-vinho"
+            style={{
+              margin: "0 0 26px",
+              fontWeight: 800,
+              fontSize: 34,
+              lineHeight: 1.18,
+              letterSpacing: "-0.03em",
+            }}
+          >
+            Respostas às perguntas mais comuns
           </h2>
-          <MagBotao href="#landing-personas">Escolher meu papel</MagBotao>
+          <MagBotao href="#landing-personas" variant="ghost">
+            Falar com o suporte
+          </MagBotao>
         </div>
-        <div className="min-w-0 space-y-3">
+        <div className="min-w-0">
           {FAQS.map((faq) => (
-            <details
-              key={faq.q}
-              className="landing-glass-light backdrop-blur-xl rounded-[16px]"
-            >
-              <summary className="flex items-center justify-between min-h-11 p-4 cursor-pointer list-none font-ui font-semibold text-sm sm:text-base text-mg-ink">
+            <details key={faq.q}>
+              <summary
+                className="flex items-center justify-between cursor-pointer list-none"
+                style={{
+                  gap: 24,
+                  padding: "22px 0",
+                  font: '500 17px / 1.4 "Hanken Grotesk", sans-serif',
+                  color: "rgb(59, 13, 22)",
+                }}
+              >
                 <span className="pr-3 min-w-0 break-words">{faq.q}</span>
-                <Icon name="expand_more" className="text-xl text-mg-ink shrink-0" />
+                <span style={{ color: "rgb(255, 77, 141)", fontWeight: 400 }} aria-hidden="true">
+                  +
+                </span>
               </summary>
-              <p className="px-4 pb-4 font-ui text-sm font-medium text-mg-ink leading-relaxed">{faq.a}</p>
+              <p
+                style={{
+                  margin: "0 0 18px",
+                  font: '400 15px / 1.65 "Hanken Grotesk", sans-serif',
+                  color: "rgb(92, 74, 78)",
+                  maxWidth: "66ch",
+                }}
+              >
+                {faq.a}
+              </p>
             </details>
           ))}
         </div>

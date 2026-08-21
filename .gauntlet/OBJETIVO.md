@@ -1,98 +1,97 @@
-# OBJETIVO — Porte literal do HTML do tema (landing + ajuste de painel)
+# OBJETIVO — Ciclo 3: fechar a lacuna com o tema (landing inteira + login/cadastro + internas)
 
-**Mudança de método em relação ao ciclo 1.** O ciclo 1 reimplementou o
-painel em Tailwind "no espírito do" mockup — passou na auditoria estrutural,
-mas o usuário, ao comparar a landing (obra de 11 ciclos anteriores) lado a
-lado com o modelo, viu que a reinterpretação livre diverge visualmente do
-tema real (raio de borda, nav, conteúdo da lista do hero, escala
-tipográfica). Instrução explícita do usuário: **"não é para reescrever o
-tema, é para usar o HTML do tema e aplicar as funcionalidades."**
+O ciclo 2 portou o **topo** da landing literalmente e passou na auditoria
+estrutural. O usuário olhou o resultado e apontou três coisas, todas
+confirmadas com medição pelo juiz:
 
-A partir de agora: **portar a estrutura DOM + estilos inline do mockup
-literalmente** para os componentes React (mesma hierarquia de elementos,
-mesmos valores de `style`, convertidos para JSX), e só então plugar a
-parte funcional (rotas reais via `react-router`, dados reais, handlers,
-estado) por cima — sem reinventar layout, raio, espaçamento ou cópia de
-texto por conta própria.
+1. **A lista do hero está desalinhada e pula.** Três posições de texto
+   distintas (767 / 737 / 770 px) porque o marcador `▶` entra e sai do
+   fluxo conforme a animação troca o item ativo.
+2. **Da metade da página para baixo o porte parou.** As 18 seções do
+   modelo existem, mas (a) sobraram 4 blocos legados que o modelo não
+   tem, deixando a página com 15.463px contra 9.132px do modelo (69% a
+   mais), e (b) onde o modelo mostra **mockup da UI do produto**, o app
+   mostra **foto de banco de imagem**.
+3. **Login e cadastro não foram portados** — foram só repintados com a
+   paleta nova, mantendo a estrutura antiga.
 
-## Contexto técnico — como ler o mockup
+Além disso o juiz achou um bug não relatado: **o indicador das abas é
+desenhado sobre a aba errada**.
 
-Os arquivos-fonte em `tema/Connexo paginas/*.html` são exports de uma
-ferramenta de design (bundle JS de ~1-4MB, com um blob de fontes
-base64 e um payload JSON gigante) — **não têm HTML estático legível**; o
-DOM real só existe depois do JS rodar num browser. Não adianta abrir com
-`cat`/`Read`.
+Este ciclo fecha essas lacunas e estende o porte literal para as telas
+internas.
 
-Por isso, o DOM real de cada uma das 9 páginas já foi extraído (renderizado
-num Chrome headless com `--dump-dom`, cortado para conter só o
-`<body>`) e salvo em `**.gauntlet/mockup-dom/*.html`**. Estes são a fonte
-de verdade — **HTML real, com todo `style="..."` inline preservado**,
-sem lixo de fonte/bundler:
+## Método (igual ao ciclo 2, que funcionou)
 
-| Arquivo | Página |
-|---|---|
-| `01-landing-dom-body.html` | Landing |
-| `02-login-dom-body.html` | Login |
-| `03-cadastro-dom-body.html` | Cadastro |
-| `04-painel-do-advogado-dom-body.html` | Painel do advogado |
-| `05-painel-do-perito-dom-body.html` | Painel do perito (= papel **contador** no app) |
-| `06-clientes-dom-body.html` | Clientes |
-| `07-processo-dom-body.html` | Processo |
-| `08-catalogo-dom-body.html` | Catálogo |
-| `09-perfil-publico-dom-body.html` | Perfil público |
+Fonte de verdade: `.gauntlet/mockup-dom/*.html` — DOM real renderizado
+das 9 páginas do tema, com todo `style="..."` inline preservado.
 
-**Atenção ao primeiro bloco de cada arquivo:** o `<div data-dc-tpl="7"
-style="position: sticky; ...">` logo no início, contendo os links
-`Landing / Login / Cadastro / Painel do advogado / ...`, é o **seletor de
-página da própria ferramenta de design** (compara com os 9 nomes de
-arquivo) — **não faz parte do design real, ignorar**. O design de verdade
-começa no `<section data-dc-tpl="20" id="...">` seguinte.
+- Ignorar o primeiro bloco de cada arquivo (`data-dc-tpl="7"`, os links
+  `Landing / Login / Cadastro / ...`): é o seletor de página da
+  ferramenta de design, não faz parte do design.
+- Converter `style="a: b"` → `style={{ a: 'b' }}` (camelCase),
+  preservando valores literais (px, cor, gradiente, raio).
+- Ler com `grep -n` + `sed -n '<ini>,<fim>p'`, nunca despejar o arquivo
+  inteiro no console.
+- **Atenção ao encoding:** o console desta máquina corrompe UTF-8. Texto
+  em português (acento, `ç`, `—`) deve ser escrito direto no arquivo
+  `.tsx`, nunca copiado através de saída de terminal. Conferir depois
+  com `grep` que não sobrou mojibake (`Ã`, `Â`, `�`).
 
-Como ler: `grep`/`sed` para achar a seção relevante pelo `id=` ou por
-texto âncora (ex.: `grep -n 'id="landing"'`), depois `sed -n
-'<inicio>,<fim>p'` para extrair o trecho. Cada elemento tem um atributo
-`data-dc-tpl="N"` (marcador da ferramenta, pode ser removido ou mantido
-como comentário — não precisa virar prop React) e um `style="..."` que
-deve virar `style={{ ... }}` em camelCase (`background-color` →
-`backgroundColor`), preservando os valores literais (cor, px, radius,
-gradiente) — não arredondar para um valor "parecido" de um token
-Tailwind existente a menos que o valor já bata exatamente.
+## Decisões já tomadas pelo usuário (não reabrir)
 
-## O que já foi corrigido (achado nesta sessão, não refazer)
-
-Uma causa raiz de alto impacto já identificada: `.landing-pill` em
-`app/web/src/index.css` usa `border-radius: 999px` (pílula total) em
-**tudo** — botões, badges, busca. O modelo usa **~7-8px** de raio na
-maioria desses elementos (só elementos claramente circulares, como o
-avatar/logo "C", usam raio total). Ver T1.
+- **Blocos legados: REMOVER.** As seções `landing-personas` ("Três
+  papéis, o mesmo processo" + Cliente/Advogado/Contador), `landing-rito`
+  / "O expediente da perícia", "O rito completo, no painel" e "O que o
+  expediente segura" saem. A landing passa a ter exatamente as seções do
+  modelo.
+- **Foto → mockup do produto.** Nos cards de "Comece simples" e "Da
+  nomeação ao trânsito em julgado", entra mockup de UI (o repo já tem
+  `MockShell`/`Mock*` em `components/landing/`), como no modelo. Foto de
+  banco de imagem sobra só onde o modelo usa foto (hero; conferir o
+  fecho no DOM antes de decidir).
 
 ## Escopo
 
 Pode editar:
-- `app/web/src/components/landing/**` (todos os `Mag*.tsx`, `RitoChapter.tsx`, `MockShell.tsx`, `controls/**`) — **landing deixa de estar congelada**
+- `app/web/src/components/landing/**`
 - `app/web/src/pages/LandingPage.tsx`
-- `app/web/src/index.css` (classes `.landing-*`/`.mag-*`, incluindo a correção de raio)
-- `app/web/src/components/layout/AppShell.tsx`, `app/web/src/components/ui/connexo-primitives.tsx`, `app/web/src/components/ui/connexo-icons.tsx` (ajustes pontuais de raio/spacing pra bater com `04-`/`05-painel-do-*-dom-body.html`, **sem desfazer** a paleta/componentização do ciclo 1 — ver T9)
-- Páginas de painel já tocadas no ciclo 1 (mesma lista do `OBJETIVO.md` anterior, arquivo `.gauntlet/cycle-1/prompt.md` tem a lista completa se precisar reconferir)
-- `.gauntlet/mockup-dom/**` (só leitura — não editar, é a referência)
+- `app/web/src/pages/LoginPage.tsx`, `RegisterPage.tsx`
+- `app/web/src/components/layout/AppShell.tsx`
+- `app/web/src/components/ui/connexo-primitives.tsx`, `connexo-icons.tsx`
+- `app/web/src/components/dashboard/**`
+- `app/web/src/pages/LawyerDashboard.tsx`, `AccountantDashboard.tsx`, `ClientDashboard.tsx`
+- `app/web/src/pages/ClientsPage.tsx`, `ClientDetailPage.tsx`
+- `app/web/src/pages/ProcessPage.tsx`, `LawyerProcessesPage.tsx`, `AccountantProcessesPage.tsx`
+- `app/web/src/pages/adv/**`, `app/web/src/pages/acc/**`
+- `app/web/src/pages/cli/CatalogPage.tsx`, `app/web/src/pages/ClientProcessDetail.tsx`
+- `app/web/src/pages/public/AccountantPublicProfile.tsx`
+- `app/web/src/index.css`
+- `app/web/tests/landing-*.test.mjs` (ajuste justificado — ver T12)
+- `app/web/public/landing/**` (só remover foto que deixou de ser usada, se for o caso)
 
 NÃO pode editar:
-- `.git/`, `.gauntlet/OBJETIVO.md`, `.gauntlet/TASKS.md`, `.env*`, segredos
-- `app/web/src/App.tsx`, `main.tsx`, `services/**`, `hooks/useAuth.tsx`, `app/api/**` — nenhuma rota, contrato de API ou lógica de auth muda
-- `data-testid` existentes — não remover (pode adicionar novos)
-- Arquivos de página duplicados/mortos (mesma lista do `OBJETIVO.md` do ciclo 1)
+- `.git/`, `.gauntlet/**` (inclusive `mockup-dom/`, que é referência), `.env*`, segredos
+- `app/web/src/App.tsx`, `main.tsx`, `services/**`, `hooks/useAuth.tsx`, `app/api/**`
+- `app/web/vite.config.ts` — **está temporariamente apontando o proxy para
+  `https://connexo.ad.vlog.br` para o usuário conferir as telas internas.
+  Não commitar, não "consertar" de volta, não tocar.**
+- Arquivos de página duplicados/mortos: `pages/AccountantCatalogPage.tsx`,
+  `pages/AccountantProcessDetail.tsx`, `pages/AccountantProfileEdit.tsx`,
+  `pages/AccountantPublicProfile.tsx`, `pages/cli/ClientProcessDetail.tsx`,
+  `pages/DashboardPage.tsx`
 
 ## Critérios de êxito globais
 
-- [ ] `cd app/web && npx tsc --noEmit` — no máximo os 3 erros baseline já conhecidos (arquivo morto)
+- [ ] `cd app/web && npx tsc --noEmit` — no máximo os 3 erros baseline de `pages/AccountantProcessDetail.tsx` (arquivo morto)
 - [ ] `cd app/web && npm run build` — exit 0
-- [ ] `cd app/web && node --test tests/*.test.mjs` — **os testes atuais podem precisar de ajuste já que o conteúdo da landing muda de propósito** (ex.: lista do hero passa a ter 7 itens de processo, não 5 de produto) — se um teste antigo checa um comportamento que o modelo explicitamente contradiz, ajuste o teste e documente por quê no VEREDITO; não é permitido apagar um teste sem substituir pela asserção equivalente atualizada
-- [ ] Nenhum `data-testid` removido
-- [ ] `git diff -- app/web/src/App.tsx app/web/src/main.tsx 'app/web/src/services/**' 'app/api/**'` vazio
-- [ ] Raio de borda: nenhum elemento não-circular da landing usa `border-radius: 999px`/`rounded-full` onde o mockup correspondente usa ~7-8px (checagem por amostragem do juiz, comparando contra `.gauntlet/mockup-dom/01-landing-dom-body.html`)
+- [ ] `cd app/web && node --test tests/*.test.mjs` — 0 falhas
+- [ ] `git diff -- app/web/src/App.tsx app/web/src/main.tsx app/web/vite.config.ts 'app/web/src/services/**' 'app/api/**' app/web/src/hooks/useAuth.tsx` **vazio**
+- [ ] Nenhum handler de submit/fetch/estado alterado nas telas internas — só apresentação
+- [ ] Nenhum mojibake introduzido: `grep -rn 'Ã\|Â\|�' app/web/src --include=*.tsx` sem resultado novo
 
-## Fora de escopo (não fazer)
+## Fora de escopo
 
-- Não mudar fonte global além do que já foi decidido (Hanken Grotesk/Figtree como `theme-body`/`theme-display`, já disponíveis desde o ciclo 1)
-- Não tocar rotas, API, auth
-- Não apagar `.gauntlet/mockup-dom/**` — é referência viva para os próximos ciclos
+- Não tocar rotas, API, auth, contratos de serviço
+- Não adicionar dependência nova
+- Não mudar as fontes já definidas (`theme-body` Hanken Grotesk / `theme-display` Figtree)

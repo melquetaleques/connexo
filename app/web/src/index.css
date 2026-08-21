@@ -135,6 +135,12 @@ button, a, input, select, textarea {
 }
 
 .landing-pill {
+  /* 01-landing-dom-body.html: hero CTAs, busca, badge CPC — border-radius: 8px */
+  border-radius: 8px;
+}
+
+.landing-capsule {
+  /* 01-landing-dom-body.html: abas Vínculo/Prazos/Laudo/Vitrine/LGPD — border-radius: 999px */
   border-radius: 999px;
 }
 

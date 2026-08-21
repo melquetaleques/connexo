@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
 const CAPS = [
-  { title: "Catálogo com CRC" },
-  { title: "Consentimento LGPD" },
-  { title: "Timeline do rito" },
-  { title: "Laudo versionado" },
-  { title: "Vitrine pública" },
+  { title: "Cadastrar o perito", indent: false },
+  { title: "Vincular com base legal", indent: false },
+  { title: "Controlar prazos", indent: false },
+  { title: "Redigir o laudo", indent: false },
+  { title: "Responder quesitos", indent: true },
+  { title: "Assinar e entregar", indent: true },
+  { title: "Publicar a vitrine", indent: true, dim: true },
 ];
 
 export function MagHeroLista() {
@@ -33,7 +35,8 @@ export function MagHeroLista() {
   return (
     <ul
       data-testid="mag-hero-lista"
-      className="space-y-2"
+      style={{ display: "flex", flexDirection: "column", gap: 8, paddingLeft: 80, listStyle: "none", margin: 0 }}
+      className="max-lg:!pl-0"
       onMouseEnter={pause}
       onMouseLeave={resume}
       onFocus={pause}
@@ -43,6 +46,7 @@ export function MagHeroLista() {
     >
       {CAPS.map((item, i) => {
         const isActive = i === active;
+        const idleColor = item.dim ? "rgba(255, 255, 255, 0.14)" : "rgba(255, 255, 255, 0.24)";
         return (
           <li
             key={item.title}
@@ -52,23 +56,31 @@ export function MagHeroLista() {
               pause();
               setActive(i);
             }}
-            className="flex items-center gap-3 py-1.5 text-white bg-transparent font-ui font-normal tracking-tight text-[1.65rem] leading-tight"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: isActive ? 14 : 0,
+              font: "800 30px / 1.35 Figtree, sans-serif",
+              letterSpacing: "-0.02em",
+              color: isActive ? "rgb(255, 255, 255)" : idleColor,
+              paddingLeft: !isActive && item.indent ? 33 : 0,
+              background: "transparent",
+              transition: "opacity 450ms ease, color 450ms ease, padding-left 450ms ease",
+            }}
           >
             <span
-              className="w-4 shrink-0 font-ui text-lg text-mg-magenta"
               aria-hidden="true"
-              style={{ opacity: isActive ? 1 : 0 }}
+              style={{
+                color: "rgb(255, 77, 141)",
+                fontSize: 19,
+                width: isActive ? "auto" : 0,
+                overflow: "hidden",
+                opacity: isActive ? 1 : 0,
+              }}
             >
               ▶
             </span>
-            <p
-              className="min-w-0 text-white"
-              style={{
-                opacity: isActive ? 1 : 0.45,
-                transform: isActive ? "translateX(6px)" : "translateX(0)",
-                transition: "opacity 450ms ease, transform 450ms ease",
-              }}
-            >
+            <p className="min-w-0" style={{ margin: 0 }}>
               {item.title}
             </p>
           </li>

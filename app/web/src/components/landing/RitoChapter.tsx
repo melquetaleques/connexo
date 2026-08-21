@@ -49,7 +49,7 @@ export function RitoChapter({
           {chips.map((chip) => (
             <li
               key={chip}
-              className="min-h-11 px-3 inline-flex items-center rounded-full border border-outline bg-white font-ui text-xs text-mg-ink"
+              className="min-h-11 px-3 inline-flex items-center landing-pill border border-outline bg-white font-ui text-xs text-mg-ink"
             >
               {chip}
             </li>
