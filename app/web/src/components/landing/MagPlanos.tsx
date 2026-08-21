@@ -8,6 +8,8 @@ import {
   IconChip,
 } from "@/components/ui/connexo-icons";
 import { MagBotao } from "./MagBotao";
+import { MockCatalogo } from "./MockCatalogo";
+import { MockConsentimento } from "./MockConsentimento";
 
 const FEATURES = [
   {
@@ -16,7 +18,8 @@ const FEATURES = [
         <GlyphCatalogo />
       </IconChip>
     ),
-    text: "CRC visível no catálogo",
+    title: "CRC visível",
+    text: "Todo perito verificado no catálogo, antes de aceitar o processo.",
   },
   {
     icon: (
@@ -24,7 +27,8 @@ const FEATURES = [
         <GlyphConsentimento />
       </IconChip>
     ),
-    text: "Consentimento LGPD por documento",
+    title: "Consentimento por documento",
+    text: "LGPD arquivo a arquivo, com dono e data de autorização.",
   },
   {
     icon: (
@@ -32,7 +36,8 @@ const FEATURES = [
         <GlyphProcesso />
       </IconChip>
     ),
-    text: "Honorários do perito separados",
+    title: "Honorários separados",
+    text: "O perito cobra o laudo. O escritório cobra a tese. Sem mistura.",
   },
   {
     icon: (
@@ -40,7 +45,8 @@ const FEATURES = [
         <GlyphPrazo />
       </IconChip>
     ),
-    text: "Timeline com hora e responsável",
+    title: "Timeline com responsável",
+    text: "Cada etapa com hora, papel e quem assinou embaixo.",
   },
   {
     icon: (
@@ -48,7 +54,8 @@ const FEATURES = [
         <GlyphLaudo />
       </IconChip>
     ),
-    text: "Laudo versionado no processo",
+    title: "Laudo versionado",
+    text: "Toda revisão fica registrada no mesmo processo, sem sobrescrever.",
   },
   {
     icon: (
@@ -56,61 +63,96 @@ const FEATURES = [
         <GlyphVitrine />
       </IconChip>
     ),
-    text: "Vitrine pública com slug próprio",
+    title: "Vitrine pública",
+    text: "Perfil próprio com slug, avaliações e fila de processos recebidos.",
   },
 ];
 
+function PreviewCard({
+  title,
+  desc,
+  children,
+}: {
+  title: string;
+  desc: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <article className="mag-field mag-field-ink border border-white/10 rounded-[16px] p-6 sm:p-8 flex flex-col">
+      <h3 className="font-display font-semibold text-xl tracking-tight mb-3 text-white">{title}</h3>
+      <p className="font-ui text-sm text-white/60 mb-6 max-w-md">{desc}</p>
+      <div className="relative mt-auto h-64 overflow-hidden rounded-[16px] border border-white/10">
+        <div className="origin-top-left scale-[0.58] w-[172%] pointer-events-none">{children}</div>
+      </div>
+    </article>
+  );
+}
+
 export function MagPlanos() {
   return (
-    <section id="planos" data-testid="mag-planos" className="relative overflow-hidden bg-mg-ink text-white py-24">
-      <div className="mag-field mag-veil mag-field-ink" aria-hidden="true">
-        <div className="mag-grain" aria-hidden="true" />
-      </div>
+    <section
+      id="planos"
+      data-testid="mag-planos"
+      className="mag-field mag-field-ink relative overflow-hidden text-white py-24"
+    >
       <div className="relative max-w-6xl mx-auto px-5 sm:px-8">
-        <h2 className="font-display font-semibold tracking-tight text-[2rem] mb-8">
+        <h2 className="font-display font-semibold tracking-tight text-[2.75rem] leading-[1.05] mb-14 max-w-xl">
           Dois caminhos, o mesmo rito
         </h2>
-        <div className="grid grid-cols-2 gap-3 mb-8">
-          <article className="landing-glass backdrop-blur-xl rounded-[16px] p-5 sm:p-8 flex flex-col">
-            <p className="font-ui text-xs uppercase tracking-wide text-white mb-3">Advogado</p>
-            <h3 className="font-display font-semibold text-xl tracking-tight mb-3">
-              Sustentar a tese com número
-            </h3>
-            <p className="font-ui text-sm text-white mb-6">
+
+        <div className="grid sm:grid-cols-2 gap-10 mb-16">
+          <div>
+            <h3 className="font-display font-semibold text-xl tracking-tight mb-3">Advogado</h3>
+            <p className="font-ui text-sm text-white/60 mb-6 max-w-sm">
               Cadastra o processo, escolhe o perito no catálogo e revisa o laudo no expediente.
             </p>
-            <div className="mt-auto">
-              <MagBotao to="/register?role=advogado" className="w-full sm:w-auto">
-                Cadastrar escritório
-              </MagBotao>
-            </div>
-          </article>
-          <article className="rounded-[16px] bg-mg-ivory text-mg-ink p-5 sm:p-8 flex flex-col">
-            <p className="font-ui text-xs uppercase tracking-wide mb-3">Contador</p>
-            <h3 className="font-display font-semibold text-xl tracking-tight mb-3">
-              Assinar o laudo à vista
-            </h3>
-            <p className="font-ui text-sm font-medium text-mg-ink mb-6">
+            <MagBotao to="/register?role=advogado" variant="light">
+              Cadastrar escritório
+            </MagBotao>
+          </div>
+          <div>
+            <h3 className="font-display font-semibold text-xl tracking-tight mb-3">Contador</h3>
+            <p className="font-ui text-sm text-white/60 mb-6 max-w-sm">
               Abre a vitrine, recebe a fila com CRC visível e entrega a versão no mesmo processo.
             </p>
-            <div className="mt-auto">
-              <MagBotao to="/register?role=contador" className="w-full sm:w-auto">
-                Criar perfil público
-              </MagBotao>
-            </div>
-          </article>
+            <MagBotao to="/register?role=contador" variant="light">
+              Criar perfil público
+            </MagBotao>
+          </div>
         </div>
-        <ul className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {FEATURES.map((f) => (
-            <li
-              key={f.text}
-              className="rounded-[16px] border border-white/10 bg-mg-ink p-4 flex items-center gap-3"
-            >
-              <span className="shrink-0">{f.icon}</span>
-              <span className="font-ui text-sm font-medium text-white">{f.text}</span>
-            </li>
-          ))}
-        </ul>
+
+        <div className="grid sm:grid-cols-2 gap-4 mb-4">
+          <PreviewCard
+            title="Catálogo com CRC verificado"
+            desc="O advogado escolhe o perito pelo registro, disponibilidade e nota — não por indicação."
+          >
+            <MockCatalogo />
+          </PreviewCard>
+          <PreviewCard
+            title="Consentimento documento a documento"
+            desc="O cliente autoriza cada arquivo. Sem o sim, o perito não lê."
+          >
+            <MockConsentimento />
+          </PreviewCard>
+        </div>
+
+        <div className="mag-field mag-field-ink border border-white/10 rounded-[16px] p-6 sm:p-10">
+          <h3 className="font-display font-semibold text-xl tracking-tight mb-2">O que o rito segura</h3>
+          <p className="font-ui text-sm text-white/60 mb-8">
+            Regras que valem para advogado, cliente e contador, sempre no mesmo processo.
+          </p>
+          <ul className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {FEATURES.map((f) => (
+              <li key={f.title} className="flex items-start gap-3">
+                <span className="shrink-0">{f.icon}</span>
+                <div>
+                  <p className="font-ui text-sm font-semibold text-white mb-1">{f.title}</p>
+                  <p className="font-ui text-xs text-white/55 leading-relaxed">{f.text}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );

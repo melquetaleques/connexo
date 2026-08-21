@@ -53,22 +53,24 @@ export function MagHeroLista() {
               setActive(i);
             }}
             className="flex items-center gap-3 py-1.5 text-white bg-transparent font-ui font-normal tracking-tight text-[1.65rem] leading-tight"
-            style={{
-              opacity: isActive ? 1 : 0.45,
-              transition: "opacity 450ms ease",
-            }}
           >
             <span
               className="w-4 shrink-0 font-ui text-lg text-mg-magenta"
               aria-hidden="true"
-              style={{
-                opacity: isActive ? 1 : 0,
-                transition: "opacity 450ms ease",
-              }}
+              style={{ opacity: isActive ? 1 : 0 }}
             >
               ▶
             </span>
-            <p className="min-w-0 text-white">{item.title}</p>
+            <p
+              className="min-w-0 text-white"
+              style={{
+                opacity: isActive ? 1 : 0.45,
+                transform: isActive ? "translateX(6px)" : "translateX(0)",
+                transition: "opacity 450ms ease, transform 450ms ease",
+              }}
+            >
+              {item.title}
+            </p>
           </li>
         );
       })}

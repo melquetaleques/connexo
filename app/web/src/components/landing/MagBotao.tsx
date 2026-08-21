@@ -6,7 +6,7 @@ type MagBotaoProps = {
   to?: string;
   href?: string;
   onClick?: () => void;
-  variant?: "solid" | "ghost";
+  variant?: "solid" | "ghost" | "light";
   className?: string;
   type?: "button" | "submit";
 };
@@ -23,7 +23,9 @@ export function MagBotao({
   const skin =
     variant === "solid"
       ? "mag-botao-solid bg-mg-ink text-white hover:bg-black"
-      : "border border-current bg-transparent hover:bg-white/10";
+      : variant === "light"
+        ? "bg-white text-mg-ink hover:bg-mg-ivory"
+        : "border border-current bg-transparent hover:bg-white/10";
   const cls = `landing-pill inline-flex items-center justify-center gap-2 min-h-11 px-6 font-ui text-sm font-semibold tracking-tight ${skin} ${className}`;
 
   if (to) {

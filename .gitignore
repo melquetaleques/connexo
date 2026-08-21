@@ -38,3 +38,9 @@ coverage/
 *.cover
 tmp/
 temp/
+
+# Gauntlet runtime artifacts
+GAUNTLET-DONE.txt
+.gauntlet/cycle-*/stdout.log
+.gauntlet/cycle-*/stderr.log
+.gauntlet/cycle-*/grok.pid

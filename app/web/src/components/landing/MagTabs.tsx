@@ -31,7 +31,7 @@ export function MagTabs({ tab, onTab }: MagTabsProps) {
       data-testid="mag-tabs"
       ref={wrapRef}
       role="tablist"
-      className="relative inline-flex flex-wrap gap-2 p-1"
+      className="relative inline-flex flex-wrap gap-2 p-1 rounded-full bg-mg-ink/5"
     >
       <span
         aria-hidden="true"

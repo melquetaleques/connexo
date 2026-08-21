@@ -1,75 +1,128 @@
-# OBJETIVO — Ciclo 10 (fotografia e movimento)
+# OBJETIVO — Aplicar o tema Connexo (painel e telas internas)
 
-O usuário olhou o resultado do ciclo 9 e disse: *"onde no layout modelo tem esse
-monte de degradê? não está respeitando textura; está pobre nas animações"*. Ele
-tem razão nas três coisas, e a causa é uma só: **o modelo é fotografia** — o
-hero é uma foto de campo ao entardecer, o bento tem fotos dentro, o showcase é
-uma grade de fotos com rótulo. A proibição de imagem, herdada dos ciclos 1–7,
-obrigou a substituir foto por gradiente. Isso acabou.
+**Aplicar** — não reinventar — o tema definido em `tema/Connexo paginas/*.html`
+em todo o app (painel do advogado, contador, cliente, login, cadastro,
+clientes, processos, catálogo, perfil público e telas não mapeadas), na
+estrutura de páginas/rotas atual. Depois de aplicado o visual, aplicar as
+**animações** correspondentes (hover, transições, reveals) da mesma forma
+que a landing já faz. Preservar 100% dos recursos programáticos (rotas,
+chamadas de API, login/autenticação, lógica de negócio). Usar **princípios
+SOLID e componentização** — extrair vocabulário repetido (cards, tabelas,
+badges, cabeçalhos de página) em componentes reutilizáveis em vez de
+duplicar JSX estilizado em cada página. Manter a segurança da aplicação
+(não copiar `<script>`/HTML bruto do bundle do mockup, não usar
+`dangerouslySetInnerHTML`, não expor segredo). Mudança **predominantemente
+estética/UX/design** — zero alteração de rotas, API, autenticação ou
+lógica de negócio.
 
-## A restrição caiu (com regras)
+## Contexto
 
-Existem **10 fotos locais** em `app/web/public/landing/` (licença Pexels, ver
-`CREDITS.md`). Elas são o material deste ciclo. Regras:
-
-- Usar **estas** fotos (`/landing/<nome>.jpg` no src). Não baixar nada novo.
-- Todo gradiente que hoje simula fotografia **vira fotografia** com um véu de
-  cor por cima (overlay bordô/ink multiply ou gradiente de legibilidade), como
-  o modelo faz. `mag-field` continua existindo como fallback/moldura, não como
-  protagonista.
-- Grain continua por cima das fotos (o modelo tem textura de compressão).
-
-## Mapa foto → lugar (contrato; o juiz confere por `src`)
-
-| Foto | Onde entra |
-|---|---|
-| `hero-campo.jpg` | fundo full-bleed do hero, com véu escuro no topo p/ nav e texto (como a foto do modelo) |
-| `painel-retrato.jpg` | conteúdo central do `mag-painel` — o "rosto" grande do painel do modelo, atrás do painel de ferramenta em glass |
-| `tile-advocacia.jpg`, `tile-laudo.jpg`, `tile-consentimento.jpg`, `tile-vitrine.jpg` | tiles do `mag-showcase` (foto + pill de rótulo, como "Advertising"/"Product shots") |
-| `bento-advogado.jpg` | dentro do `bento-vinho` (thumbnail/fundo parcial com véu bordô) |
-| `bento-contador.jpg` | dentro do `bento-teal` (idem, véu petróleo) |
-| `fecho-campo.jpg` | fundo do `mag-fecho` com véu quente |
-| `tile-suave.jpg` | livre: `mag-vitrine-grande` ou faixa que precisar de vida |
-
-## Movimento (pacote completo)
-
-O modelo se move. Adicionar, respeitando `prefers-reduced-motion` (tudo vira
-estático sob reduce):
-
-- **M7 ken-burns**: as fotos grandes (hero, fecho, vitrine-grande, painel) com
-  zoom lento contínuo (scale 1→1.06, ~18s, alternando direção).
-- **M8 hover-zoom**: tiles do showcase e cards do bento: foto escala 1.04 e véu
-  clareia no hover (transition ~400ms).
-- **M9 parallax sutil** no hero: campo/foto desloca ~6–10px contra o scroll
-  (transform, não background-attachment).
-- **M10 marquee**: os selos de `mag-hero-confianca` deslizam em loop contínuo
-  lento (como a fila de logos do modelo).
-- Stagger real nos reveals do bento (delays incrementais).
-
-## Os dois números pendentes do ciclo 9 (continuam valendo)
-
-- **Proporção escura ∈ [20,35]%** — as fotos com véu escuro devem resolver.
-- **Contraste**: zerar a lista do `cycle-9/VEREDITO.md` (timestamps do rito,
-  microtextos de mock). ≥4.5:1 por pixel.
+- Referência de design (9 mockups HTML "bundled", grandes e não editáveis
+  diretamente — servem só de referência visual): `tema/Connexo paginas/`:
+  `01 Landing`, `02 Login`, `03 Cadastro`, `04 Painel do advogado`,
+  `05 Painel do perito` (= papel **contador** no app), `06 Clientes`,
+  `07 Processo`, `08 Catalogo`, `09 Perfil publico`.
+- A landing (`LandingPage.tsx` + `components/landing/Mag*.tsx`) já foi
+  retemada em 11 ciclos de gauntlet anteriores a partir do mesmo tema e
+  **passa em 11/11 testes** (`app/web/tests/landing-*.test.mjs`). Ela fica
+  **congelada** (não reabrir esse trabalho), mas os tokens de cor que ela
+  cravou em `tailwind.config.js` (`mg-ink`, `mg-ivory`, `mg-vinho`,
+  `mg-magenta`, `mg-indigo`) já são a paleta literal extraída do mesmo
+  `tema/Connexo paginas/` — reusar esses hex é aplicar o tema, não
+  reinterpretá-lo.
+- Fonte do mockup (medida via browser real nos 9 arquivos): corpo em
+  **Hanken Grotesk**, títulos/branding em **Figtree**. A landing não usa
+  essas fontes (ficou em Plus Jakarta Sans/Cabinet Grotesk antes desta
+  tarefa existir) — como ela está congelada, a inconsistência entre
+  landing e painel é aceita por ora. Para todas as páginas **dentro do
+  escopo desta tarefa**, aplicar Hanken Grotesk (corpo) e Figtree
+  (headings/branding) como o mockup define — adicionar via Google
+  Fonts/Fontshare (mesmo mecanismo de preconnect já usado em
+  `index.html` para as fontes atuais) e configurar em
+  `tailwind.config.js` como nova entrada de `fontFamily` (ex.:
+  `theme-body`/`theme-display`), sem remover as entradas `sans`/`display`
+  atuais (a landing ainda depende delas).
+- O resto do app (painel/dashboard) hoje usa uma paleta **antiga e não
+  relacionada** — navy `#000830` / dourado `#C59D5C` — definida em
+  `theme.extend.colors.primary/secondary/surface/...` do
+  `tailwind.config.js`. Esses tokens (`primary`, `secondary`, `surface`,
+  `surface-1`, `surface-2`, `outline`, `paper`, `ink`) são usados por quase
+  todo arquivo fora de `components/landing` (confirmado por grep: 40+
+  arquivos). **Retemar essencialmente = trocar os valores hex desses
+  tokens para a família wine/cream já validada na landing, sem renomear
+  classes** — isso repinta a maior parte do app sem tocar em cada arquivo.
+  Depois disso, ajustes estruturais pontuais (layout do `AppShell`,
+  cards, tabelas, formulários) alinham cada tela ao mockup correspondente.
+- Rotas reais (única fonte de verdade — `app/web/src/App.tsx`): há
+  arquivos de página **duplicados e mortos** que NÃO são importados por
+  `App.tsx` (ex.: `pages/AccountantProcessDetail.tsx` vs
+  `pages/acc/AccountantProcessDetail.tsx` — só o segundo é usado; mesmo
+  padrão para `AccountantCatalogPage.tsx`, `AccountantProfileEdit.tsx`,
+  `AccountantPublicProfile.tsx`, `ClientProcessDetail.tsx`,
+  `DashboardPage.tsx`). **Não editar os arquivos mortos** — perda de
+  esforço e risco de "consertar" algo que nunca renderiza.
+- Baseline medido nesta sessão (2026-08-20):
+  - `node --test tests/*.test.mjs` → **11 passam, 0 falham**.
+  - `npx tsc --noEmit` → **3 erros pré-existentes**, todos em
+    `src/pages/AccountantProcessDetail.tsx` (arquivo morto, fora de rota).
+    Não aumentar esse número; não é obrigatório zerá-lo (arquivo fora de
+    escopo).
+  - `npm run build` deve continuar funcionando (Vite).
 
 ## Escopo
 
 Pode editar:
-- `app/web/src/pages/LandingPage.tsx`, `app/web/src/components/landing/**`
+- `app/web/tailwind.config.js` (somente valores hex de
+  `primary/secondary/surface/surface-1/surface-2/on-surface-variant/outline/paper/ink`;
+  pode reaproveitar os hex já existentes de `mg-vinho/mg-ivory/mg-ink/mg-magenta/mg-indigo`)
+- `app/web/src/index.css` (regras globais fora do bloco `.mag-*`/`.landing-*`, que ficam congelados)
+- `app/web/src/components/ui/connexo-primitives.tsx`
 - `app/web/src/components/ui/connexo-icons.tsx`
-- `app/web/tailwind.config.js`, `app/web/src/index.css`, `app/web/index.html`
-- `app/web/tests/*.test.mjs` (novos; os 10 existentes não podem enfraquecer)
-- `.gauntlet/DESIGN-PLAN.md`
+- `app/web/src/components/layout/AppShell.tsx`
+- `app/web/src/components/dashboard/**`
+- `app/web/src/components/marketplace/**`
+- `app/web/src/components/lgpd/**`
+- `app/web/src/components/shared/**` (exceto `ErrorBoundary.tsx` — só classes visuais, não a lógica de captura de erro)
+- `app/web/src/pages/LoginPage.tsx`, `RegisterPage.tsx`
+- `app/web/src/pages/LawyerDashboard.tsx`, `AccountantDashboard.tsx`, `ClientDashboard.tsx`
+- `app/web/src/pages/ClientsPage.tsx`, `ClientDetailPage.tsx`
+- `app/web/src/pages/ProcessPage.tsx`, `LawyerProcessesPage.tsx`, `AccountantProcessesPage.tsx`
+- `app/web/src/pages/adv/LawyerProcessDetail.tsx`, `adv/LawyerSubscriptionPage.tsx`
+- `app/web/src/pages/acc/AccountantProcessDetail.tsx`, `acc/AccountantProfileEdit.tsx`
+- `app/web/src/pages/cli/CatalogPage.tsx` (rota real de `/cli/catalogo` e `/acc/catálogo-equivalente`, confira `App.tsx`)
+- `app/web/src/pages/ClientProcessDetail.tsx` (rota real de `/cli/processos/:id` — **não** `pages/cli/ClientProcessDetail.tsx`, que é morto), `ClientDocumentsPage.tsx`, `ClientNotificationsPage.tsx`
+- `app/web/src/pages/public/AccountantPublicProfile.tsx`
+- `app/web/src/pages/PostsPage.tsx`, `ServicesPage.tsx`, `UsersPage.tsx`, `SettingsPage.tsx`, `NotFoundPage.tsx`, `PagePlaceholder.tsx`
 
-NÃO pode: baixar/gerar imagem nova; deletar as 10 fotos; Go; painéis;
-`connexo-primitives.tsx`; `GoldButton`; os 10 testes existentes; commit/push.
+NÃO pode editar:
+- `.git/`, `.gauntlet/`, `.env*`, segredos
+- `app/web/src/components/landing/**`, `app/web/src/pages/LandingPage.tsx` (congelado, já aprovado)
+- Qualquer classe/regra `.mag-*` ou `.landing-*` em `index.css`
+- Tokens `mg-ink`, `mg-ivory`, `mg-vinho`, `mg-magenta`, `mg-indigo`, `mg-blue`, `mg-warm` em `tailwind.config.js` (só leitura/reuso de valor)
+- Arquivos de página duplicados/mortos (não importados em `App.tsx`):
+  `pages/AccountantCatalogPage.tsx`, `pages/AccountantProcessDetail.tsx`,
+  `pages/AccountantProfileEdit.tsx`, `pages/AccountantPublicProfile.tsx`,
+  `pages/cli/ClientProcessDetail.tsx`, `pages/DashboardPage.tsx`.
+- Qualquer arquivo em `app/api/**`, `app/web/src/services/**`, `hooks/useAuth.tsx`, `App.tsx`, `main.tsx` — nenhuma rota, chamada de API, contexto de auth ou lógica muda
+- `data-testid`, nomes de função exportada, assinaturas de props públicas — não remover nem renomear
 
 ## Critérios de êxito globais
 
-- [ ] build 0; tsc ≤3; `node --test` ≥10 verdes; go ok
-- [ ] As 10 fotos referenciadas (≥8 em uso real no DOM)
-- [ ] Zero fetch externo em runtime (fotos servidas de `/landing/`)
-- [ ] Sem overflow 375/768/1280; `<h1>` único; zero erro console
-- [ ] Reduced-motion: nada invisível, ken-burns/marquee/parallax parados
-- [ ] Congelados do c9 intactos: hue quente hero/fecho, h2 vinho, CTAs ink,
-      top-3 ≤55%, ordem das seções, testids, glass ≥21, ctrl ≥14
+- [ ] `cd app/web && npx tsc --noEmit` sai com no máximo os 3 erros pré-existentes de `pages/AccountantProcessDetail.tsx` (arquivo morto) — nenhum erro novo em outro arquivo
+- [ ] `cd app/web && npm run build` sai com exit 0
+- [ ] `cd app/web && node --test tests/*.test.mjs` continua 11/11 verdes (a landing não pode regredir)
+- [ ] `git diff --name-only` não toca nenhum arquivo fora do Escopo acima
+- [ ] `git diff -- app/web/src/App.tsx app/web/src/main.tsx 'app/web/src/services/**' 'app/api/**'` vazio — nenhuma rota, endpoint ou contrato de API muda
+- [ ] Nenhum `data-testid` existente foi removido (`git diff` só pode adicionar/mover, não apagar `data-testid=`)
+- [ ] As 3 sidebars de papel (advogado/contador/cliente) continuam com os mesmos itens de navegação e mesmos `to=` de rota do `AppShell.tsx` atual — só o visual muda
+- [ ] Nenhum arquivo novo/editado usa `dangerouslySetInnerHTML`, `eval`, ou HTML colado literalmente do bundle do mockup (`grep -rn "dangerouslySetInnerHTML\|<script" app/web/src` restrito aos arquivos do diff, deve ficar vazio)
+- [ ] Componentização: nenhum padrão visual usado em ≥3 páginas (card de estatística, cabeçalho de página com busca, badge de status, tabela de linhas) fica reimplementado do zero em cada arquivo — deve existir um componente compartilhado importado pelas páginas que o usam
+
+## Fora de escopo (não fazer)
+
+- Não re-tocar a landing — já aprovada, congelada (incluindo sua fonte atual)
+- Não deletar os arquivos de página duplicados/mortos — fora do escopo desta tarefa, mesmo que pareçam lixo
+- Não adicionar dependências de UI novas (sem libs de componente novas); fontes novas só via Google Fonts/Fontshare (mesmo mecanismo já usado), nunca arquivo binário de fonte copiado do bundle do mockup
+- Não mudar comportamento de formulários (validação, submit, mensagens de erro) — só aparência
+- Não mudar `useAuth`, `ProtectedRoute`, lógica de roles/permissão
+- Não copiar `<script>`, JSON de bundler ou base64 de fonte/imagem embutido nos arquivos `tema/Connexo paginas/*.html` para dentro do app — eles são só referência visual (abrir num servidor local + browser/devtools para extrair cor/estrutura), nunca `cat`/colar o arquivo inteiro

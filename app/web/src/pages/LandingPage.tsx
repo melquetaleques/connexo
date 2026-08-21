@@ -135,6 +135,7 @@ function ProductSection() {
   const [tab, setTab] = useState(0);
   const [shown, setShown] = useState(0);
   const [opaque, setOpaque] = useState(true);
+  const [paused, setPaused] = useState(false);
   const firstTab = useRef(true);
 
   useEffect(() => {
@@ -158,35 +159,43 @@ function ProductSection() {
     return () => window.clearTimeout(t);
   }, [tab]);
 
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || paused) return undefined;
+    const id = window.setTimeout(() => {
+      setTab((t) => (t + 1) % 3);
+    }, 4500);
+    return () => window.clearTimeout(id);
+  }, [tab, paused]);
+
   return (
     <section id="produto" className="relative overflow-hidden bg-mg-ivory text-mg-ink py-20">
-      <div className="mag-field mag-veil mag-field-ivory" aria-hidden="true">
-        <div className="mag-grain" aria-hidden="true" />
-      </div>
       <div className="relative max-w-6xl mx-auto px-5 sm:px-8 space-y-6">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="mag-title-vinho font-ui font-bold text-[2rem] tracking-tight mb-3 text-mg-vinho">
+          <h2 className="mag-title-vinho font-display font-bold text-[2.75rem] leading-[1.05] tracking-tight mb-4 text-mg-vinho">
             Um só expediente
           </h2>
-          <p className="font-ui text-base font-medium text-mg-ink mb-6">
+          <p className="font-ui text-base text-mg-ink/55 mb-6">
             Catálogo, consentimento e timeline no mesmo lugar — o rito visível para os três.
           </p>
         </div>
         <div className="flex justify-center">
           <MagTabs tab={tab} onTab={setTab} />
         </div>
-        <MagPainel>
-          <div
-            style={{
-              opacity: opaque ? 1 : 0,
-              transition: "opacity 180ms ease",
-            }}
-          >
-            {shown === 0 ? <MockCatalogo /> : null}
-            {shown === 1 ? <MockConsentimento /> : null}
-            {shown === 2 ? <MockTimeline /> : null}
-          </div>
-        </MagPainel>
+        <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+          <MagPainel activeIndex={tab}>
+            <div
+              style={{
+                opacity: opaque ? 1 : 0,
+                transition: "opacity 180ms ease",
+              }}
+            >
+              {shown === 0 ? <MockCatalogo /> : null}
+              {shown === 1 ? <MockConsentimento /> : null}
+              {shown === 2 ? <MockTimeline /> : null}
+            </div>
+          </MagPainel>
+        </div>
       </div>
     </section>
   );
@@ -202,14 +211,12 @@ function ConexaoSection() {
           className="mag-photo-img mag-ken-burns mag-ken-burns-rev"
         />
       </div>
-      <div className="mag-field mag-veil mag-field-ink" aria-hidden="true">
-        <div className="mag-grain" aria-hidden="true" />
-      </div>
+      <div className="mag-field mag-veil mag-field-ink" aria-hidden="true" />
       <div
         data-testid="landing-conexao"
         className="relative max-w-6xl mx-auto px-5 sm:px-8"
       >
-        <h2 className="font-ui font-bold text-[2rem] tracking-tight mb-3">
+        <h2 className="font-display font-bold text-[2.75rem] tracking-tight mb-3">
           O rito completo, no painel
         </h2>
         <p className="font-ui text-base text-white mb-8 max-w-2xl">
@@ -217,7 +224,6 @@ function ConexaoSection() {
           Os três no mesmo expediente, com a ferramenta aberta sobre o processo.
         </p>
         <div className="mag-field mag-field-vinho relative overflow-hidden isolate rounded-[16px] p-2 sm:p-3">
-          <div className="mag-grain" aria-hidden="true" />
           <div className="relative">
             <MockAppShell />
             <div className="absolute right-4 sm:right-8 top-14 sm:top-20 w-[min(280px,74%)] sm:w-[300px] z-10">
@@ -233,16 +239,13 @@ function ConexaoSection() {
 function RitoSection() {
   return (
     <section data-testid="landing-rito" className="relative overflow-hidden bg-mg-ivory text-mg-ink py-16">
-      <div className="mag-field mag-veil mag-field-ivory" aria-hidden="true">
-        <div className="mag-grain" aria-hidden="true" />
-      </div>
       <div
         className="landing-magenta-rail pointer-events-none absolute left-5 sm:left-8 top-28 bottom-16 w-px hidden sm:block z-10"
         aria-hidden="true"
       />
-      <div className="landing-stagger relative max-w-6xl mx-auto px-5 sm:px-8 space-y-20">
+      <div className="landing-stagger relative max-w-6xl mx-auto px-5 sm:px-8 space-y-12">
         <div>
-          <h2 className="mag-title-vinho font-ui font-bold text-[2rem] tracking-tight mb-3 text-mg-vinho">
+          <h2 className="mag-title-vinho font-display font-bold text-[2.75rem] tracking-tight mb-3 text-mg-vinho">
             O expediente da perícia
           </h2>
           <p className="font-ui text-base font-medium text-mg-ink">
@@ -256,6 +259,7 @@ function RitoSection() {
           titleEnd="descreve o escopo da perícia."
           body="Número CNJ, vara e o que o laudo precisa responder. O cliente entra no expediente por convite, não por pasta compartilhada."
           chips={["Cadastro de processo", "Escopo da perícia", "Número CNJ"]}
+          tone="ink"
         >
           <MockTimeline />
         </RitoChapter>
@@ -266,6 +270,7 @@ function RitoSection() {
           titleEnd="um a um, com base na LGPD."
           body="Cada arquivo tem consentimento próprio. Sem o sim, o perito não lê. O dado deixa de ser um anexo solto no e-mail."
           chips={["Consentimento por documento", "Escolha do perito"]}
+          tone="teal"
           reverse
         >
           <MockConsentimento />
@@ -277,6 +282,7 @@ function RitoSection() {
           titleEnd="assina o laudo no processo."
           body="CRC visível, versão numerada, arquivo no mesmo expediente. O honorário do perito não se mistura com o do escritório."
           chips={["Fila de processos", "Assinatura do laudo", "CRC verificado"]}
+          tone="vinho"
         >
           <MockLaudo />
         </RitoChapter>
@@ -287,6 +293,7 @@ function RitoSection() {
           titleEnd="pede ajuste, ou usa o número na tese."
           body="O pedido de ajuste fica no processo. A vitrine do perito continua pública para o próximo caso, com avaliação à vista."
           chips={["Pedido de ajuste", "Tese com número"]}
+          tone="ink"
           reverse
         >
           <MockVitrine />
@@ -311,9 +318,8 @@ function PersonasSection() {
       <div className="landing-stagger grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <article
           data-testid="bento-claro"
-          className="landing-reveal mag-field mag-field-ivory mag-photo-hover-card relative overflow-hidden isolate lg:col-span-7 text-ink p-8 sm:p-10 flex flex-col rounded-[16px]"
+          className="landing-reveal mag-field mag-field-ivory relative overflow-hidden isolate lg:col-span-7 text-ink p-8 sm:p-10 flex flex-col rounded-[16px]"
         >
-          <div className="mag-grain" aria-hidden="true" />
           <div className="relative flex flex-col flex-1" data-testid="persona-cliente">
             <p className="font-ui text-xs text-ledger mb-2">Quem autoriza o dado</p>
             <div className="flex items-center gap-3 mb-6">
@@ -321,7 +327,7 @@ function PersonasSection() {
                 <GlyphConsentimento />
               </IconChip>
               <IconAutorizacao className="hidden" />
-              <h3 className="font-ui font-bold text-xl text-mg-vinho">Cliente</h3>
+              <h3 className="font-display font-bold text-xl text-mg-vinho">Cliente</h3>
             </div>
             <p data-testid="persona-cliente-dor" className="text-base mb-4">
               Não sabe se a análise contábil do processo é confiável nem em que pé está.
@@ -365,7 +371,7 @@ function PersonasSection() {
           <div className="mag-grain" aria-hidden="true" />
           <div className="relative flex flex-col flex-1" data-testid="persona-advogado">
             <p className="font-ui text-xs text-white mb-2">Quem sustenta a tese</p>
-            <h3 className="font-ui font-bold text-xl mb-6">Advogado</h3>
+            <h3 className="font-display font-bold text-xl mb-6">Advogado</h3>
             <p data-testid="persona-advogado-dor" className="text-base text-white mb-4">
               Precisa sustentar tese com número que não domina; a perícia é cara, lenta e imprevisível.
             </p>
@@ -392,12 +398,11 @@ function PersonasSection() {
 
         <article
           data-testid="bento-ink"
-          className="landing-reveal mag-field mag-field-ink mag-photo-hover-card relative overflow-hidden isolate lg:col-span-12 text-white p-8 sm:p-10 rounded-[16px]"
+          className="landing-reveal mag-field mag-field-ink relative overflow-hidden isolate lg:col-span-12 text-white p-8 sm:p-10 rounded-[16px]"
         >
-          <div className="mag-grain" aria-hidden="true" />
           <div className="relative">
             <p className="font-ui text-xs text-white mb-2">Quem move o expediente</p>
-            <h3 className="font-ui font-bold text-xl mb-6">O rito, com dono em cada etapa</h3>
+            <h3 className="font-display font-bold text-xl mb-6">O rito, com dono em cada etapa</h3>
             <div className="relative h-72 overflow-hidden rounded-[16px]">
               <MockTimeline />
               <span className="absolute top-10 right-3 sm:right-6 landing-pill mag-chip-contrast backdrop-blur-xl text-white font-ui text-xs font-semibold px-3 min-h-8 inline-flex items-center">
@@ -430,7 +435,7 @@ function PersonasSection() {
                 <GlyphVitrine />
               </IconChip>
               <IconVitrine className="hidden" />
-              <h3 className="font-ui font-bold text-xl text-white">
+              <h3 className="font-display font-bold text-xl text-white">
                 Contador
               </h3>
             </div>
@@ -471,7 +476,7 @@ function FluxoSection() {
   return (
     <section data-testid="landing-fluxo" className="pt-16">
       <div className="max-w-6xl mx-auto px-5 sm:px-8">
-        <h2 className="mag-title-vinho font-ui font-bold text-[2rem] tracking-tight mb-12 text-mg-vinho">
+        <h2 className="mag-title-vinho font-display font-bold text-[2.75rem] tracking-tight mb-12 text-mg-vinho">
           O que o expediente segura
         </h2>
         <ol className="grid md:grid-cols-3 gap-8">
@@ -480,7 +485,7 @@ function FluxoSection() {
               <GlyphPrazo />
             </IconChip>
             <IconPrazo className="hidden" />
-            <h3 className="font-ui font-bold text-xl mb-3 mt-4">
+            <h3 className="font-display font-bold text-xl mb-3 mt-4">
               Dado com dono
             </h3>
             <p className="font-ui text-sm leading-relaxed text-ink">
@@ -492,7 +497,7 @@ function FluxoSection() {
               <GlyphProcesso />
             </IconChip>
             <IconAcompanhamento className="hidden" />
-            <h3 className="font-ui font-bold text-xl mb-3 mt-4">
+            <h3 className="font-display font-bold text-xl mb-3 mt-4">
               Três no mesmo rito
             </h3>
             <p className="font-ui text-sm leading-relaxed text-ink">
@@ -504,7 +509,7 @@ function FluxoSection() {
               <GlyphLaudo />
             </IconChip>
             <IconLaudo className="hidden" />
-            <h3 className="font-ui font-bold text-xl mb-3 mt-4">
+            <h3 className="font-display font-bold text-xl mb-3 mt-4">
               Honorários separados
             </h3>
             <p className="font-ui text-sm leading-relaxed text-ink">
@@ -533,13 +538,8 @@ export function LandingPage() {
       <MagShowcase />
       <RitoSection />
       <ConexaoSection />
-      <div data-testid="landing-quebra-clara" className="relative overflow-hidden bg-mg-ivory text-mg-ink py-16">
-        <div className="mag-field mag-veil mag-field-ivory" aria-hidden="true">
-          <div className="mag-grain" aria-hidden="true" />
-        </div>
-        <div className="relative">
-          <FluxoSection />
-        </div>
+      <div data-testid="landing-quebra-clara" className="mag-field mag-field-ivory relative overflow-hidden text-mg-ink py-16">
+        <FluxoSection />
       </div>
       <MagPlanos />
       <section id="landing-faq" data-testid="landing-faq">

@@ -15,7 +15,9 @@ export function MagHero() {
         Advogado pede o número, cliente autoriza o dado, contador assina o laudo.
       </p>
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <MagBotao href="#landing-personas">Escolher meu papel</MagBotao>
+        <MagBotao href="#landing-personas" variant="light">
+          Escolher meu papel
+        </MagBotao>
         <MagBotao to="/login" variant="ghost" className="text-white">
           Já tenho conta
         </MagBotao>

@@ -7,8 +7,15 @@ type RitoChapterProps = {
   body: string;
   chips: string[];
   reverse?: boolean;
+  tone: "ink" | "vinho" | "teal";
   children: ReactNode;
 };
+
+const TONE_FIELD = {
+  ink: "mag-field-ink",
+  vinho: "mag-field-vinho",
+  teal: "mag-field-teal",
+} as const;
 
 export function RitoChapter({
   time,
@@ -17,15 +24,16 @@ export function RitoChapter({
   body,
   chips,
   reverse,
+  tone,
   children,
 }: RitoChapterProps) {
   return (
     <article
-      className={`landing-reveal relative flex flex-col lg:flex-row lg:items-center gap-8 lg:gap-16 ${
+      className={`landing-reveal relative flex flex-col lg:flex-row lg:items-center gap-8 lg:gap-12 ${
         reverse ? "lg:flex-row-reverse" : ""
       }`}
     >
-      <div className="lg:w-1/2">
+      <div className="lg:w-2/5">
         <div className="flex items-center gap-3 mb-4">
           <span
             className="hidden sm:inline-flex w-3 h-3 rounded-full bg-mg-magenta shrink-0"
@@ -48,7 +56,10 @@ export function RitoChapter({
           ))}
         </ul>
       </div>
-      <div className="lg:w-1/2">{children}</div>
+      <div className={`mag-field ${TONE_FIELD[tone]} relative isolate lg:w-3/5 rounded-[16px] p-2 sm:p-3 overflow-hidden`}>
+        <div className="mag-grain" aria-hidden="true" />
+        <div className="relative">{children}</div>
+      </div>
     </article>
   );
 }

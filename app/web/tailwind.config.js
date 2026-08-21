@@ -44,7 +44,7 @@ export default {
       },
       fontFamily: {
         sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
-        display: ["Geist", "Inter", "system-ui", "sans-serif"],
+        display: ["Cabinet Grotesk", "Geist", "Inter", "system-ui", "sans-serif"],
         ui: ["Geist", "Inter", "system-ui", "sans-serif"],
       },
     },

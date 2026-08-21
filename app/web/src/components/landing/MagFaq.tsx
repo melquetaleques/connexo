@@ -39,7 +39,7 @@ export function MagFaq() {
         className="relative max-w-6xl mx-auto px-5 sm:px-8 grid grid-cols-2 gap-4 sm:gap-12 items-start"
       >
         <div className="min-w-0">
-          <h2 className="mag-title-vinho font-display font-semibold tracking-tight text-xl sm:text-[2rem] mb-6 text-mg-vinho">
+          <h2 className="mag-title-vinho font-display font-semibold tracking-tight text-xl sm:text-[2.75rem] mb-6 text-mg-vinho">
             Perguntas antes de entrar
           </h2>
           <MagBotao href="#landing-personas">Escolher meu papel</MagBotao>

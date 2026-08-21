@@ -89,7 +89,7 @@ export function MagFerramentas() {
       </div>
       <div className="relative max-w-6xl mx-auto px-5 sm:px-8">
         <div className="flex items-end justify-between gap-3 mb-6">
-          <h2 className="mag-title-vinho font-display font-semibold tracking-tight text-[2rem] text-mg-vinho">
+          <h2 className="mag-title-vinho font-display font-semibold tracking-tight text-[2.75rem] text-mg-vinho">
             Ferramentas do expediente
           </h2>
           <div className="flex gap-2 shrink-0">
