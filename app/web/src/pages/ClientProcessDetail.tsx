@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { PageContainer, Card, Icon, SectionTitle, GhostButton, GoldButton, Pill, Avatar } from "@/components/ui/connexo-primitives";
+import { PageContainer, Card, Icon, SectionTitle, GhostButton, GoldButton, Pill, Avatar, TimelineStep, DeadlineCard } from "@/components/ui/connexo-primitives";
 import { listMyProcesses, ClientProcess } from "@/services/client";
 import { DocumentManager } from "@/components/shared/DocumentManager";
 import { apiErrorMessage } from "@/lib/utils";
@@ -75,14 +75,8 @@ export function ClientProcessDetail() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="p-8 border-l-4 border-l-primary">
-                <p className="text-[10px] font-black text-primary/30 uppercase tracking-widest mb-1">Tipo de Processo</p>
-                <p className="text-lg font-black text-primary">{process.type}</p>
-              </Card>
-              <Card className="p-8 border-l-4 border-l-secondary">
-                <p className="text-[10px] font-black text-primary/30 uppercase tracking-widest mb-1">Advogado Responsável</p>
-                <p className="text-lg font-black text-primary">{process.lawyer_name}</p>
-              </Card>
+              <DeadlineCard label="Tipo de Processo" value={process.type} icon="gavel" />
+              <DeadlineCard label="Advogado Responsável" value={process.lawyer_name} icon="person" />
             </div>
           </section>
 
@@ -128,34 +122,35 @@ export function ClientProcessDetail() {
 
           <div className="mt-12">
             <SectionTitle title="Linha do Tempo" />
-            <div className="space-y-8 pl-4 border-l-2 border-outline/30 ml-4">
-              <TimelineItem
+            <div className="space-y-1">
+              <TimelineStep
                 date={new Date(process.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
                 title="Processo Registrado"
-                desc="Seu advogado cadastrou o processo na plataforma."
+                description="Seu advogado cadastrou o processo na plataforma."
                 active={true}
               />
               {process.accountant_id ? (
-                <TimelineItem
+                <TimelineStep
                   date={new Date(process.updated_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
                   title="Perito Vinculado"
-                  desc={`${process.accountant_name} vinculado ao processo.`}
+                  description={`${process.accountant_name} vinculado ao processo.`}
                   active={true}
                 />
               ) : (
-                <TimelineItem
+                <TimelineStep
                   date="Pendente"
                   title="Vinculo com Perito"
-                  desc="Aguardando escolha e aceite do contador perito."
+                  description="Aguardando escolha e aceite do contador perito."
                   active={false}
                 />
               )}
               {process.accountant_id && (
-                <TimelineItem
+                <TimelineStep
                   date="Em andamento"
                   title="Andamento da Pericia"
-                  desc="Documentos sendo analisados pelo perito contabil."
+                  description="Documentos sendo analisados pelo perito contabil."
                   active={true}
+                  last
                 />
               )}
             </div>
@@ -163,18 +158,5 @@ export function ClientProcessDetail() {
         </div>
       </div>
     </PageContainer>
-  );
-}
-
-function TimelineItem({ date, title, desc, active }: { date: string, title: string, desc: string, active: boolean }) {
-  return (
-    <div className="relative">
-      <div className={`absolute -left-[25px] top-1 w-4 h-4 rounded-full border-4 border-white ${active ? 'bg-secondary ring-4 ring-secondary/20' : 'bg-outline/50'}`} />
-      <div>
-        <p className="text-[10px] font-black text-primary/30 uppercase tracking-widest mb-1">{date}</p>
-        <p className={`text-sm font-black ${active ? 'text-primary' : 'text-primary/40'} mb-1`}>{title}</p>
-        <p className="text-xs text-primary/40 leading-relaxed font-medium">{desc}</p>
-      </div>
-    </div>
   );
 }

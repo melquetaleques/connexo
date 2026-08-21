@@ -5,12 +5,12 @@ type DuotoneIconProps = {
 };
 
 const CHIP_TINTS = {
-  lavender: { bg: "#E4D9F8", fg: "#5B21B6" },
-  mint: { bg: "#CFF5E4", fg: "#047857" },
-  peach: { bg: "#FFDCC8", fg: "#C2410C" },
-  sky: { bg: "#D4E5FF", fg: "#1D4ED8" },
-  rose: { bg: "#F8D0E0", fg: "#BE185D" },
-  sand: { bg: "#FDE68A", fg: "#B45309" },
+  lavender: { bg: "#F3D6E4", fg: "#40101E" },
+  mint: { bg: "#E4E2DE", fg: "#40101E" },
+  peach: { bg: "#F6E4D6", fg: "#9A5A2B" },
+  sky: { bg: "#D6DEF6", fg: "#5060E0" },
+  rose: { bg: "#F8D0E0", fg: "#E040A0" },
+  sand: { bg: "#F0F0E8", fg: "#40101E" },
 } as const;
 
 export type IconChipTint = keyof typeof CHIP_TINTS;
@@ -202,7 +202,7 @@ export function IconAutorizacao({ className }: DuotoneIconProps) {
       className={className}
     >
       <path
-        className="fill-ledger"
+        className="fill-primary"
         d="M5 2h9l5 5v15H5V2z"
       />
       <path
@@ -242,7 +242,7 @@ export function IconAcompanhamento({ className }: DuotoneIconProps) {
       className={className}
     >
       <path
-        className="fill-ledger"
+        className="fill-primary"
         d="M12 3.2 21.2 20.2H2.8L12 3.2z"
       />
       <path

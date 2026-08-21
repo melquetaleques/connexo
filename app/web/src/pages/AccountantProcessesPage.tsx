@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageContainer, Card, Icon, SectionTitle, Pill, GhostButton } from "@/components/ui/connexo-primitives";
+import { PageContainer, Card, Icon, PageHeader, StatusBadge, GhostButton, Pill } from "@/components/ui/connexo-primitives";
 import { listAccountantProcesses, AccountantProcess } from "@/services/accountant";
 
 export function AccountantProcessesPage() {
@@ -32,12 +32,10 @@ export function AccountantProcessesPage() {
 
   return (
     <PageContainer>
-      <div className="mb-12">
-        <h1 className="text-4xl font-black text-primary tracking-tight mb-2">Processos Vinculados</h1>
-        <p className="text-primary/40 font-bold uppercase tracking-[0.2em] text-xs">Perícias ativas e solicitações pendentes</p>
-      </div>
-
-      <SectionTitle title="Processos" />
+      <PageHeader
+        kicker="Perícias ativas e solicitações pendentes"
+        title="Processos Vinculados"
+      />
       {processes.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {processes.map((p) => (
@@ -51,9 +49,9 @@ export function AccountantProcessesPage() {
                     <span className="text-xs font-bold text-primary/40 uppercase tracking-widest">{String(p.court ?? "")}</span>
                   </div>
                 </div>
-                <Pill tone={p.status === "ativo" ? "success" : p.status === "recusado" ? "error" : "gold"}>
+                <StatusBadge status={p.status}>
                   {p.status ?? ""}
-                </Pill>
+                </StatusBadge>
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-outline/20">
                 <span className="text-xs font-bold text-primary/40 uppercase tracking-widest">Cliente: {p.client_name}</span>

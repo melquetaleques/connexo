@@ -114,7 +114,7 @@ export function BindProcessModal({ accountant, onClose, onSuccess }: BindProcess
           )}
         </div>
 
-        <div className="p-8 bg-[#F9FAFB] flex gap-4">
+        <div className="p-8 bg-surface-1 flex gap-4">
           <GhostButton className="flex-1 py-4" onClick={onClose}>Cancelar</GhostButton>
           <GoldButton 
             className="flex-[2] py-4" 

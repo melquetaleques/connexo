@@ -60,23 +60,20 @@ export function AppShell({ role = "advogado" }: AppShellProps) {
   const subtitle = role === "advogado" ? "Advogado" : role === "contador" ? "Contador" : role === "cliente" ? "Cliente" : "";
 
   return (
-    <div className="min-h-screen flex bg-surface-1 font-['Plus_Jakarta_Sans']">
-      {/* Sidebar */}
+    <div className="min-h-screen flex bg-surface-1 font-theme-body">
       <aside className="w-72 shrink-0 bg-primary text-white flex flex-col relative z-20 shadow-2xl">
-        {/* Branding Area */}
         <div className="p-8 pb-10">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded bg-secondary flex items-center justify-center shadow-lg shadow-secondary/20">
+            <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center shadow-lg shadow-secondary/20">
               <Icon name="balance" className="text-white text-base" />
             </div>
-            <span className="text-xl font-black tracking-tighter uppercase">Connexo</span>
+            <span className="text-xl font-semibold tracking-tight uppercase font-theme-display">Connexo</span>
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-secondary/60">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
             {ROLE_LABELS[role]}
           </p>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 px-4 space-y-1">
           {nav.map((item) => (
             <NavLink
@@ -84,9 +81,9 @@ export function AppShell({ role = "advogado" }: AppShellProps) {
               to={item.to}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-bold transition-all group relative overflow-hidden",
-                  isActive 
-                    ? "bg-secondary text-white shadow-lg shadow-secondary/20" 
+                  "flex items-center gap-3 rounded-full px-4 py-3 text-sm font-semibold transition-all duration-300 ease-out group relative overflow-hidden motion-reduce:transition-none",
+                  isActive
+                    ? "bg-white/12 text-white shadow-inner ring-1 ring-white/15"
                     : "text-white/60 hover:text-white hover:bg-white/5"
                 )
               }
@@ -94,55 +91,64 @@ export function AppShell({ role = "advogado" }: AppShellProps) {
               <Icon name={item.icon} fill={location.pathname === item.to} className="text-xl shrink-0" />
               <span>{item.label}</span>
               {location.pathname === item.to && (
-                <div className="absolute left-0 top-0 w-1 h-full bg-white/20" />
+                <div className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-secondary" />
               )}
             </NavLink>
           ))}
         </nav>
 
-        {/* User Profile Hook */}
+        <div className="px-4 pb-3">
+          <div className="rounded-2xl p-4 border border-white/10 bg-white/5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 mb-1">Plano</p>
+            <p className="text-sm font-semibold font-theme-display">Profissional</p>
+            <p className="text-[10px] text-white/40 mt-1">Vitrine e prazos no mesmo expediente.</p>
+          </div>
+        </div>
+
         <div className="p-4 mt-auto">
-          <div className="bg-white/5 rounded-2xl p-4 flex items-center gap-3 border border-white/5">
+          <div className="bg-white/5 rounded-2xl p-4 flex items-center gap-3 border border-white/10 transition-colors duration-300 hover:bg-white/8 motion-reduce:transition-none">
             <Avatar initials={initials} size="md" tone="gold" />
             <div className="min-w-0">
-              <p className="text-sm font-bold truncate">{displayName}</p>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-secondary/80">{subtitle}</p>
+              <p className="text-sm font-semibold truncate font-theme-display">{displayName}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">{subtitle}</p>
             </div>
           </div>
 
-          <button onClick={logout} className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white/40 hover:text-rose-400 transition-colors">
+          <button
+            onClick={logout}
+            className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-white/40 hover:text-secondary transition-colors duration-300 rounded-full hover:bg-white/5 motion-reduce:transition-none"
+          >
             <Icon name="logout" className="text-lg" />
             Sair
           </button>
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <header className="h-20 shrink-0 border-b border-outline/80 bg-white/60 backdrop-blur-xl px-8 flex items-center justify-between sticky top-0 z-10">
+        <header className="h-20 shrink-0 border-b border-outline bg-white/70 backdrop-blur-xl px-8 flex items-center justify-between sticky top-0 z-10 cx-glass">
           <div>
             <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-primary/40">Visão Geral</h2>
-            <p className="text-sm font-extrabold text-primary">Sexta-feira, 04 de Maio de 2026</p>
+            <p className="text-sm font-semibold text-ink font-theme-display">Sexta-feira, 04 de Maio de 2026</p>
           </div>
-          
+
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-surface-2 border border-outline/50">
+            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-surface-2 border border-outline">
               <Icon name="search" className="text-primary/40" />
-              <input 
-                type="text" 
-                placeholder="Pesquisar..." 
-                className="bg-transparent border-none p-0 text-xs font-bold text-primary placeholder:text-primary/30 focus:ring-0 w-32"
+              <input
+                type="text"
+                placeholder="Pesquisar..."
+                className="bg-transparent border-none p-0 text-xs font-medium text-ink placeholder:text-primary/30 focus:ring-0 w-32 font-theme-body"
               />
             </div>
-            
-            <button className="relative w-10 h-10 flex items-center justify-center rounded-full bg-white border border-outline hover:border-secondary transition-all group">
-              <Icon name="notifications" className="text-primary/60 group-hover:text-secondary" />
-              <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-rose-500 border-2 border-white" />
+
+            <button className="relative w-10 h-10 flex items-center justify-center rounded-full bg-white border border-outline hover:border-secondary transition-all duration-300 group motion-reduce:transition-none">
+              <Icon name="notifications" className="text-primary/60 group-hover:text-secondary transition-colors" />
+              <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-secondary border-2 border-white" />
             </button>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto custom-scrollbar">
+        <main className="flex-1 overflow-y-auto custom-scrollbar bg-surface-1">
           <Outlet />
         </main>
       </div>

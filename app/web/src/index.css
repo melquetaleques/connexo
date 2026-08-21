@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-  @apply bg-slate-50 text-primary font-sans antialiased selection:bg-secondary/20 selection:text-primary;
+  @apply bg-paper text-ink font-sans antialiased selection:bg-secondary/20 selection:text-ink;
 }
 
 /* Custom Scrollbar */
@@ -32,13 +32,13 @@ button, a, input, select, textarea {
 }
 
 .ph-stripes {
-  background: repeating-linear-gradient(-45deg, #f3f4f6, #f3f4f6 8px, #e5e7eb 8px, #e5e7eb 16px);
+  background: repeating-linear-gradient(-45deg, #F0F0E8, #F0F0E8 8px, #E4E2DE 8px, #E4E2DE 16px);
 }
 
 :focus-visible {
-  outline: 2px solid #C59D5C !important;
+  outline: 2px solid #E040A0 !important;
   outline-offset: 3px;
-  box-shadow: 0 0 0 3px rgb(197 157 92 / 0.55);
+  box-shadow: 0 0 0 3px rgb(224 64 160 / 0.45);
   transition: none;
 }
 
@@ -104,6 +104,13 @@ button, a, input, select, textarea {
   .mag-photo-hover-card:hover .mag-photo-veil {
     transform: none;
     opacity: 1;
+  }
+
+  .cx-reveal,
+  .cx-stagger > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 
@@ -497,4 +504,55 @@ button, a, input, select, textarea {
     #5060E0 var(--ctrl-pct, 62%),
     rgb(20 20 20 / 0.16) var(--ctrl-pct, 62%)
   );
+}
+
+/* Panel theme (Connexo wine/cream) — not landing */
+.cx-page {
+  font-family: "Hanken Grotesk", "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+.cx-display {
+  font-family: "Figtree", "Cabinet Grotesk", system-ui, sans-serif;
+}
+
+.cx-glass {
+  background-color: rgb(255 255 255 / 0.62);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgb(228 226 222 / 0.9);
+  box-shadow: 0 8px 28px rgb(64 16 30 / 0.06);
+}
+
+.cx-reveal {
+  animation: cx-reveal 0.5s ease both;
+}
+
+.cx-stagger > * {
+  animation: cx-reveal 0.5s ease both;
+}
+
+.cx-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.cx-stagger > *:nth-child(2) { animation-delay: 80ms; }
+.cx-stagger > *:nth-child(3) { animation-delay: 160ms; }
+.cx-stagger > *:nth-child(4) { animation-delay: 240ms; }
+.cx-stagger > *:nth-child(5) { animation-delay: 320ms; }
+.cx-stagger > *:nth-child(6) { animation-delay: 400ms; }
+
+@keyframes cx-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cx-reveal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

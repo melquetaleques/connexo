@@ -1,228 +1,192 @@
-# TAREFAS — Reforma visual do painel
+# TAREFAS — Ciclo 2 (porte literal do HTML do tema)
 
-Baseline medido (2026-08-20): `node --test` 11/11 verdes; `tsc --noEmit` 3
-erros pré-existentes (todos em `pages/AccountantProcessDetail.tsx`, arquivo
-morto fora de rota). Nenhuma tarefa abaixo pode piorar esses números.
+Baseline: `node --test` 11/11 antes desta rodada (pode mudar — ver
+Critérios de êxito globais no OBJETIVO.md). `tsc --noEmit` 3 erros
+pré-existentes (arquivo morto). Ciclo 1 (painel) já aprovado e mantido
+como base — não regredir paleta (`primary/secondary/surface/paper/ink` em
+`tailwind.config.js`) nem a componentização (`StatCard`, `PageHeader`,
+etc.).
 
-Paleta de referência (extraída por inspeção real do navegador nos mockups
-`tema/Connexo paginas/*.html` — os arquivos são bundles gigantes, não abra
-como texto; se precisar reabrir, sirva com um servidor local e inspecione
-via devtools/computed style):
+Regra de leitura do mockup em toda tarefa abaixo: usar
+`.gauntlet/mockup-dom/<arquivo>-dom-body.html`. Ignorar o primeiro bloco
+(`data-dc-tpl="7"`, seletor de página da ferramenta). O design real
+começa no `<section data-dc-tpl="20"...>` (ou equivalente nas outras
+páginas). Converter `style="a: b; c: d"` → `style={{ a: 'b', c: 'd' }}`
+(camelCase), preservando valores literais.
 
-- Fundo/paper: cream `rgb(243,241,237)` ≈ `#F3F1ED` (perto do `mg-ivory` já existente)
-- Ink/texto: `rgb(28,27,26)` ≈ `#1C1B1A` (perto do `mg-ink` já existente)
-- Wine/chrome escuro (sidebar, headers, botão primário): `rgb(74,15,27)` ≈ `#4A0F1B` (família do `mg-vinho` já existente, `#40101E`)
-- Accent marrom/dourado suave: `rgb(154,90,43)` ≈ `#9A5A2B`
-- Accent magenta/flare (destaque, badges, links ativos): `rgb(193,30,99)`/`rgb(255,77,141)` (família do `mg-magenta` já existente)
-- Accent azul (links, badges informativos): `rgb(43,78,168)` (família do `mg-indigo` já existente)
-- Bordas/superfícies neutras: `rgb(234,231,226)`, `rgb(228,226,222)`
-- Raios de borda observados: `8px`, `12px`, `14px`, `16px`, `20px`, `24px`, pílulas `999px`
+## T1 — Corrigir raio de borda global da landing (`.landing-pill`)
 
-Regra geral de todas as tarefas: **reusar os tokens `mg-*` já definidos em
-`tailwind.config.js` como fonte dos novos valores de `primary/secondary/
-surface/outline/paper/ink`** em vez de inventar hex novos soltos — mantém
-uma única fonte de paleta no repo. Aplicar o tema é copiar cor/estrutura
-real do mockup correspondente, não estilizar "no espírito de".
+**Fazer:** em `app/web/src/index.css`, mudar `.landing-pill` de
+`border-radius: 999px` para o raio que o modelo usa nos elementos
+equivalentes (badges/botões/busca): **8px** (conferir em
+`01-landing-dom-body.html` — elementos como o pill do topo do hero, os
+botões `Acessar o expediente`/`Criar conta`, a caixa de busca usam
+`border-radius: 8px`; só elementos genuinamente circulares, como o
+quadrado do logo "C" que usa `border-radius: 7px` — não é pílula — e
+avatares redondos de verdade, ficam com raio total). Auditar os outros
+componentes `landing-glass*`/`mag-*` em `index.css` pelo mesmo critério
+(comparar contra o mockup, não assumir).
 
-Toda tarefa de página (T2 em diante) inclui, nesta ordem: **1) tema**
-(cor/tipografia/estrutura do mockup), **2) animação** (hover, transição de
-estado, entrada/reveal — o que o mockup sugere ou, quando o mockup é
-estático, o padrão já usado na landing: `transition`, `hover:scale`,
-reveal on-mount), sempre respeitando `prefers-reduced-motion` como a
-landing já faz (ver `mag-*` em `index.css` para o padrão). **3)
-componentização**: se o mesmo padrão visual aparece em outra tarefa,
-extrair para um componente compartilhado em vez de duplicar.
+**Êxito:** `grep -n "landing-pill" app/web/src/index.css` mostra
+`border-radius: 8px` (ou o valor literal correto medido no mockup, com
+comentário citando de onde veio); inspeção visual no dev server mostra
+botões/badges da landing com cantos discretos, não pílula, exceto onde o
+mockup usa pílula de fato.
 
-## T1 — Fundação: paleta, tipografia e primitivos compartilhados
+**Verificar com:** `cd app/web && git diff src/index.css` + captura de tela do hero.
 
-**Fazer:**
-1. Em `tailwind.config.js`, trocar os valores hex de `primary`,
-   `secondary`, `surface`, `surface-1`, `surface-2`, `on-surface-variant`,
-   `outline`, `paper`, `ink` para a família wine/cream acima (reaproveitando
-   `mg-vinho`/`mg-ivory`/`mg-ink`/`mg-magenta`/`mg-indigo` como base).
-2. Adicionar Hanken Grotesk (corpo) e Figtree (headings) via Google
-   Fonts/Fontshare em `index.html` (mesmo padrão de `<link rel="preconnect">`
-   já usado) e registrar em `tailwind.config.js` como novas entradas de
-   `fontFamily` (não remover `sans`/`display` atuais — a landing depende
-   delas).
-3. Reskinar `app/web/src/components/ui/connexo-primitives.tsx` (`Icon`,
-   `Avatar`, `Card`, `GoldButton`, `GhostButton` e qualquer outro
-   primitivo — inputs, badges, se existirem) e `connexo-icons.tsx`:
-   nova paleta, novas fontes, vocabulário visual do mockup (glass sutil,
-   raios generosos, sombras suaves), transições `hover`/`active` nos
-   elementos interativos (botão, card clicável) — sem mudar nome de
-   nenhuma prop, export ou `data-testid`.
+## T2 — Hero + nav (fundir, portar literal)
 
-**Êxito:**
-1. `git diff app/web/tailwind.config.js` mostra os 9 tokens de cor com
-   novos valores hex (nenhuma chave removida) + no máximo 2 novas entradas
-   de `fontFamily` adicionadas (nenhuma das existentes removida).
-2. `grep -c "mg-vinho\|mg-ivory\|mg-ink\|mg-magenta\|mg-indigo" tailwind.config.js` no diff evidencia reuso (não hex soltos novos fora dessa família nos 9 tokens de cor).
-3. `index.html` ganha `<link>`/`<style>` de Hanken Grotesk e Figtree seguindo o mesmo padrão de preconnect já existente; nenhum link de fonte atual foi removido.
-4. `Icon`, `Avatar`, `Card`, `GoldButton`, `GhostButton` continuam exportados com a mesma assinatura de props (`grep -n "export function"` antes/depois idêntico em nomes e parâmetros).
-5. Pelo menos `GoldButton`/`GhostButton`/`Card` (quando clicável) têm classe `transition` + estado `hover:`/`active:` visível (inspeção do JSX).
-6. `tsc --noEmit` não piora (ver critério global).
+**Fazer:** em `01-landing-dom-body.html`, a partir do `<section
+id="landing">`: o **nav real do site fica dentro do hero** (logo Connexo,
+links `Expediente / Peritos / Recursos / Escritórios / Planos`, pílula de
+busca "Buscar processo", `Entrar`, botão `Criar conta`) — não é uma barra
+fixa/sticky separada. Portar essa estrutura para dentro de
+`HeroSection()` em `LandingPage.tsx`, substituindo a `<MagNav />` atual
+(fixa/sticky, com labels diferentes: `Produto/Papéis/Planos/Perguntas`).
+Ligar cada item a uma rota/âncora real do app (Entrar→`/login`, Criar
+conta→`/register` ou `#landing-personas` se não houver cadastro público
+direto — usar o que já existe hoje), mantendo o texto/estrutura visual do
+modelo. `MagNav.tsx` pode ser removido se não sobrar nenhum uso, ou
+mantido só se outra página o importar (conferir com `grep -rn "MagNav"
+app/web/src`).
 
-**Verificar com:** `cd app/web && npx tsc --noEmit && git diff tailwind.config.js index.html src/components/ui/connexo-primitives.tsx src/components/ui/connexo-icons.tsx`
+**Êxito:** hero renderiza com nav integrado ao bloco vinho (não há barra
+separada fixa no topo da landing); todos os 5 links + busca + Entrar +
+Criar conta presentes; `git diff` não quebra nenhuma rota existente.
 
-## T2 — AppShell (sidebar e topbar dos 3 papéis + admin)
+**Verificar com:** captura de tela em 1440×900 comparando com
+`.gauntlet/mockup-dom/01-landing-dom-body.html` renderizado (pode servir
+com `python -m http.server` a partir de `tema/Connexo paginas/` e abrir
+`01 Landing.html` para conferir visualmente, ou usar a screenshot já
+tirada pelo juiz como referência).
 
-**Fazer:** reskinar `app/web/src/components/layout/AppShell.tsx` para a
-estrutura dos mockups `04 Painel do advogado.html` / `05 Painel do
-perito.html`: sidebar escura (wine) com branding, nav com pílulas/ícones,
-cartão de plano, avatar+nome no rodapé; topbar clara com busca e saudação.
-Aplicar para os 4 papéis (`advogado`, `contador`, `cliente`, `admin`) —
-cliente e admin não têm mockup dedicado, adequar ao mesmo vocabulário
-(mesma sidebar wine, mesmos componentes, cores/labels do papel mantidos).
-Aplicar transição no item de nav ativo/hover (destaque suave, não só
-mudança abrupta de cor) e microtransição no logout/avatar, respeitando
-`prefers-reduced-motion`.
+## T3 — Conteúdo e altura do hero
 
-**Êxito:**
-1. `NAV` (itens de navegação por papel) e `ROLE_LABELS` continuam com as
-   mesmas entradas `to=`/rotas de hoje — `git diff` só muda className/JSX
-   de apresentação, não a lista de rotas nem `useAuth()`/`logout`.
-2. Sidebar renderiza com fundo da família wine (`bg-primary` após T1, ou
-   classe equivalente) nas 3 rotas de teste manual: `/adv/dashboard`,
-   `/acc/dashboard`, `/cli/dashboard` (verificar via browser/dev server).
-3. Nenhum item de nav sumiu (mesmo `.length` de `NAV[role]` antes/depois).
-4. Item de nav ativo/hover tem `transition` no className; com
-   `prefers-reduced-motion: reduce` simulado no browser, a transição
-   desaparece mas o item continua visível/clicável.
+**Fazer:** portar do mockup: pílula do hero (`Perícia contábil judicial ·
+CPC art. 465 →` — hoje é `Expediente com CRC à vista`), parágrafo
+(`Todo o rito da prova pericial em um só lugar...` — hoje é texto
+diferente), CTAs (`Acessar o expediente` + `▶ Por que Connexo?` — hoje é
+`Escolher meu papel`/`Já tenho conta`; manter os `href`/`to` que já
+funcionam no app, só trocar rótulo/estilo pro do modelo, a menos que o
+rótulo atual já corresponda a uma ação real que o modelo não tem — nesse
+caso manter o rótulo funcional e aplicar só o estilo). Altura do bloco
+vinho: `min-height: 760px` (fixo, não `92vh`) no container do hero.
 
-**Verificar com:** `cd app/web && git diff src/components/layout/AppShell.tsx` + inspeção visual no dev server nas 3 rotas.
+**Êxito:** textos batem com o mockup (ou justificativa registrada no
+VEREDITO se um CTA precisou ficar funcional-diferente); `min-height` do
+hero é um valor fixo em px, não unidade de viewport.
 
-## T3 — Login e Cadastro
+**Verificar com:** `git diff` do `HeroSection`/`MagHero.tsx`.
 
-**Fazer:** reskinar `app/web/src/pages/LoginPage.tsx` e `RegisterPage.tsx`
-seguindo `02 Login.html`/`03 Cadastro.html`: split screen com painel de
-marca à esquerda (stats "320+ Perícias entregues" etc. viram dados reais
-ou genéricos do app, não hardcode fictício se já existir dado real) e
-formulário à direita em cartão claro. Manter todos os `<input>`,
-`name`/`type`, validação, chamadas a `useAuth`/serviços de login/registro
-intactas — só JSX de apresentação. Aplicar transição de foco em input e
-estado de loading do botão de submit (se já existir estado de loading no
-componente, só estilizar; não criar estado novo).
+## T4 — Lista de capacidades do hero (coluna direita)
 
-**Êxito:**
-1. `git diff` nesses 2 arquivos não toca nenhuma chamada a hook de auth,
-   `fetch`/`axios`, `onSubmit`, nem remove nenhum campo de formulário
-   existente (mesmo conjunto de `name=`/`type=` de inputs antes/depois).
-2. Fluxo de login continua funcional: digitar credencial e submeter dispara
-   a mesma função de submit de antes (checar visualmente no dev server:
-   erro de credencial inválida ainda aparece).
+**Fazer:** `MagHeroLista.tsx` hoje mostra 5 itens de **produto**
+(Catálogo com CRC, Consentimento LGPD, Timeline do rito, Laudo
+versionado, Vitrine pública), ciclando a cada 1300ms. O modelo mostra 7
+itens de **processo/rito** (Cadastrar o perito, Vincular com base legal,
+Controlar prazos, **Redigir o laudo** [destacado], Responder quesitos,
+Assinar e entregar, Publicar a vitrine — os 3 últimos com leve
+indentação). Trocar o conteúdo do array `CAPS` para os 7 itens do modelo,
+mantendo a lógica de ciclo/animação existente (isso conta como "aplicar
+funcionalidade" sobre o HTML estático do modelo — pode manter a
+auto-troca, não precisa virar estático).
 
-**Verificar com:** `cd app/web && git diff src/pages/LoginPage.tsx src/pages/RegisterPage.tsx` + teste manual de submit no dev server.
+**Êxito:** 7 itens presentes, textos batem com o modelo; animação
+existente preservada (`prefers-reduced-motion` continua respeitado).
 
-## T4 — Dashboards (advogado, contador, cliente)
+**Verificar com:** `git diff src/components/landing/MagHeroLista.tsx`.
 
-**Fazer:** reskinar `LawyerDashboard.tsx`, `AccountantDashboard.tsx`,
-`ClientDashboard.tsx` (e `components/dashboard/ActivityChart.tsx` se
-usado) seguindo o padrão dos mockups 04/05: saudação, cards de estatística
-em grade, tabela "próximos prazos", "ações rápidas", lista de
-vínculos/peritos, banner de vitrine. `ClientDashboard` não tem mockup —
-usar o mesmo vocabulário de cards/stat/tabela adequado ao papel cliente.
-Extrair o card de estatística ("Total de clientes", "38", etc.) como
-componente compartilhado (ex. `StatCard` em `connexo-primitives.tsx` ou
-`components/dashboard/`) reusado pelos 3 dashboards — não duplicar o
-mesmo JSX 3 vezes. Aplicar reveal leve de entrada nos cards (fade/translate
-curto, tipo já usado no bento da landing) respeitando `prefers-reduced-motion`.
+## T5 — Trust strip do hero
 
-**Êxito:**
-1. Toda chamada a serviço/hook de dados (`useEffect`, chamadas a
-   `services/*`) permanece idêntica — `git diff` só no JSX de apresentação
-   e classes.
-2. Os números/dados exibidos continuam vindo do estado carregado (não
-   hardcoded) — nenhum `useState`/prop de dado real foi substituído por
-   texto fixo.
-3. Visual: cards de estatística com cantos arredondados e paleta wine/cream, sidebar do AppShell (T2) coerente.
-4. Existe um componente de card de estatística importado pelos 3
-   dashboards (`grep -rn "StatCard\|from.*dashboard" src/pages/*Dashboard.tsx` mostra o mesmo import nos 3 arquivos) — não 3 implementações JSX inline divergentes.
+**Fazer:** trocar as 4 badges atuais (`CRC LGPD OAB LAUDO`) pelos 6 nomes
+de escritório do modelo (`Machado, Pereira & Costa, Duarte, Ribeiro
+Perícias, Vale Norte, Aurora`) com o texto "Usado por 47 escritórios de
+advocacia e contabilidade" acima — ver `MagConfianca.tsx`.
 
-**Verificar com:** `cd app/web && git diff src/pages/LawyerDashboard.tsx src/pages/AccountantDashboard.tsx src/pages/ClientDashboard.tsx src/components/dashboard` + inspeção visual.
+**Êxito:** texto e 6 nomes batem com o modelo.
 
-## T5 — Clientes (lista e detalhe)
+**Verificar com:** `git diff src/components/landing/MagConfianca.tsx`.
 
-**Fazer:** reskinar `ClientsPage.tsx` e `ClientDetailPage.tsx` seguindo
-`06 Clientes.html` (tabela/lista de clientes com busca, cartão de
-detalhe com processos vinculados). Aplicar hover de linha na tabela e
-transição no campo de busca/filtro.
+## T6 — Seção "Um só lugar para todo o rito" / trilha LGPD
 
-**Êxito:** `git diff` só altera classes/estrutura visual; toda função de
-busca/filtro/paginação e toda chamada a API permanece com o mesmo
-comportamento (testar digitando na busca no dev server e conferindo que
-filtra igual a antes).
+**Fazer:** localizar no mockup (`grep -n` por "Um só lugar" ou "trilha do
+consentimento" em `01-landing-dom-body.html`) a seção com abas
+(Vínculo/Prazos/Laudo Novo/Vitrine/LGPD no modelo — hoje `MagTabs.tsx` tem
+`Catálogo/Consentimento/Timeline`, 3 abas em vez de 5) e o card escuro
+com a demonstração de consentimento (campos "Escopo de documentos",
+"Prazo de retenção", "Trilha de auditoria", "Revogação pelo cliente",
+mini-preview de UI). Portar estrutura/raio/espaçamento; manter os dados
+mockados que o componente atual já usa se forem equivalentes, só ajustar
+para bater com os rótulos/quantidade de abas do modelo.
 
-**Verificar com:** `cd app/web && git diff src/pages/ClientsPage.tsx src/pages/ClientDetailPage.tsx` + teste manual de busca.
+**Êxito:** 5 abas presentes com os rótulos do modelo; card de
+demonstração com a mesma estrutura de campos.
 
-## T6 — Processos (lista e detalhe, 3 papéis)
+**Verificar com:** `git diff src/components/landing/MagTabs.tsx src/components/landing/RitoChapter.tsx` (ou onde essa seção viver).
 
-**Fazer:** reskinar `ProcessPage.tsx`, `LawyerProcessesPage.tsx`,
-`AccountantProcessesPage.tsx`, `adv/LawyerProcessDetail.tsx`,
-`acc/AccountantProcessDetail.tsx`, `ClientProcessDetail.tsx` seguindo
-`07 Processo.html` (timeline do rito, quesitos, versões de laudo, cards de
-prazo). Manter consistência visual entre os 3 papéis (mesma estrutura de
-timeline/cards, cores de estado iguais entre telas) — extrair o card de
-prazo/timeline como componente compartilhado reusado nos 3 papéis, não
-triplicado. Aplicar transição na troca de versão do laudo/timeline (o que
-já existir de estado de UI, só animar a troca visual).
+## T7 — Integrações, planos, módulos, FAQ, rodapé
 
-**Êxito:** `git diff` preserva toda lógica de fetch/mutação (upload de
-laudo, resposta de quesito, mudança de status) — só classes/estrutura
-visual mudam. Nenhum handler de clique/submit removido (mesma contagem de
-`onClick=`/`onSubmit=` por arquivo antes/depois, salvo se um vira outro
-elemento semanticamente equivalente — justificar no VERIFY).
+**Fazer:** para cada seção restante do mockup (integrações
+PJe/e-SAJ/Projudi/ICP-Brasil/Gov.br/CFC/OAB/Receita; "Comece simples,
+escale quando o rito exigir"; grade de módulos; planos; FAQ; rodapé),
+comparar a versão atual (`MagFerramentas.tsx`, `MagShowcase.tsx`,
+`MagPlanos.tsx`, `MagFaq.tsx`, `MagRodape.tsx`, `MagPainel.tsx`,
+`MagBento.tsx`) contra a seção correspondente em
+`01-landing-dom-body.html` e portar raio/espaçamento/tipografia onde
+divergir visivelmente (não precisa ser pixel-perfect, mas o raio de 8px
+de T1 deve se propagar a todo canto/botão que hoje usa `landing-pill`
+indevidamente).
 
-**Verificar com:** `cd app/web && git diff src/pages/ProcessPage.tsx src/pages/LawyerProcessesPage.tsx src/pages/AccountantProcessesPage.tsx src/pages/adv/LawyerProcessDetail.tsx src/pages/acc/AccountantProcessDetail.tsx src/pages/ClientProcessDetail.tsx`
+**Êxito:** nenhuma seção da landing usa `border-radius: 999px` fora dos
+casos genuinamente circulares do modelo (mesmo critério de T1).
 
-## T7 — Catálogo e Perfil público
+**Verificar com:** `git diff src/components/landing/` completo + captura de tela da página inteira.
 
-**Fazer:** reskinar `cli/CatalogPage.tsx` seguindo `08 Catalogo.html`
-(grade de cartões de contador/perito com filtro) e
-`public/AccountantPublicProfile.tsx` seguindo `09 Perfil publico.html`
-(perfil com foto, credenciais CRC, avaliações, CTA de contato). Aplicar
-hover-zoom nos cartões do catálogo (igual ao showcase da landing) e
-transição no CTA de contato do perfil, respeitando `prefers-reduced-motion`.
+## T8 — Testes da landing
 
-**Êxito:** `git diff` preserva toda chamada a API de listagem/filtro e
-toda lógica de roteamento por `slug`. Teste manual: abrir
-`/cli/catalogo` e `/contadores/:slug` (com um slug real do backend/mock)
-renderiza sem erro no console.
+**Fazer:** os testes em `app/web/tests/landing-*.test.mjs` foram escritos
+para a versão reinterpretada (ex.: podem checar que a lista do hero tem 5
+itens de produto, não 7 de processo). Ajustar as asserções que ficaram
+obsoletas pela mudança de conteúdo de T3/T4/T5/T6, **sem apagar
+cobertura** — cada asserção removida precisa de uma equivalente nova no
+lugar, checando o conteúdo/estrutura correta pós-porte.
 
-**Verificar com:** `cd app/web && git diff src/pages/cli/CatalogPage.tsx src/pages/public/AccountantPublicProfile.tsx` + teste manual nas 2 rotas, checar `read_console_messages` sem erro novo.
+**Êxito:** `node --test tests/*.test.mjs` verde; nenhum teste removido
+sem substituto; diff de teste justificado linha por linha no VEREDITO.
 
-## T8 — Telas sem mockup dedicado
+**Verificar com:** `cd app/web && node --test tests/*.test.mjs` + `git diff tests/`.
 
-**Fazer:** adequar ao vocabulário visual já estabelecido em T1/T2 (cards,
-botões, cores, radius) as telas que não têm mockup próprio:
-`PostsPage.tsx`, `ServicesPage.tsx`, `UsersPage.tsx`, `SettingsPage.tsx`,
-`NotFoundPage.tsx`, `acc/AccountantProfileEdit.tsx`,
-`adv/LawyerSubscriptionPage.tsx`, `ClientDocumentsPage.tsx`,
-`ClientNotificationsPage.tsx`. Sem mockup para copiar 1:1 — usar os
-mesmos primitivos de T1 (`Card`, `GoldButton`, etc.) para que fiquem
-visualmente da mesma família das telas mapeadas.
+## T9 — Ajuste do painel (raio/spacing, não recomeçar)
 
-**Êxito:** cada uma dessas páginas usa pelo menos um primitivo de
-`connexo-primitives.tsx` (import presente) em vez de HTML cru estilizado
-do zero; nenhuma lógica de submit/fetch/estado alterada (`git diff` só
-classes/JSX de apresentação).
+**Fazer:** o painel do ciclo 1 já está com a paleta e componentização
+certas (não mexer nisso). Comparar `AppShell.tsx`,
+`connexo-primitives.tsx` (Card/GoldButton/GhostButton) e o dashboard do
+advogado/contador contra `04-painel-do-advogado-dom-body.html` /
+`05-painel-do-perito-dom-body.html` — mesmo critério de raio de borda (o
+modelo do painel provavelmente também usa cantos discretos, não pílula,
+em cards/botões — conferir, não assumir) e espaçamento de sidebar/topbar.
+Ajustar só o que divergir visivelmente; preservar toda prop/rota/lógica
+do ciclo 1.
 
-**Verificar com:** `cd app/web && git diff src/pages/PostsPage.tsx src/pages/ServicesPage.tsx src/pages/UsersPage.tsx src/pages/SettingsPage.tsx src/pages/NotFoundPage.tsx src/pages/acc/AccountantProfileEdit.tsx src/pages/adv/LawyerSubscriptionPage.tsx src/pages/ClientDocumentsPage.tsx src/pages/ClientNotificationsPage.tsx`
+**Êxito:** raio de card/botão do painel bate com o mockup 04/05; nenhuma
+regressão nas 9 tarefas já aprovadas no ciclo 1 (conferir `git diff` não
+muda `NAV`/rotas/dados).
 
-## T9 — Regressão e integridade (checar em todo cycle, não só no fim)
+**Verificar com:** `git diff src/components/layout/AppShell.tsx src/components/ui/connexo-primitives.tsx` + captura de tela do painel.
 
-**Fazer:** nada de novo — é checagem contínua do que as tarefas acima não
-podem quebrar.
+## T10 — Regressão e integridade
+
+**Fazer:** nada de novo — checagem contínua.
 
 **Êxito:**
-1. `cd app/web && npx tsc --noEmit` → só os 3 erros baseline de
-   `pages/AccountantProcessDetail.tsx`.
+1. `cd app/web && npx tsc --noEmit` → só os 3 erros baseline.
 2. `cd app/web && npm run build` → exit 0.
-3. `cd app/web && node --test tests/*.test.mjs` → 11 passam, 0 falham.
-4. `git diff --name-only` não inclui nenhum arquivo fora do Escopo do OBJETIVO.md.
-5. `git diff -- app/web/src/App.tsx app/web/src/main.tsx 'app/web/src/services/**' 'app/api/**'` vazio.
-6. Nenhuma linha `data-testid=` removida em relação ao commit de checkpoint (`git diff <checkpoint> | grep '^-.*data-testid'` vazio).
-7. Segurança: `git diff <checkpoint> | grep -i "dangerouslySetInnerHTML\|<script"` vazio nos arquivos tocados.
-8. Componentização: nenhum dos padrões repetidos (card de estatística, card de prazo/timeline, cabeçalho de página com busca) tem 3+ implementações JSX divergentes entre os arquivos tocados — checar por import compartilhado (ver Êxito de T4/T6).
+3. `cd app/web && node --test tests/*.test.mjs` → verde (conteúdo pode
+   ter mudado por T8, mas 0 falhas).
+4. `git diff -- app/web/src/App.tsx app/web/src/main.tsx 'app/web/src/services/**' 'app/api/**'` vazio.
+5. Nenhum `data-testid` removido.
+6. Amostragem de raio de borda (T1/T7/T9) confirmada pelo juiz, não só
+   pelo executor.
 
-**Verificar com:** os 8 comandos/checagens acima, rodados pelo juiz — não reaproveitar a alegação do executor.
+**Verificar com:** os comandos acima, rodados pelo juiz.

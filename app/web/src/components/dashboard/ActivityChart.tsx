@@ -26,7 +26,7 @@ export function ActivityChart({ data, accent }: { data: MonthlyActivity[]; accen
           x2={w - pad}
           y1={pad + (h - pad * 2) * t}
           y2={pad + (h - pad * 2) * t}
-          stroke="#E5E7EB"
+          stroke="#E4E2DE"
           strokeDasharray="3 4"
         />
       ))}
@@ -41,7 +41,7 @@ export function ActivityChart({ data, accent }: { data: MonthlyActivity[]; accen
       <path
         d={linePath("laudos")}
         fill="none"
-        stroke="#000830"
+        stroke="#40101E"
         strokeWidth="2"
         strokeDasharray="5 4"
         strokeLinecap="round"
@@ -54,7 +54,7 @@ export function ActivityChart({ data, accent }: { data: MonthlyActivity[]; accen
             y={h - 8}
             textAnchor="middle"
             fontSize="10"
-            fill="#6B7280"
+            fill="#141414"
             fontWeight="700"
           >
             {d.m}

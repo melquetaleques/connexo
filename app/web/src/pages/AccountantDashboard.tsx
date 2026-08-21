@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageContainer, Card, Icon, SectionTitle, GoldButton, GhostButton, Pill, Avatar } from "@/components/ui/connexo-primitives";
+import { StatCard } from "@/components/dashboard/StatCard";
 import { getAccountantDashboard, AccountantDashboardData, acceptLinkRequest, rejectLinkRequest } from "@/services/accountant";
 import { apiErrorMessage } from "@/lib/utils";
 
@@ -50,7 +51,7 @@ export function AccountantDashboard() {
   return (
     <PageContainer>
       <div className="mb-12">
-        <h1 className="text-4xl font-black text-primary tracking-tight mb-2">Painel do Perito</h1>
+        <h1 className="text-4xl font-semibold text-ink tracking-tight mb-2 font-theme-display">Painel do Perito</h1>
         <p className="text-primary/40 font-bold uppercase tracking-[0.2em] text-xs">Gestão de Processos e Vínculos</p>
       </div>
       {actionError && (
@@ -60,7 +61,7 @@ export function AccountantDashboard() {
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 cx-stagger">
         <StatCard 
           label="Solicitações Pendentes" 
           value={data?.stats.pending_links || 0} 
@@ -148,19 +149,5 @@ export function AccountantDashboard() {
         </div>
       </div>
     </PageContainer>
-  );
-}
-
-function StatCard({ label, value, icon, highlight = false }: { label: string, value: string | number, icon: string, highlight?: boolean }) {
-  return (
-    <Card className={`p-8 border-b-4 ${highlight ? 'border-b-secondary' : 'border-b-primary/10'}`}>
-      <div className="flex items-center justify-between mb-4">
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${highlight ? 'bg-secondary/10 text-secondary' : 'bg-surface-2 text-primary/40'}`}>
-          <Icon name={icon} className="text-2xl" />
-        </div>
-      </div>
-      <p className="text-3xl font-black text-primary mb-1 tracking-tight">{value}</p>
-      <p className="text-[10px] font-black text-primary/30 uppercase tracking-[0.15em]">{label}</p>
-    </Card>
   );
 }

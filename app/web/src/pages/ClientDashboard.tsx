@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { PageContainer, Card, Icon, SectionTitle, GoldButton, Pill } from "@/components/ui/connexo-primitives";
+import { PageContainer, Card, Icon, SectionTitle, GoldButton, Pill, PageHeader } from "@/components/ui/connexo-primitives";
+import { StatCard } from "@/components/dashboard/StatCard";
 import { listMyProcesses, ClientProcess } from "@/services/client";
 import { useNavigate } from "react-router-dom";
 import { apiErrorMessage } from "@/lib/utils";
@@ -44,14 +45,29 @@ export function ClientProcessesPage({
 
   return (
     <PageContainer>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-        <div>
-          <h1 className="text-4xl font-black text-primary tracking-tight mb-2">{title}</h1>
-          <p className="text-primary/40 font-bold uppercase tracking-[0.2em] text-xs">{kicker}</p>
-        </div>
-        <GoldButton icon="search" onClick={() => navigate("/cli/catalogo")}>
-          Buscar Novos Peritos
-        </GoldButton>
+      <PageHeader
+        kicker={kicker}
+        title={title}
+        action={
+          <GoldButton icon="search" onClick={() => navigate("/cli/catalogo")}>
+            Buscar Novos Peritos
+          </GoldButton>
+        }
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 cx-stagger">
+        <StatCard label="Processos" value={processes.length} icon="balance" />
+        <StatCard
+          label="Em Andamento"
+          value={processes.filter(p => p.stage !== "Concluído").length}
+          icon="pending"
+        />
+        <StatCard
+          label="Aguardando Vínculo"
+          value={processes.filter(p => !p.accountant_id).length}
+          icon="person_search"
+          highlight
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">

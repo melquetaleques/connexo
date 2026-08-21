@@ -10,6 +10,7 @@ import {
   StatusDot,
   Stat,
   Avatar,
+  TimelineStep,
 } from "@/components/ui/connexo-primitives";
 import { DocumentManager } from "@/components/shared/DocumentManager";
 import { getProcess, getProcessTimeline, type TimelineEntry } from "@/services/processes";
@@ -242,18 +243,14 @@ export function ProcessPage() {
 
           <Card className="p-8">
             <h3 className="text-sm font-black text-primary uppercase tracking-widest mb-6 border-b border-outline/60 pb-4">Histórico de Atividades</h3>
-            <div className="space-y-6">
+            <div className="space-y-1">
               {timeline.length > 0 ? timeline.map((log, i) => (
-                <div key={i} className="flex gap-4 relative">
-                  {i < timeline.length - 1 && <div className="absolute left-[11px] top-6 w-px h-10 bg-outline/60" />}
-                  <div className="w-6 h-6 rounded-full bg-surface-2 border border-outline flex items-center justify-center shrink-0 z-10">
-                    <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-primary">{log.action}</p>
-                    <p className="text-[10px] text-primary/40 uppercase font-medium">{log.user} • {log.time}</p>
-                  </div>
-                </div>
+                <TimelineStep
+                  key={i}
+                  title={log.action}
+                  description={`${log.user} • ${log.time}`}
+                  last={i === timeline.length - 1}
+                />
               )) : (
                 <p className="text-xs font-bold text-primary/30 uppercase tracking-widest text-center py-4">
                   Nenhuma atividade registrada
@@ -313,7 +310,7 @@ export function ProcessPage() {
               )}
             </div>
 
-            <div className="p-8 bg-[#F9FAFB] flex gap-4">
+            <div className="p-8 bg-surface-1 flex gap-4">
               <GhostButton className="flex-1 py-4" onClick={() => setIsRequestModalOpen(false)}>Cancelar</GhostButton>
               <GoldButton
                 className="flex-[2] py-4"

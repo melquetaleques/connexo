@@ -159,7 +159,7 @@ export function AccountantPublicProfile() {
             {/* Info */}
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-3 mb-3">
-                <h1 className="text-3xl font-black text-primary tracking-tight">{profile.name}</h1>
+                <h1 className="text-3xl font-semibold text-ink tracking-tight font-theme-display">{profile.name}</h1>
                 <Pill tone={availConfig.tone as any}>
                   <div className={`w-1.5 h-1.5 rounded-full ${availConfig.color} inline-block mr-1.5`} />
                   {availConfig.label}
@@ -186,7 +186,7 @@ export function AccountantPublicProfile() {
             <div className="shrink-0 w-full md:w-auto">
               <GoldButton
                 icon="handshake"
-                className="w-full md:w-auto"
+                className="w-full md:w-auto hover:scale-[1.02] transition-transform duration-300 motion-reduce:hover:scale-100"
                 onClick={() => {
                   if (!user) {
                     navigate(`/login?next=/contadores/${slug}`);
@@ -210,7 +210,7 @@ export function AccountantPublicProfile() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {profile.photo_urls.map((url, idx) => (
               <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-surface-2 border border-outline/30 shadow-sm">
-                <img src={url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                <img src={url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-500 hover:scale-105 motion-reduce:hover:scale-100" />
               </div>
             ))}
           </div>

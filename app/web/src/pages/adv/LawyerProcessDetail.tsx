@@ -9,6 +9,7 @@ import {
   Pill,
   StatusDot,
   Avatar,
+  TimelineStep,
 } from "@/components/ui/connexo-primitives";
 import api from "@/services/api";
 import { apiErrorMessage } from "@/lib/utils";
@@ -344,32 +345,22 @@ export function LawyerProcessDetail() {
             <h3 className="text-sm font-black text-primary uppercase tracking-widest mb-6 border-b border-outline/60 pb-4">
               Timeline
             </h3>
-            <div className="space-y-6">
+            <div className="space-y-1">
               {events.length === 0 ? (
                 <p className="text-xs font-medium text-primary/40 text-center">Nenhum evento registrado</p>
               ) : (
                 events.map((ev, i) => (
-                  <div key={ev.id} className="flex gap-4 relative">
-                    {i < events.length - 1 && (
-                      <div className="absolute left-[11px] top-6 w-px h-10 bg-outline/60" />
-                    )}
-                    <div className="w-6 h-6 rounded-full bg-surface-2 border border-outline flex items-center justify-center shrink-0 z-10">
-                      <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-primary">
-                        {EVENT_LABELS[ev.event_type] || ev.event_type}
-                      </p>
-                      <p className="text-[10px] text-primary/40 uppercase font-medium">
-                        {ev.actor_role} &bull; {new Date(ev.created_at).toLocaleString()}
-                      </p>
-                      {ev.metadata && (
-                        <p className="text-[10px] text-primary/30 mt-1">
-                          {ev.metadata.from_status} &rarr; {ev.metadata.to_status}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  <TimelineStep
+                    key={ev.id}
+                    title={EVENT_LABELS[ev.event_type] || ev.event_type}
+                    date={`${ev.actor_role} • ${new Date(ev.created_at).toLocaleString()}`}
+                    description={
+                      ev.metadata
+                        ? `${ev.metadata.from_status} → ${ev.metadata.to_status}`
+                        : undefined
+                    }
+                    last={i === events.length - 1}
+                  />
                 ))
               )}
             </div>

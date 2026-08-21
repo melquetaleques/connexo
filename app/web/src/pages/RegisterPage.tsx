@@ -4,8 +4,6 @@ import { GoldButton, Icon, Field, SelectField } from "@/components/ui/connexo-pr
 import { useAuth, type Role } from "@/hooks/useAuth";
 import { apiErrorMessage } from "@/lib/utils";
 
-const ACCENT = "#C59D5C";
-
 const REGISTER_ROLES: Role[] = ["advogado", "contador", "cliente"];
 
 function parseRole(value: string | null): Role {
@@ -92,33 +90,46 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative bg-[#F9FAFB] font-['Plus_Jakarta_Sans'] py-12 px-4">
-      {/* Watermarks */}
-      <div className="fixed inset-0 z-0 overflow-hidden select-none pointer-events-none opacity-[0.03]">
-        <span className="absolute -top-10 -left-10 text-[10rem] font-black text-primary leading-none">CONNEXO</span>
+    <div className="min-h-screen flex items-center justify-center relative bg-surface-1 font-theme-body py-12 px-4">
+      <div className="fixed inset-0 z-0 overflow-hidden select-none pointer-events-none opacity-[0.04]">
+        <span className="absolute -top-10 -left-10 text-[10rem] font-semibold text-primary leading-none font-theme-display">CONNEXO</span>
       </div>
 
-      <main className="relative z-10 w-full max-w-[850px] bg-white rounded-[32px] shadow-[0_50px_100px_-30px_rgba(0,8,48,0.15)] overflow-hidden border border-[#F3F4F6] animate-in fade-in slide-in-from-bottom-8 duration-700">
-        
-        {/* Header do Wizard */}
-        <div className="px-12 py-10 border-b border-[#F3F4F6] flex items-center justify-between bg-white">
+      <main className="relative z-10 w-full max-w-[1100px] grid grid-cols-1 md:grid-cols-5 bg-white rounded-[32px] shadow-[0_50px_100px_-30px_rgba(64,16,30,0.18)] overflow-hidden border border-outline cx-reveal">
+
+        <div className="hidden md:flex md:col-span-2 flex-col justify-between p-10 bg-primary text-white">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
               <Icon name="balance" className="text-white text-xl" />
             </div>
-            <span className="text-xl font-black tracking-tighter uppercase text-primary">Connexo</span>
+            <span className="text-xl font-semibold tracking-tight uppercase font-theme-display">Connexo</span>
           </div>
-          <Link to="/login" className="text-[11px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary transition-colors flex items-center gap-2">
-            <Icon name="arrow_back" className="text-base" />
-            Voltar ao Login
-          </Link>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-secondary mb-3">Cadastro</p>
+            <h2 className="text-3xl font-semibold leading-tight font-theme-display">O rito pericial no mesmo expediente.</h2>
+            <p className="mt-4 text-sm text-white/60">Advogado, perito e cliente no mesmo fluxo — sem planilha paralela.</p>
+          </div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">LGPD · CRC · OAB</p>
         </div>
 
-        <div className="px-12 pt-12">
-          {/* Barra de Progresso */}
+        <div className="md:col-span-3 px-8 md:px-12 pt-10">
+          <div className="flex items-center justify-between mb-8 md:hidden">
+            <span className="text-lg font-semibold uppercase font-theme-display text-primary">Connexo</span>
+            <Link to="/login" className="text-[11px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary transition-colors flex items-center gap-2">
+              <Icon name="arrow_back" className="text-base" />
+              Voltar ao Login
+            </Link>
+          </div>
+          <div className="hidden md:flex justify-end mb-6">
+            <Link to="/login" className="text-[11px] font-bold uppercase tracking-widest text-primary/40 hover:text-primary transition-colors flex items-center gap-2">
+              <Icon name="arrow_back" className="text-base" />
+              Voltar ao Login
+            </Link>
+          </div>
+
           <div className="mb-12">
             <div className="flex justify-between items-end mb-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.4em]" style={{ color: ACCENT }}>
+              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-secondary">
                 Etapa {step} de {totalSteps}
               </p>
               <p className="text-xs font-bold text-primary/30 uppercase tracking-widest">
@@ -129,8 +140,7 @@ export function RegisterPage() {
               {[1, 2].map((s) => (
                 <div
                   key={s}
-                  className="h-1.5 flex-1 rounded-full transition-all duration-500"
-                  style={{ background: s <= step ? ACCENT : "#F3F4F6" }}
+                  className={`h-1.5 flex-1 rounded-full transition-all duration-500 motion-reduce:transition-none ${s <= step ? "bg-secondary" : "bg-surface-2"}`}
                 />
               ))}
             </div>
@@ -237,7 +247,7 @@ export function RegisterPage() {
                 type="checkbox" 
                 checked={acceptedTerms}
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
-                className="peer appearance-none w-6 h-6 border-2 border-[#F3F4F6] rounded-lg checked:bg-secondary checked:border-secondary transition-all cursor-pointer"
+                className="peer appearance-none w-6 h-6 border-2 border-outline rounded-lg checked:bg-secondary checked:border-secondary transition-all cursor-pointer"
               />
               <Icon name="check" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none text-xs" />
             </div>

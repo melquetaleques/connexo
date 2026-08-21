@@ -8,7 +8,8 @@ import {
   SectionTitle,
   Field,
   Avatar,
-  Pill
+  Pill,
+  PageHeader,
 } from "@/components/ui/connexo-primitives";
 import api from "@/services/api";
 
@@ -114,20 +115,17 @@ export function UsersPage() {
   return (
     <PageContainer>
       <div className="flex flex-col gap-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-[10px] font-bold text-secondary uppercase tracking-[0.3em]">
-              Equipe
-            </span>
-            <h2 className="text-3xl font-bold text-primary mt-1">Membros da Equipe</h2>
-          </div>
-          {!inviting && (
-            <GoldButton onClick={() => setInviting(true)}>
-              <Icon name="person_add" className="text-base" /> Convidar usuário
-            </GoldButton>
-          )}
-        </div>
+        <PageHeader
+          kicker="Equipe"
+          title="Membros da Equipe"
+          action={
+            !inviting ? (
+              <GoldButton onClick={() => setInviting(true)}>
+                <Icon name="person_add" className="text-base" /> Convidar usuário
+              </GoldButton>
+            ) : undefined
+          }
+        />
 
         {/* Invite Panel */}
         {inviting && (

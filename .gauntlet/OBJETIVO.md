@@ -1,128 +1,98 @@
-# OBJETIVO — Aplicar o tema Connexo (painel e telas internas)
+# OBJETIVO — Porte literal do HTML do tema (landing + ajuste de painel)
 
-**Aplicar** — não reinventar — o tema definido em `tema/Connexo paginas/*.html`
-em todo o app (painel do advogado, contador, cliente, login, cadastro,
-clientes, processos, catálogo, perfil público e telas não mapeadas), na
-estrutura de páginas/rotas atual. Depois de aplicado o visual, aplicar as
-**animações** correspondentes (hover, transições, reveals) da mesma forma
-que a landing já faz. Preservar 100% dos recursos programáticos (rotas,
-chamadas de API, login/autenticação, lógica de negócio). Usar **princípios
-SOLID e componentização** — extrair vocabulário repetido (cards, tabelas,
-badges, cabeçalhos de página) em componentes reutilizáveis em vez de
-duplicar JSX estilizado em cada página. Manter a segurança da aplicação
-(não copiar `<script>`/HTML bruto do bundle do mockup, não usar
-`dangerouslySetInnerHTML`, não expor segredo). Mudança **predominantemente
-estética/UX/design** — zero alteração de rotas, API, autenticação ou
-lógica de negócio.
+**Mudança de método em relação ao ciclo 1.** O ciclo 1 reimplementou o
+painel em Tailwind "no espírito do" mockup — passou na auditoria estrutural,
+mas o usuário, ao comparar a landing (obra de 11 ciclos anteriores) lado a
+lado com o modelo, viu que a reinterpretação livre diverge visualmente do
+tema real (raio de borda, nav, conteúdo da lista do hero, escala
+tipográfica). Instrução explícita do usuário: **"não é para reescrever o
+tema, é para usar o HTML do tema e aplicar as funcionalidades."**
 
-## Contexto
+A partir de agora: **portar a estrutura DOM + estilos inline do mockup
+literalmente** para os componentes React (mesma hierarquia de elementos,
+mesmos valores de `style`, convertidos para JSX), e só então plugar a
+parte funcional (rotas reais via `react-router`, dados reais, handlers,
+estado) por cima — sem reinventar layout, raio, espaçamento ou cópia de
+texto por conta própria.
 
-- Referência de design (9 mockups HTML "bundled", grandes e não editáveis
-  diretamente — servem só de referência visual): `tema/Connexo paginas/`:
-  `01 Landing`, `02 Login`, `03 Cadastro`, `04 Painel do advogado`,
-  `05 Painel do perito` (= papel **contador** no app), `06 Clientes`,
-  `07 Processo`, `08 Catalogo`, `09 Perfil publico`.
-- A landing (`LandingPage.tsx` + `components/landing/Mag*.tsx`) já foi
-  retemada em 11 ciclos de gauntlet anteriores a partir do mesmo tema e
-  **passa em 11/11 testes** (`app/web/tests/landing-*.test.mjs`). Ela fica
-  **congelada** (não reabrir esse trabalho), mas os tokens de cor que ela
-  cravou em `tailwind.config.js` (`mg-ink`, `mg-ivory`, `mg-vinho`,
-  `mg-magenta`, `mg-indigo`) já são a paleta literal extraída do mesmo
-  `tema/Connexo paginas/` — reusar esses hex é aplicar o tema, não
-  reinterpretá-lo.
-- Fonte do mockup (medida via browser real nos 9 arquivos): corpo em
-  **Hanken Grotesk**, títulos/branding em **Figtree**. A landing não usa
-  essas fontes (ficou em Plus Jakarta Sans/Cabinet Grotesk antes desta
-  tarefa existir) — como ela está congelada, a inconsistência entre
-  landing e painel é aceita por ora. Para todas as páginas **dentro do
-  escopo desta tarefa**, aplicar Hanken Grotesk (corpo) e Figtree
-  (headings/branding) como o mockup define — adicionar via Google
-  Fonts/Fontshare (mesmo mecanismo de preconnect já usado em
-  `index.html` para as fontes atuais) e configurar em
-  `tailwind.config.js` como nova entrada de `fontFamily` (ex.:
-  `theme-body`/`theme-display`), sem remover as entradas `sans`/`display`
-  atuais (a landing ainda depende delas).
-- O resto do app (painel/dashboard) hoje usa uma paleta **antiga e não
-  relacionada** — navy `#000830` / dourado `#C59D5C` — definida em
-  `theme.extend.colors.primary/secondary/surface/...` do
-  `tailwind.config.js`. Esses tokens (`primary`, `secondary`, `surface`,
-  `surface-1`, `surface-2`, `outline`, `paper`, `ink`) são usados por quase
-  todo arquivo fora de `components/landing` (confirmado por grep: 40+
-  arquivos). **Retemar essencialmente = trocar os valores hex desses
-  tokens para a família wine/cream já validada na landing, sem renomear
-  classes** — isso repinta a maior parte do app sem tocar em cada arquivo.
-  Depois disso, ajustes estruturais pontuais (layout do `AppShell`,
-  cards, tabelas, formulários) alinham cada tela ao mockup correspondente.
-- Rotas reais (única fonte de verdade — `app/web/src/App.tsx`): há
-  arquivos de página **duplicados e mortos** que NÃO são importados por
-  `App.tsx` (ex.: `pages/AccountantProcessDetail.tsx` vs
-  `pages/acc/AccountantProcessDetail.tsx` — só o segundo é usado; mesmo
-  padrão para `AccountantCatalogPage.tsx`, `AccountantProfileEdit.tsx`,
-  `AccountantPublicProfile.tsx`, `ClientProcessDetail.tsx`,
-  `DashboardPage.tsx`). **Não editar os arquivos mortos** — perda de
-  esforço e risco de "consertar" algo que nunca renderiza.
-- Baseline medido nesta sessão (2026-08-20):
-  - `node --test tests/*.test.mjs` → **11 passam, 0 falham**.
-  - `npx tsc --noEmit` → **3 erros pré-existentes**, todos em
-    `src/pages/AccountantProcessDetail.tsx` (arquivo morto, fora de rota).
-    Não aumentar esse número; não é obrigatório zerá-lo (arquivo fora de
-    escopo).
-  - `npm run build` deve continuar funcionando (Vite).
+## Contexto técnico — como ler o mockup
+
+Os arquivos-fonte em `tema/Connexo paginas/*.html` são exports de uma
+ferramenta de design (bundle JS de ~1-4MB, com um blob de fontes
+base64 e um payload JSON gigante) — **não têm HTML estático legível**; o
+DOM real só existe depois do JS rodar num browser. Não adianta abrir com
+`cat`/`Read`.
+
+Por isso, o DOM real de cada uma das 9 páginas já foi extraído (renderizado
+num Chrome headless com `--dump-dom`, cortado para conter só o
+`<body>`) e salvo em `**.gauntlet/mockup-dom/*.html`**. Estes são a fonte
+de verdade — **HTML real, com todo `style="..."` inline preservado**,
+sem lixo de fonte/bundler:
+
+| Arquivo | Página |
+|---|---|
+| `01-landing-dom-body.html` | Landing |
+| `02-login-dom-body.html` | Login |
+| `03-cadastro-dom-body.html` | Cadastro |
+| `04-painel-do-advogado-dom-body.html` | Painel do advogado |
+| `05-painel-do-perito-dom-body.html` | Painel do perito (= papel **contador** no app) |
+| `06-clientes-dom-body.html` | Clientes |
+| `07-processo-dom-body.html` | Processo |
+| `08-catalogo-dom-body.html` | Catálogo |
+| `09-perfil-publico-dom-body.html` | Perfil público |
+
+**Atenção ao primeiro bloco de cada arquivo:** o `<div data-dc-tpl="7"
+style="position: sticky; ...">` logo no início, contendo os links
+`Landing / Login / Cadastro / Painel do advogado / ...`, é o **seletor de
+página da própria ferramenta de design** (compara com os 9 nomes de
+arquivo) — **não faz parte do design real, ignorar**. O design de verdade
+começa no `<section data-dc-tpl="20" id="...">` seguinte.
+
+Como ler: `grep`/`sed` para achar a seção relevante pelo `id=` ou por
+texto âncora (ex.: `grep -n 'id="landing"'`), depois `sed -n
+'<inicio>,<fim>p'` para extrair o trecho. Cada elemento tem um atributo
+`data-dc-tpl="N"` (marcador da ferramenta, pode ser removido ou mantido
+como comentário — não precisa virar prop React) e um `style="..."` que
+deve virar `style={{ ... }}` em camelCase (`background-color` →
+`backgroundColor`), preservando os valores literais (cor, px, radius,
+gradiente) — não arredondar para um valor "parecido" de um token
+Tailwind existente a menos que o valor já bata exatamente.
+
+## O que já foi corrigido (achado nesta sessão, não refazer)
+
+Uma causa raiz de alto impacto já identificada: `.landing-pill` em
+`app/web/src/index.css` usa `border-radius: 999px` (pílula total) em
+**tudo** — botões, badges, busca. O modelo usa **~7-8px** de raio na
+maioria desses elementos (só elementos claramente circulares, como o
+avatar/logo "C", usam raio total). Ver T1.
 
 ## Escopo
 
 Pode editar:
-- `app/web/tailwind.config.js` (somente valores hex de
-  `primary/secondary/surface/surface-1/surface-2/on-surface-variant/outline/paper/ink`;
-  pode reaproveitar os hex já existentes de `mg-vinho/mg-ivory/mg-ink/mg-magenta/mg-indigo`)
-- `app/web/src/index.css` (regras globais fora do bloco `.mag-*`/`.landing-*`, que ficam congelados)
-- `app/web/src/components/ui/connexo-primitives.tsx`
-- `app/web/src/components/ui/connexo-icons.tsx`
-- `app/web/src/components/layout/AppShell.tsx`
-- `app/web/src/components/dashboard/**`
-- `app/web/src/components/marketplace/**`
-- `app/web/src/components/lgpd/**`
-- `app/web/src/components/shared/**` (exceto `ErrorBoundary.tsx` — só classes visuais, não a lógica de captura de erro)
-- `app/web/src/pages/LoginPage.tsx`, `RegisterPage.tsx`
-- `app/web/src/pages/LawyerDashboard.tsx`, `AccountantDashboard.tsx`, `ClientDashboard.tsx`
-- `app/web/src/pages/ClientsPage.tsx`, `ClientDetailPage.tsx`
-- `app/web/src/pages/ProcessPage.tsx`, `LawyerProcessesPage.tsx`, `AccountantProcessesPage.tsx`
-- `app/web/src/pages/adv/LawyerProcessDetail.tsx`, `adv/LawyerSubscriptionPage.tsx`
-- `app/web/src/pages/acc/AccountantProcessDetail.tsx`, `acc/AccountantProfileEdit.tsx`
-- `app/web/src/pages/cli/CatalogPage.tsx` (rota real de `/cli/catalogo` e `/acc/catálogo-equivalente`, confira `App.tsx`)
-- `app/web/src/pages/ClientProcessDetail.tsx` (rota real de `/cli/processos/:id` — **não** `pages/cli/ClientProcessDetail.tsx`, que é morto), `ClientDocumentsPage.tsx`, `ClientNotificationsPage.tsx`
-- `app/web/src/pages/public/AccountantPublicProfile.tsx`
-- `app/web/src/pages/PostsPage.tsx`, `ServicesPage.tsx`, `UsersPage.tsx`, `SettingsPage.tsx`, `NotFoundPage.tsx`, `PagePlaceholder.tsx`
+- `app/web/src/components/landing/**` (todos os `Mag*.tsx`, `RitoChapter.tsx`, `MockShell.tsx`, `controls/**`) — **landing deixa de estar congelada**
+- `app/web/src/pages/LandingPage.tsx`
+- `app/web/src/index.css` (classes `.landing-*`/`.mag-*`, incluindo a correção de raio)
+- `app/web/src/components/layout/AppShell.tsx`, `app/web/src/components/ui/connexo-primitives.tsx`, `app/web/src/components/ui/connexo-icons.tsx` (ajustes pontuais de raio/spacing pra bater com `04-`/`05-painel-do-*-dom-body.html`, **sem desfazer** a paleta/componentização do ciclo 1 — ver T9)
+- Páginas de painel já tocadas no ciclo 1 (mesma lista do `OBJETIVO.md` anterior, arquivo `.gauntlet/cycle-1/prompt.md` tem a lista completa se precisar reconferir)
+- `.gauntlet/mockup-dom/**` (só leitura — não editar, é a referência)
 
 NÃO pode editar:
-- `.git/`, `.gauntlet/`, `.env*`, segredos
-- `app/web/src/components/landing/**`, `app/web/src/pages/LandingPage.tsx` (congelado, já aprovado)
-- Qualquer classe/regra `.mag-*` ou `.landing-*` em `index.css`
-- Tokens `mg-ink`, `mg-ivory`, `mg-vinho`, `mg-magenta`, `mg-indigo`, `mg-blue`, `mg-warm` em `tailwind.config.js` (só leitura/reuso de valor)
-- Arquivos de página duplicados/mortos (não importados em `App.tsx`):
-  `pages/AccountantCatalogPage.tsx`, `pages/AccountantProcessDetail.tsx`,
-  `pages/AccountantProfileEdit.tsx`, `pages/AccountantPublicProfile.tsx`,
-  `pages/cli/ClientProcessDetail.tsx`, `pages/DashboardPage.tsx`.
-- Qualquer arquivo em `app/api/**`, `app/web/src/services/**`, `hooks/useAuth.tsx`, `App.tsx`, `main.tsx` — nenhuma rota, chamada de API, contexto de auth ou lógica muda
-- `data-testid`, nomes de função exportada, assinaturas de props públicas — não remover nem renomear
+- `.git/`, `.gauntlet/OBJETIVO.md`, `.gauntlet/TASKS.md`, `.env*`, segredos
+- `app/web/src/App.tsx`, `main.tsx`, `services/**`, `hooks/useAuth.tsx`, `app/api/**` — nenhuma rota, contrato de API ou lógica de auth muda
+- `data-testid` existentes — não remover (pode adicionar novos)
+- Arquivos de página duplicados/mortos (mesma lista do `OBJETIVO.md` do ciclo 1)
 
 ## Critérios de êxito globais
 
-- [ ] `cd app/web && npx tsc --noEmit` sai com no máximo os 3 erros pré-existentes de `pages/AccountantProcessDetail.tsx` (arquivo morto) — nenhum erro novo em outro arquivo
-- [ ] `cd app/web && npm run build` sai com exit 0
-- [ ] `cd app/web && node --test tests/*.test.mjs` continua 11/11 verdes (a landing não pode regredir)
-- [ ] `git diff --name-only` não toca nenhum arquivo fora do Escopo acima
-- [ ] `git diff -- app/web/src/App.tsx app/web/src/main.tsx 'app/web/src/services/**' 'app/api/**'` vazio — nenhuma rota, endpoint ou contrato de API muda
-- [ ] Nenhum `data-testid` existente foi removido (`git diff` só pode adicionar/mover, não apagar `data-testid=`)
-- [ ] As 3 sidebars de papel (advogado/contador/cliente) continuam com os mesmos itens de navegação e mesmos `to=` de rota do `AppShell.tsx` atual — só o visual muda
-- [ ] Nenhum arquivo novo/editado usa `dangerouslySetInnerHTML`, `eval`, ou HTML colado literalmente do bundle do mockup (`grep -rn "dangerouslySetInnerHTML\|<script" app/web/src` restrito aos arquivos do diff, deve ficar vazio)
-- [ ] Componentização: nenhum padrão visual usado em ≥3 páginas (card de estatística, cabeçalho de página com busca, badge de status, tabela de linhas) fica reimplementado do zero em cada arquivo — deve existir um componente compartilhado importado pelas páginas que o usam
+- [ ] `cd app/web && npx tsc --noEmit` — no máximo os 3 erros baseline já conhecidos (arquivo morto)
+- [ ] `cd app/web && npm run build` — exit 0
+- [ ] `cd app/web && node --test tests/*.test.mjs` — **os testes atuais podem precisar de ajuste já que o conteúdo da landing muda de propósito** (ex.: lista do hero passa a ter 7 itens de processo, não 5 de produto) — se um teste antigo checa um comportamento que o modelo explicitamente contradiz, ajuste o teste e documente por quê no VEREDITO; não é permitido apagar um teste sem substituir pela asserção equivalente atualizada
+- [ ] Nenhum `data-testid` removido
+- [ ] `git diff -- app/web/src/App.tsx app/web/src/main.tsx 'app/web/src/services/**' 'app/api/**'` vazio
+- [ ] Raio de borda: nenhum elemento não-circular da landing usa `border-radius: 999px`/`rounded-full` onde o mockup correspondente usa ~7-8px (checagem por amostragem do juiz, comparando contra `.gauntlet/mockup-dom/01-landing-dom-body.html`)
 
 ## Fora de escopo (não fazer)
 
-- Não re-tocar a landing — já aprovada, congelada (incluindo sua fonte atual)
-- Não deletar os arquivos de página duplicados/mortos — fora do escopo desta tarefa, mesmo que pareçam lixo
-- Não adicionar dependências de UI novas (sem libs de componente novas); fontes novas só via Google Fonts/Fontshare (mesmo mecanismo já usado), nunca arquivo binário de fonte copiado do bundle do mockup
-- Não mudar comportamento de formulários (validação, submit, mensagens de erro) — só aparência
-- Não mudar `useAuth`, `ProtectedRoute`, lógica de roles/permissão
-- Não copiar `<script>`, JSON de bundler ou base64 de fonte/imagem embutido nos arquivos `tema/Connexo paginas/*.html` para dentro do app — eles são só referência visual (abrir num servidor local + browser/devtools para extrair cor/estrutura), nunca `cat`/colar o arquivo inteiro
+- Não mudar fonte global além do que já foi decidido (Hanken Grotesk/Figtree como `theme-body`/`theme-display`, já disponíveis desde o ciclo 1)
+- Não tocar rotas, API, auth
+- Não apagar `.gauntlet/mockup-dom/**` — é referência viva para os próximos ciclos

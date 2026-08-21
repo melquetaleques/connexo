@@ -8,6 +8,7 @@ import {
   PageContainer,
   Pill,
   Field,
+  PageHeader,
 } from "@/components/ui/connexo-primitives";
 import api from "@/services/api";
 
@@ -83,16 +84,11 @@ export function CatalogPage() {
   return (
     <PageContainer>
       <div className="flex flex-col gap-8">
-        {/* Header */}
-        <div>
-          <span className="text-[10px] font-bold text-secondary uppercase tracking-[0.3em]">
-            Catálogo de Contadores
-          </span>
-          <h2 className="text-3xl font-bold text-primary mt-1">Encontre o Perito Ideal</h2>
-          <p className="text-sm font-medium text-primary/60 mt-2">
-            Profissionais especializados em perícia contábil para seu processo.
-          </p>
-        </div>
+        <PageHeader
+          kicker="Catálogo de Contadores"
+          title="Encontre o Perito Ideal"
+          subtitle="Profissionais especializados em perícia contábil para seu processo."
+        />
 
         {/* Search & Filters */}
         <Card>
@@ -227,7 +223,7 @@ export function CatalogPage() {
             {accountants.map((acc) => {
               const badge = AVAILABILITY_BADGE[acc.availability] || AVAILABILITY_BADGE.disponivel;
               return (
-                <Card key={acc.id} className="group hover:border-secondary/30 transition-all cursor-pointer" onClick={() => navigate(profilePath(acc))}>
+                <Card key={acc.id} className="group hover:border-secondary/30 transition-all duration-300 cursor-pointer hover:scale-[1.02] motion-reduce:hover:scale-100" onClick={() => navigate(profilePath(acc))}>
                   <div className="flex flex-col gap-4">
                     {/* Header with logo */}
                     <div className="flex items-center gap-4">

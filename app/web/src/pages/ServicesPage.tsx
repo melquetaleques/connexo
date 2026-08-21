@@ -6,7 +6,8 @@ import {
   Icon,
   PageContainer,
   SectionTitle,
-  Field
+  Field,
+  PageHeader,
 } from "@/components/ui/connexo-primitives";
 import api from "@/services/api";
 
@@ -101,20 +102,17 @@ export function ServicesPage() {
   return (
     <PageContainer>
       <div className="flex flex-col gap-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-[10px] font-bold text-secondary uppercase tracking-[0.3em]">
-              Meus Serviços
-            </span>
-            <h2 className="text-3xl font-bold text-primary mt-1">Serviços Oferecidos</h2>
-          </div>
-          {!editing && (
-            <GoldButton onClick={() => setEditing(true)}>
-              <Icon name="add" className="text-base" /> Cadastrar serviço
-            </GoldButton>
-          )}
-        </div>
+        <PageHeader
+          kicker="Meus Serviços"
+          title="Serviços Oferecidos"
+          action={
+            !editing ? (
+              <GoldButton onClick={() => setEditing(true)}>
+                <Icon name="add" className="text-base" /> Cadastrar serviço
+              </GoldButton>
+            ) : undefined
+          }
+        />
 
         {/* Form Panel */}
         {editing && (

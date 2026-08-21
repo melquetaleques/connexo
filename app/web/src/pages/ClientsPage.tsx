@@ -10,8 +10,11 @@ import {
   PageContainer,
   Pill,
   StatusDot,
-  SectionTitle,
-  Field
+  Field,
+  PageHeader,
+  DataTable,
+  DataRow,
+  StatusBadge,
 } from "@/components/ui/connexo-primitives";
 // O serviço api será configurado no Plan 1.3. Por enquanto, mantemos a compatibilidade.
 import api from "@/services/api";
@@ -183,19 +186,19 @@ export function ClientsPage() {
         </div>
       )}
 
-      {/* Header da Página */}
-      <div className="mb-10">
-        <SectionTitle 
-          title={`${clients.length} Clientes`} 
-          kicker="Gestão de Carteira" 
-          action={
-            <div className="flex items-center gap-3">
-              <GhostButton icon="download" className="hidden md:inline-flex" disabled title="Exportação em desenvolvimento">Exportar</GhostButton>
-              <GoldButton icon="add" onClick={() => setIsAddModalOpen(true)}>Novo Cliente</GoldButton>
-            </div>
-          }
-        />
-      </div>
+      <PageHeader
+        kicker="Gestão de Carteira"
+        title={`${clients.length} Clientes`}
+        search={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Buscar por nome ou doc..."
+        action={
+          <div className="flex items-center gap-3">
+            <GhostButton icon="download" className="hidden md:inline-flex" disabled title="Exportação em desenvolvimento">Exportar</GhostButton>
+            <GoldButton icon="add" onClick={() => setIsAddModalOpen(true)}>Novo Cliente</GoldButton>
+          </div>
+        }
+      />
 
       {/* Filtros e Visualização */}
       <Card padded={false} className="mb-8 overflow-hidden">
@@ -218,16 +221,6 @@ export function ClientsPage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="relative">
-              <Icon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar por nome ou doc..."
-                className="w-64 pl-11 pr-4 py-2.5 rounded-full border-none bg-white text-sm font-medium focus:ring-2 focus:ring-secondary/40 shadow-sm"
-              />
-            </div>
-            
             <div className="flex bg-white rounded-full p-1 border border-outline/60 shadow-sm">
               <button
                 onClick={() => setView("lista")}
@@ -260,54 +253,37 @@ export function ClientsPage() {
             <GoldButton icon="add" className="mt-8" onClick={() => setIsAddModalOpen(true)}>Cadastrar Primeiro Cliente</GoldButton>
           </div>
         ) : view === "lista" ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-surface-2/20 border-b border-outline/40">
-                  <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-primary/40">Cliente</th>
-                  <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-primary/40">Documento</th>
-                  <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-primary/40">Contato</th>
-                  <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-primary/40 text-right">Status</th>
-                  <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-primary/40 w-10"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline/40">
-                {filtered.map((c) => (
-                  <tr 
-                    key={c.id} 
-                    className="group hover:bg-surface-2/40 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/adv/clientes/${c.id}`)}
-                  >
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-4">
-                        <Avatar initials={c.name.substring(0, 2).toUpperCase()} tone="navy" />
-                        <div>
-                          <p className="font-bold text-primary group-hover:text-secondary transition-colors">{c.name}</p>
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-primary/40">{c.type}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <code className="text-xs font-mono font-bold text-primary/60">{c.document}</code>
-                    </td>
-                    <td className="px-8 py-5">
-                      <p className="text-xs font-medium text-primary/80">{c.email}</p>
-                      <p className="text-[10px] font-bold text-primary/40 mt-0.5">{c.phone}</p>
-                    </td>
-                    <td className="px-8 py-5 text-right">
-                      <Pill tone={c.status === "ativo" ? "success" : c.status === "atencao" ? "warning" : "neutral"}>
-                        <StatusDot tone={c.status === "ativo" ? "success" : c.status === "atencao" ? "warning" : "neutral"} />
-                        {c.status === "ativo" ? "Ativo" : c.status === "atencao" ? "Atenção" : "Encerrado"}
-                      </Pill>
-                    </td>
-                    <td className="px-8 py-5">
-                      <Icon name="chevron_right" className="text-primary/20 group-hover:text-secondary transition-all group-hover:translate-x-1" />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable headers={["Cliente", "Documento", "Contato", "Status", ""]}>
+            {filtered.map((c) => (
+              <DataRow key={c.id} onClick={() => navigate(`/adv/clientes/${c.id}`)}>
+                <td className="px-8 py-5">
+                  <div className="flex items-center gap-4">
+                    <Avatar initials={c.name.substring(0, 2).toUpperCase()} tone="navy" />
+                    <div>
+                      <p className="font-bold text-primary group-hover:text-secondary transition-colors">{c.name}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-primary/40">{c.type}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-8 py-5">
+                  <code className="text-xs font-mono font-bold text-primary/60">{c.document}</code>
+                </td>
+                <td className="px-8 py-5">
+                  <p className="text-xs font-medium text-primary/80">{c.email}</p>
+                  <p className="text-[10px] font-bold text-primary/40 mt-0.5">{c.phone}</p>
+                </td>
+                <td className="px-8 py-5 text-right">
+                  <StatusBadge status={c.status}>
+                    <StatusDot tone={c.status === "ativo" ? "success" : c.status === "atencao" ? "warning" : "neutral"} />
+                    {c.status === "ativo" ? "Ativo" : c.status === "atencao" ? "Atenção" : "Encerrado"}
+                  </StatusBadge>
+                </td>
+                <td className="px-8 py-5">
+                  <Icon name="chevron_right" className="text-primary/20 group-hover:text-secondary transition-all group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0" />
+                </td>
+              </DataRow>
+            ))}
+          </DataTable>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8">
             {filtered.map((c) => (

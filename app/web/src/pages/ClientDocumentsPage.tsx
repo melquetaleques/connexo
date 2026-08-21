@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageContainer, Card, Icon, GhostButton, SectionTitle } from "@/components/ui/connexo-primitives";
+import { PageContainer, Card, Icon, GhostButton, SectionTitle, PageHeader } from "@/components/ui/connexo-primitives";
 import { listDocumentsByProcess } from "@/services/documents";
 import api from "@/services/api";
 import type { Process } from "@/types";
@@ -59,10 +59,10 @@ export function ClientDocumentsPage() {
 
   return (
     <PageContainer>
-      <div className="mb-12">
-        <h1 className="text-4xl font-black text-primary tracking-tight mb-2">Meus Documentos</h1>
-        <p className="text-primary/40 font-bold uppercase tracking-[0.2em] text-xs">Documentos anexados aos seus processos</p>
-      </div>
+      <PageHeader
+        kicker="Documentos anexados aos seus processos"
+        title="Meus Documentos"
+      />
 
       <div className="mb-10">
         <ClientDocumentRequests />

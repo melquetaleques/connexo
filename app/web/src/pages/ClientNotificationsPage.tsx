@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PageContainer, Icon, Pill } from "@/components/ui/connexo-primitives";
+import { PageContainer, Icon, Pill, PageHeader, Card } from "@/components/ui/connexo-primitives";
 import api from "@/services/api";
 
 interface Notification {
@@ -58,22 +58,22 @@ export function ClientNotificationsPage() {
 
   return (
     <PageContainer>
-      <div className="flex items-center justify-between mb-12">
-        <div>
-          <h1 className="text-4xl font-black text-primary tracking-tight mb-2">Notificações</h1>
-          <p className="text-primary/40 font-bold uppercase tracking-[0.2em] text-xs">Alertas sobre seus processos e vínculos</p>
-        </div>
-        {unreadCount > 0 && (
-          <Pill tone="gold">{unreadCount} {unreadCount === 1 ? "nova" : "novas"}</Pill>
-        )}
-      </div>
+      <PageHeader
+        kicker="Alertas sobre seus processos e vínculos"
+        title="Notificações"
+        action={
+          unreadCount > 0 ? (
+            <Pill tone="gold">{unreadCount} {unreadCount === 1 ? "nova" : "novas"}</Pill>
+          ) : undefined
+        }
+      />
 
       {notifications.length > 0 ? (
         <div className="space-y-4">
           {notifications.map((n) => (
-            <div
+            <Card
               key={n.id}
-              className={`p-6 rounded-[24px] border transition-all cursor-pointer relative ${
+              className={`p-6 rounded-[24px] border transition-all duration-300 cursor-pointer relative ${
                 !n.read
                   ? "bg-secondary/[0.03] border-secondary/20"
                   : "bg-white border-outline/20"
@@ -94,7 +94,7 @@ export function ClientNotificationsPage() {
                   <p className="text-xs text-primary/50 leading-relaxed font-medium">{n.body}</p>
                 </div>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       ) : (

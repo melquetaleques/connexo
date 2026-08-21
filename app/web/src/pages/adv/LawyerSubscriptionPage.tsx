@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, GoldButton, Icon, Badge, PageContainer, SectionTitle } from "@/components/ui/connexo-primitives";
+import { Card, GoldButton, Icon, Badge, PageContainer, PageHeader } from "@/components/ui/connexo-primitives";
 import api from "@/services/api";
 import { apiErrorMessage } from "@/lib/utils";
 
@@ -109,9 +109,11 @@ export function LawyerSubscriptionPage() {
   return (
     <PageContainer>
       <div className="max-w-3xl mx-auto">
-        <SectionTitle subtitle="Acompanhe o status do seu plano e gerencie sua assinatura.">
-          Plano & Cobrança
-        </SectionTitle>
+        <PageHeader
+          kicker="Acompanhe o status do seu plano"
+          title="Plano & Cobrança"
+          subtitle="Gerencie sua assinatura."
+        />
 
         {/* Current plan card */}
         <Card className="p-8 mb-8">

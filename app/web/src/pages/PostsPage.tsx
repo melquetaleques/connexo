@@ -7,7 +7,8 @@ import {
   PageContainer,
   SectionTitle,
   Field,
-  Pill
+  Pill,
+  PageHeader,
 } from "@/components/ui/connexo-primitives";
 import api from "@/services/api";
 
@@ -112,20 +113,17 @@ export function PostsPage() {
   return (
     <PageContainer>
       <div className="flex flex-col gap-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-[10px] font-bold text-secondary uppercase tracking-[0.3em]">
-              Conteúdo Editorial
-            </span>
-            <h2 className="text-3xl font-bold text-primary mt-1">Artigos & Publicações</h2>
-          </div>
-          {!composing && (
-            <GoldButton onClick={() => setComposing(true)}>
-              <Icon name="add" className="text-base" /> Nova postagem
-            </GoldButton>
-          )}
-        </div>
+        <PageHeader
+          kicker="Conteúdo Editorial"
+          title="Artigos & Publicações"
+          action={
+            !composing ? (
+              <GoldButton onClick={() => setComposing(true)}>
+                <Icon name="add" className="text-base" /> Nova postagem
+              </GoldButton>
+            ) : undefined
+          }
+        />
 
         {/* Compose Panel */}
         {composing && (

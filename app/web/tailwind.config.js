@@ -4,15 +4,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#000830",
-        secondary: "#C59D5C",
-        surface: "#F9FAFB",
-        "surface-1": "#F6F7F8",
-        "surface-2": "#F3F4F6",
-        "on-surface-variant": "#4B5563",
-        outline: "#E5E7EB",
-        paper: "#F3EBD8",
-        ink: "#1A1712",
+        // Wine/cream family sourced from mg-vinho / mg-ivory / mg-ink / mg-magenta / mg-indigo
+        primary: "#40101E", // mg-vinho
+        secondary: "#E040A0", // mg-magenta
+        surface: "#F0F0E8", // mg-ivory
+        "surface-1": "#F0F0E8", // mg-ivory
+        "surface-2": "#EAE7E2", // ivory family (mockup surface)
+        "on-surface-variant": "#141414", // mg-ink
+        outline: "#E4E2DE", // ivory family (mockup border)
+        paper: "#F0F0E8", // mg-ivory
+        ink: "#141414", // mg-ink
         ledger: "#2F4A3C",
         "navy-deep": "#0A0E1A",
         "navy-mid": "#101628",
@@ -46,6 +47,8 @@ export default {
         sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
         display: ["Cabinet Grotesk", "Geist", "Inter", "system-ui", "sans-serif"],
         ui: ["Geist", "Inter", "system-ui", "sans-serif"],
+        "theme-body": ["Hanken Grotesk", "Plus Jakarta Sans", "system-ui", "sans-serif"],
+        "theme-display": ["Figtree", "Cabinet Grotesk", "system-ui", "sans-serif"],
       },
     },
   },

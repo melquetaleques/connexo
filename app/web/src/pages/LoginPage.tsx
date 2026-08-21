@@ -4,8 +4,6 @@ import { GoldButton, Icon } from "@/components/ui/connexo-primitives";
 import { useAuth } from "@/hooks/useAuth";
 import { apiErrorMessage } from "@/lib/utils";
 
-const ACCENT = "#C59D5C";
-
 function roleDashboard(role: string): string {
   switch (role) {
     case "advogado": return "/adv/dashboard";
@@ -58,36 +56,31 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center overflow-hidden relative bg-[#F9FAFB] font-['Plus_Jakarta_Sans']">
-      {/* Watermarks de fundo */}
-      <div className="fixed inset-0 z-0 overflow-hidden select-none pointer-events-none opacity-[0.03]">
-        <span className="absolute -top-10 -left-10 text-[10rem] font-black text-primary leading-none">CONNEXO</span>
-        <span className="absolute bottom-10 right-10 text-[10rem] font-black text-primary leading-none">EST. 2002</span>
-        <div className="absolute top-1/4 -right-20 w-[600px] h-[600px] rounded-full blur-[120px]" style={{ background: `${ACCENT}1A` }} />
-        <div className="absolute -bottom-20 -left-20 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[150px]" />
+    <div className="min-h-screen flex items-center justify-center overflow-hidden relative bg-surface-1 font-theme-body">
+      <div className="fixed inset-0 z-0 overflow-hidden select-none pointer-events-none opacity-[0.04]">
+        <span className="absolute -top-10 -left-10 text-[10rem] font-semibold text-primary leading-none font-theme-display">CONNEXO</span>
+        <span className="absolute bottom-10 right-10 text-[10rem] font-semibold text-primary leading-none font-theme-display">EST. 2002</span>
       </div>
 
-      <main className="relative z-10 w-full max-w-[1200px] grid grid-cols-1 md:grid-cols-2 gap-0 min-h-[750px] shadow-[0_50px_100px_-20px_rgba(0,8,48,0.25)] rounded-[32px] bg-white overflow-hidden mx-4 animate-in fade-in zoom-in-95 duration-700">
-        
-        {/* Lado Esquerdo - Editorial / Branding */}
-        <div className="relative hidden md:flex flex-col justify-between p-16 bg-[#000830] text-white overflow-hidden">
-          {/* Overlay e Efeitos */}
-          <div className="absolute inset-0 z-0 bg-gradient-to-t from-primary via-primary/80 to-transparent" />
-          <span className="absolute -top-12 -left-8 text-[12rem] font-black text-white opacity-[0.02] leading-none">CONNEXO</span>
+      <main className="relative z-10 w-full max-w-[1200px] grid grid-cols-1 md:grid-cols-2 gap-0 min-h-[750px] shadow-[0_50px_100px_-20px_rgba(64,16,30,0.22)] rounded-[32px] bg-white overflow-hidden mx-4 cx-reveal">
+
+        <div className="relative hidden md:flex flex-col justify-between p-16 bg-primary text-white overflow-hidden">
+          <div className="absolute inset-0 z-0 bg-gradient-to-t from-primary via-primary/85 to-transparent" />
+          <span className="absolute -top-12 -left-8 text-[12rem] font-semibold text-white opacity-[0.04] leading-none font-theme-display">CONNEXO</span>
 
           <div className="relative z-10">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center shadow-lg shadow-secondary/20">
                 <Icon name="balance" className="text-white text-2xl" />
               </div>
-              <span className="text-2xl font-black tracking-tighter uppercase">Connexo</span>
+              <span className="text-2xl font-semibold tracking-tight uppercase font-theme-display">Connexo</span>
             </div>
           </div>
 
           <div className="relative z-10">
-            <h1 className="text-6xl font-black leading-[1] tracking-tighter mb-8">
+            <h1 className="text-6xl font-semibold leading-[1] tracking-tight mb-8 font-theme-display">
               A precisão contábil <br />
-              <span style={{ color: ACCENT }}>a serviço da causa.</span>
+              <span className="text-secondary">a serviço da causa.</span>
             </h1>
             <p className="text-xl text-white/60 font-light max-w-sm leading-relaxed">
               Plataforma para escritórios de contabilidade que atuam com perícia judicial, integrada aos painéis dos escritórios de advocacia.
@@ -101,21 +94,20 @@ export function LoginPage() {
               { v: "98%", l: "Pareceres no prazo" },
             ].map((s, i) => (
               <div key={i} className="group cursor-default">
-                <p className="text-3xl font-black tracking-tighter group-hover:scale-110 transition-transform duration-300 origin-left" style={{ color: ACCENT }}>{s.v}</p>
+                <p className="text-3xl font-semibold tracking-tight group-hover:scale-110 transition-transform duration-300 origin-left motion-reduce:transition-none motion-reduce:group-hover:scale-100 text-secondary font-theme-display">{s.v}</p>
                 <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/40 mt-2">{s.l}</p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Lado Direito - Auth Interface */}
         <div className="flex flex-col justify-center p-8 md:p-20 bg-white">
           <div className="mb-12">
-            <p className="text-[10px] font-bold uppercase tracking-[0.4em] mb-4" style={{ color: ACCENT }}>
+            <p className="text-[10px] font-bold uppercase tracking-[0.4em] mb-4 text-secondary">
               Acesso à plataforma
             </p>
-            <h3 className="text-4xl font-black text-primary tracking-tight mb-3">Bem-vindo de volta</h3>
-            <p className="text-primary/50 font-medium text-base">
+            <h3 className="text-4xl font-semibold text-ink tracking-tight mb-3 font-theme-display">Bem-vindo de volta</h3>
+            <p className="text-on-surface-variant/60 font-medium text-base">
               Acesse sua conta para gerenciar processos, laudos e documentos.
             </p>
           </div>
@@ -139,7 +131,7 @@ export function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-14 pr-5 py-5 rounded-2xl bg-[#F9FAFB] border-none text-primary font-bold focus:ring-2 focus:ring-secondary/40 transition-all text-sm shadow-inner"
+                  className="w-full pl-14 pr-5 py-5 rounded-2xl bg-surface-1 border border-outline text-ink font-medium focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition-all duration-300 text-sm font-theme-body motion-reduce:transition-none"
                   placeholder="eduarda@pereiraecosta.com.br"
                 />
               </div>
@@ -148,7 +140,7 @@ export function LoginPage() {
             <div>
               <div className="flex justify-between items-center mb-3">
                 <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary opacity-40">Senha de Acesso</label>
-                <Link to="#" className="text-[10px] font-bold uppercase tracking-wider hover:text-primary transition-colors" style={{ color: ACCENT }}>
+                <Link to="#" className="text-[10px] font-bold uppercase tracking-wider text-secondary hover:text-primary transition-colors">
                   Esqueci a senha
                 </Link>
               </div>
@@ -159,12 +151,12 @@ export function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-14 pr-14 py-5 rounded-2xl bg-[#F9FAFB] border-none text-primary font-bold focus:ring-2 focus:ring-secondary/40 transition-all text-sm shadow-inner"
+                  className="w-full pl-14 pr-14 py-5 rounded-2xl bg-surface-1 border border-outline text-ink font-medium focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition-all duration-300 text-sm font-theme-body motion-reduce:transition-none"
                   placeholder="••••••••••••"
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowPwd(!showPwd)} 
+                <button
+                  type="button"
+                  onClick={() => setShowPwd(!showPwd)}
                   className="absolute right-5 top-1/2 -translate-y-1/2 text-primary/20 hover:text-primary transition-colors p-1"
                 >
                   <Icon name={showPwd ? "visibility_off" : "visibility"} className="text-xl" />
@@ -173,20 +165,19 @@ export function LoginPage() {
             </div>
 
             <label className="flex items-center gap-3 py-3 cursor-pointer group">
-              <input 
-                type="checkbox" 
-                defaultChecked 
-                className="w-5 h-5 rounded-lg border-none bg-[#F9FAFB] text-secondary focus:ring-secondary/20 transition-all shadow-inner" 
-                style={{ accentColor: ACCENT }} 
+              <input
+                type="checkbox"
+                defaultChecked
+                className="w-5 h-5 rounded-lg border-none bg-surface-1 text-secondary focus:ring-secondary/20 transition-all"
               />
               <span className="text-xs font-bold text-primary/40 group-hover:text-primary transition-colors uppercase tracking-wider">Manter conectado neste dispositivo</span>
             </label>
 
             <div className="pt-4">
-              <GoldButton 
-                type="submit" 
-                icon={loading ? "autorenew" : "arrow_forward"} 
-                className="w-full py-6 text-sm uppercase tracking-[0.2em] font-black shadow-xl shadow-secondary/20"
+              <GoldButton
+                type="submit"
+                icon={loading ? "autorenew" : "arrow_forward"}
+                className={loading ? "w-full py-6 text-sm uppercase tracking-[0.2em] font-black opacity-80" : "w-full py-6 text-sm uppercase tracking-[0.2em] font-black"}
                 disabled={loading}
               >
                 {loading ? "Autenticando..." : "Acessar Painel"}
@@ -194,17 +185,17 @@ export function LoginPage() {
             </div>
           </form>
 
-          <div className="mt-12 pt-8 border-t border-[#F3F4F6] text-center">
+          <div className="mt-12 pt-8 border-t border-outline text-center">
             <p className="text-sm text-primary/40 font-medium">
               Ainda não possui credenciais? <br className="md:hidden" />
-              <Link to="/register" className="font-black hover:scale-105 inline-block transition-transform ml-1" style={{ color: ACCENT }}>
+              <Link to="/register" className="font-semibold hover:scale-105 inline-block transition-transform ml-1 text-secondary motion-reduce:hover:scale-100">
                 Solicitar acesso ao escritório
               </Link>
             </p>
           </div>
         </div>
       </main>
-      
+
     </div>
   );
 }

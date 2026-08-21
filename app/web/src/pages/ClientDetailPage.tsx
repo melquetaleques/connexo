@@ -14,7 +14,7 @@ import {
 import api from "@/services/api";
 import type { Process } from "@/types";
 
-const ACCENT = "#C59D5C";
+
 
 interface Client {
   id: string;
@@ -158,7 +158,7 @@ export function ClientDetailPage() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <GhostButton icon="forum" disabled title="Mensagens em desenvolvimento">Mensagens</GhostButton>
-            <GoldButton icon="add" accent={ACCENT} onClick={() => setIsNewProcessOpen(true)}>
+            <GoldButton icon="add" onClick={() => setIsNewProcessOpen(true)}>
               Novo processo
             </GoldButton>
           </div>
@@ -178,10 +178,9 @@ export function ClientDetailPage() {
             key={t.k}
             type="button"
             onClick={() => setTab(t.k)}
-            className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-5 py-3 text-sm font-bold transition-colors ${
-              tab === t.k ? "text-primary" : "border-transparent text-on-surface-variant hover:text-primary"
+            className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-5 py-3 text-sm font-bold transition-colors duration-300 motion-reduce:transition-none ${
+              tab === t.k ? "text-primary border-secondary" : "border-transparent text-on-surface-variant hover:text-primary"
             }`}
-            style={tab === t.k ? { borderColor: ACCENT, color: "#000830" } : {}}
           >
             <Icon name={t.i} className="text-base" />
             {t.l}

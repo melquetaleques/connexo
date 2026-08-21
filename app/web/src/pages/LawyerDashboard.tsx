@@ -8,10 +8,9 @@ import {
   GhostButton,
   Pill,
 } from "@/components/ui/connexo-primitives";
+import { StatCard } from "@/components/dashboard/StatCard";
 import api from "@/services/api";
 import { useAuth } from "@/hooks/useAuth";
-
-const ACCENT = "#C59D5C";
 
 interface DashboardData {
   total_clients: number;
@@ -57,51 +56,31 @@ export function LawyerDashboard() {
     <PageContainer>
       <div className="relative z-10">
         <div className="mb-10">
-          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: ACCENT }}>
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-secondary">
             Painel do Advogado
           </p>
-          <h1 className="text-primary text-4xl font-extrabold leading-[1.05] tracking-[-0.03em] md:text-5xl">
+          <h1 className="text-ink text-4xl font-semibold leading-[1.05] tracking-tight md:text-5xl font-theme-display">
             Olá, {user?.name.split(" ")[0]}. <br />
-            Você tem <span style={{ color: ACCENT }}>{data?.active_processes ?? 0} processos</span> ativos.
+            Você tem <span className="text-secondary">{data?.active_processes ?? 0} processos</span> ativos.
           </h1>
         </div>
 
-        <div className="mb-10 grid grid-cols-1 gap-5 md:grid-cols-3">
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-on-surface-variant">Total de Clientes</p>
-                <p className="mt-2 text-3xl font-extrabold tracking-tight text-primary">{data?.total_clients ?? 0}</p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary/10">
-                <Icon name="groups" className="text-2xl text-secondary" />
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-on-surface-variant">Processos Totais</p>
-                <p className="mt-2 text-3xl font-extrabold tracking-tight text-primary">{data?.total_processes ?? 0}</p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary/10">
-                <Icon name="folder" className="text-2xl text-secondary" />
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-on-surface-variant">Peritos Vinculados</p>
-                <p className="mt-2 text-3xl font-extrabold tracking-tight text-primary">0</p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary/10">
-                <Icon name="engineering" className="text-2xl text-secondary" />
-              </div>
-            </div>
-          </Card>
+        <div className="mb-10 grid grid-cols-1 gap-5 md:grid-cols-3 cx-stagger">
+          <StatCard
+            label="Total de Clientes"
+            value={data?.total_clients ?? 0}
+            icon="groups"
+          />
+          <StatCard
+            label="Processos Totais"
+            value={data?.total_processes ?? 0}
+            icon="folder"
+          />
+          <StatCard
+            label="Peritos Vinculados"
+            value={0}
+            icon="engineering"
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

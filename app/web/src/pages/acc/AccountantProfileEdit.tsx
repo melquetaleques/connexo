@@ -8,6 +8,7 @@ import {
   SectionTitle,
   Field,
   Pill,
+  PageHeader,
 } from "@/components/ui/connexo-primitives";
 import {
   getMyProfile,
@@ -188,13 +189,10 @@ export function AccountantProfileEdit() {
   return (
     <PageContainer>
       <div className="flex flex-col gap-8 max-w-3xl mx-auto">
-        {/* Header */}
-        <div>
-          <span className="text-[10px] font-bold text-secondary uppercase tracking-[0.3em]">
-            Editar Perfil
-          </span>
-          <h2 className="text-3xl font-bold text-primary mt-1">Perfil Público do Contador</h2>
-        </div>
+        <PageHeader
+          kicker="Editar Perfil"
+          title="Perfil Público do Contador"
+        />
 
         {/* Success Banner */}
         {success && (

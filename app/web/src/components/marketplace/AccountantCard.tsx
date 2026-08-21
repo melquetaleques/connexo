@@ -14,7 +14,7 @@ export function AccountantCard({ accountant }: AccountantCardProps) {
   };
 
   return (
-    <Card className="group relative h-full flex flex-col justify-between overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 bg-white border-outline/50">
+    <Card className="group relative h-full flex flex-col justify-between overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.02] bg-white border-outline/50 motion-reduce:hover:scale-100 motion-reduce:hover:translate-y-0">
       {/* Decoração de Fundo Sutil */}
       <div className="absolute -top-12 -right-12 w-32 h-32 bg-secondary/5 rounded-full blur-3xl group-hover:bg-secondary/10 transition-colors" />
       

@@ -5,7 +5,8 @@ import {
   GoldButton,
   Icon,
   PageContainer,
-  Pill,
+  PageHeader,
+  StatusBadge,
   StatusDot,
 } from "@/components/ui/connexo-primitives";
 import { listProcesses } from "@/services/processes";
@@ -34,17 +35,15 @@ export function LawyerProcessesPage() {
 
   return (
     <PageContainer>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.3em] text-secondary">
-            Gestao Processual
-          </p>
-          <h2 className="text-3xl font-black text-primary tracking-tight">Processos</h2>
-        </div>
-        <Link to="/adv/clientes">
-          <GoldButton icon="add">Novo Processo</GoldButton>
-        </Link>
-      </div>
+      <PageHeader
+        kicker="Gestao Processual"
+        title="Processos"
+        action={
+          <Link to="/adv/clientes">
+            <GoldButton icon="add">Novo Processo</GoldButton>
+          </Link>
+        }
+      />
 
       {processes.length === 0 ? (
         <Card className="py-24 text-center border-dashed border-2">
@@ -72,10 +71,10 @@ export function LawyerProcessesPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <Pill tone={p.status === "active" || p.status === "ativo" ? "success" : "neutral"}>
+                  <StatusBadge status={p.status}>
                     <StatusDot tone={p.status === "active" || p.status === "ativo" ? "success" : "neutral"} />
                     {p.status}
-                  </Pill>
+                  </StatusBadge>
                   <Icon name="chevron_right" className="text-primary/20" />
                 </div>
               </Card>

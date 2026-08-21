@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PageContainer, Card, Icon, SectionTitle, GoldButton } from "@/components/ui/connexo-primitives";
+import { PageContainer, Card, Icon, SectionTitle, GoldButton, PageHeader } from "@/components/ui/connexo-primitives";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/services/api";
 import { apiErrorMessage } from "@/lib/utils";
@@ -33,10 +33,10 @@ export function SettingsPage() {
   return (
     <PageContainer>
       <div className="max-w-3xl">
-        <div className="mb-10">
-          <h1 className="text-4xl font-black text-primary tracking-tight mb-2">Configuracoes</h1>
-          <p className="text-primary/40 font-bold uppercase tracking-[0.2em] text-xs">Gerencie suas preferencias e dados da conta</p>
-        </div>
+        <PageHeader
+          kicker="Gerencie suas preferencias e dados da conta"
+          title="Configuracoes"
+        />
 
         <div className="space-y-8">
           <Card className="p-8">
